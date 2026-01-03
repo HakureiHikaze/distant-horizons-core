@@ -32,7 +32,7 @@ public final class ModInfo
 	
 	/** Incremented every time any packets are added, changed or removed, with a few exceptions. */
 	public static final int PROTOCOL_VERSION = 13;
-	public static final String WRAPPER_PACKET_PATH = "message";
+	public static final String WRAPPER_PACKET_PATH = "msg";
 	
 	/** The internal mod name */
 	public static final String NAME = "DistantHorizons";
