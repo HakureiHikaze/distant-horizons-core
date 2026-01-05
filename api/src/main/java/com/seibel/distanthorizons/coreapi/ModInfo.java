@@ -32,6 +32,8 @@ public final class ModInfo
 	
 	/** Incremented every time any packets are added, changed or removed, with a few exceptions. */
 	public static final int PROTOCOL_VERSION = 13;
+
+	/** The full plugin channel name (RESOURCE_NAMESPACE:WRAPPER_PACKET_PATH) must be 20 characters or fewer for compatibility with <1.13. */
 	public static final String WRAPPER_PACKET_PATH = "msg";
 	
 	/** The internal mod name */
