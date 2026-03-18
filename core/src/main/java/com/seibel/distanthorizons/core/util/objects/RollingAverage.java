@@ -17,12 +17,15 @@ public class RollingAverage
 	private int index = 0;
 	private double sum = 0.0;
 	private final Lock arrayLock = new ReentrantLock();
+	/** how many items have been added to this average over its lifetime */
+	private long lifetimeCount = 0;
 	
 	
 	
 	//=============//
 	// constructor //
 	//=============//
+	//region
 	
 	public RollingAverage(int size)
 	{
@@ -35,11 +38,14 @@ public class RollingAverage
 		this.values = new double[size];
 	}
 	
+	//endregion
+	
 	
 	
 	//=======//
 	// input //
 	//=======//
+	//region
 	
 	public void add(double value)
 	{
@@ -56,6 +62,8 @@ public class RollingAverage
 			this.index = (this.index + 1) % this.maxSize;
 			
 			this.currentSize = Math.max(this.index+1, this.currentSize);
+			
+			this.lifetimeCount++;
 		}
 		finally
 		{
@@ -71,6 +79,7 @@ public class RollingAverage
 			this.sum = 0;
 			this.index = 0;
 			this.currentSize = 0;
+			this.lifetimeCount = 0;
 			Arrays.fill(this.values, 0);
 		}
 		finally
@@ -79,11 +88,14 @@ public class RollingAverage
 		}
 	}
 	
+	//endregion
+	
 	
 	
 	//========//
 	// output //
 	//========//
+	//region
 	
 	/** Gets the current rolling average. */
 	public double getAverage()
@@ -101,14 +113,22 @@ public class RollingAverage
 	/** rounded to two decimals*/
 	public String getAverageRoundedString() { return String.format("%.2f", this.getAverage()); }
 	
+	public long getLifetimeCount() { return this.lifetimeCount; }
+	
+	//endregion
+	
 	
 	
 	//================//
 	// base overrides //
 	//================//
+	//region
 	
 	@Override 
 	public String toString() { return "avg: ["+this.getAverageRoundedString()+"], count: ["+this.currentSize+"], max count: ["+this.maxSize+"]."; }
+	
+	//endregion
+	
 	
 }
 

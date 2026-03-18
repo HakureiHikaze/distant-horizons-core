@@ -2,16 +2,24 @@ package com.seibel.distanthorizons.core.render;
 
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
+import com.seibel.distanthorizons.core.enums.MinecraftTextFormat;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
+import com.seibel.distanthorizons.core.logging.f3.F3Screen;
 import com.seibel.distanthorizons.core.util.TimerUtil;
+import com.seibel.distanthorizons.core.util.objects.RollingAverage;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftClientWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
+import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IProfilerWrapper;
 import com.seibel.distanthorizons.coreapi.ModInfo;
 import org.jetbrains.annotations.Nullable;
 
+import java.text.NumberFormat;
+import java.util.List;
 import java.util.Timer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.LongAdder;
 
 public class RenderThreadTaskHandler
 {
@@ -19,7 +27,9 @@ public class RenderThreadTaskHandler
 		.fileLevelConfig(Config.Common.Logging.logRendererEventToFile)
 		.build();
 	
-	private static final ConcurrentLinkedQueue<Runnable> RENDER_THREAD_RUNNABLE_QUEUE = new ConcurrentLinkedQueue<>();
+	private static final ConcurrentLinkedQueue<QueuedRunnable> RENDER_THREAD_RUNNABLE_QUEUE = new ConcurrentLinkedQueue<>();
+	private static final ConcurrentHashMap<String, RollingAverage> AVERAGE_MS_RUN_TIME_BY_TASK_NAME = new ConcurrentHashMap<>();
+	private static final LongAdder COMPLETED_TASK_COUNTER = new LongAdder();
 	
 	private static final Timer TIMER = TimerUtil.CreateTimer("Cleanup timer");
 	private static final long MS_BETWEEN_CLEANUP_TICKS = 1_000L;
@@ -29,7 +39,7 @@ public class RenderThreadTaskHandler
 	public static final RenderThreadTaskHandler INSTANCE = new RenderThreadTaskHandler();
 	
 	
-	private long msSinceGlTasksRun = System.currentTimeMillis();
+	private long msSinceTasksRun = System.currentTimeMillis();
 	
 	
 	
@@ -93,9 +103,9 @@ public class RenderThreadTaskHandler
 	private void runRenderThreadTasks(long msMaxRunTime)
 	{
 		long startTimeMs = System.currentTimeMillis();
-		this.msSinceGlTasksRun = startTimeMs;
+		this.msSinceTasksRun = startTimeMs;
 		
-		Runnable runnable = RENDER_THREAD_RUNNABLE_QUEUE.poll();
+		QueuedRunnable runnable = RENDER_THREAD_RUNNABLE_QUEUE.poll();
 		while(runnable != null)
 		{
 			runnable.run();
@@ -103,6 +113,19 @@ public class RenderThreadTaskHandler
 			// only try running for a limited amount of time to prevent lag spikes
 			long currentTimeMs = System.currentTimeMillis();
 			long runDuration = currentTimeMs - startTimeMs;
+			
+			// stat tracking
+			if (ModInfo.IS_DEV_BUILD)
+			{
+				if (!AVERAGE_MS_RUN_TIME_BY_TASK_NAME.containsKey(runnable.name))
+				{
+					AVERAGE_MS_RUN_TIME_BY_TASK_NAME.put(runnable.name, new RollingAverage(1_000));
+				}
+				AVERAGE_MS_RUN_TIME_BY_TASK_NAME.get(runnable.name).add(runDuration);
+				
+				COMPLETED_TASK_COUNTER.increment();
+			}
+			
 			if (runDuration > msMaxRunTime)
 			{
 				break;
@@ -119,7 +142,7 @@ public class RenderThreadTaskHandler
 	private void manualCleanupTick()
 	{
 		long nowMs = System.currentTimeMillis();
-		long msSinceLast = nowMs - this.msSinceGlTasksRun;
+		long msSinceLast = nowMs - this.msSinceTasksRun;
 		if (msSinceLast < MS_BEFORE_RUN_CLEANUP_TIMER)
 		{
 			return;
@@ -130,10 +153,62 @@ public class RenderThreadTaskHandler
 		// Run the queued tasks on MC's executor (hopefully this should always run,
 		// even if DH's render code isn't being hit).
 		IMinecraftClientWrapper MC = SingletonInjector.INSTANCE.get(IMinecraftClientWrapper.class);
-		MC.executeOnRenderThread(() -> this.runRenderThreadTasks(1_000));
+		MC.executeOnRenderThread(() -> this.runRenderThreadTasks(250));
 	}
 	
 	//endregion
+	
+	
+	
+	//===========//
+	// debugging //
+	//===========//
+	///region
+	
+	public void addDebugMenuStringsToList(List<String> messageList)
+	{
+		if (!ModInfo.IS_DEV_BUILD)
+		{
+			return;
+		}
+		
+		
+		String o = MinecraftTextFormat.ORANGE;
+		String g = MinecraftTextFormat.GREEN;
+		String b = MinecraftTextFormat.DARK_BLUE;
+		String y = MinecraftTextFormat.YELLOW;
+		String cf = MinecraftTextFormat.CLEAR_FORMATTING;
+		
+		
+		
+		NumberFormat numberFormat = F3Screen.NUMBER_FORMAT;
+		
+		String queueSize = numberFormat.format(RENDER_THREAD_RUNNABLE_QUEUE.size());
+		String completedCount = numberFormat.format(COMPLETED_TASK_COUNTER.sum());
+		
+		String messageHeader = "Render Tasks, Queue: "+o+queueSize+cf+", Done: "+g+completedCount+cf;
+		messageList.add(messageHeader);
+		
+		AVERAGE_MS_RUN_TIME_BY_TASK_NAME.forEach((name, rollingAverage) -> 
+		{
+			// thread runtime
+			String runTimeAvgStr;
+			double runTimeAvgInMs = rollingAverage.getAverage();
+			if (!Double.isNaN(runTimeAvgInMs))
+			{
+				runTimeAvgStr = numberFormat.format(runTimeAvgInMs);
+			}
+			else
+			{
+				runTimeAvgStr = "<0";
+			}
+			
+			String message = name+" Avg: "+b+runTimeAvgStr+"ms"+cf+" #: "+y+rollingAverage.getLifetimeCount()+cf;
+			messageList.add(message);
+		});
+	}
+	
+	///endregion
 	
 	
 	

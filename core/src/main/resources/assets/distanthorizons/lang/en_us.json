@@ -573,6 +573,8 @@
     "Player Section Pos Detail Level",
   "distanthorizons.config.client.advanced.debugging.f3Screen.showThreadPools":
     "Show Thread Pools",
+  "distanthorizons.config.client.advanced.debugging.f3Screen.showRenderThreadTasks":
+    "Show Render Thread Tasks",
   "distanthorizons.config.client.advanced.debugging.f3Screen.showCombinedObjectPools":
     "Show Combined Object Pools",
   "distanthorizons.config.client.advanced.debugging.f3Screen.showSeparatedObjectPools":

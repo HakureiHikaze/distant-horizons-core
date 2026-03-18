@@ -1151,6 +1151,11 @@ public class Config
 							.comment("Shows info about each thread pool.")
 							.build();
 					
+					public static ConfigEntry<Boolean> showRenderThreadTasks = new ConfigEntry.Builder<Boolean>()
+							.set(false)
+							.comment("Shows info about the render thread tasks.")
+							.build();
+					
 					public static ConfigEntry<Boolean> showCombinedObjectPools = new ConfigEntry.Builder<Boolean>()
 							.set(false)
 							.comment("Shows the combined memory use and array counts for all DH pooled objects.")
