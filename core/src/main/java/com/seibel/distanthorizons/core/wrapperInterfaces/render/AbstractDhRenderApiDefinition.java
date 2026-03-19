@@ -36,6 +36,11 @@ public abstract class AbstractDhRenderApiDefinition implements IBindable
 	public abstract IDhVanillaFadeRenderer getVanillaFadeRenderer();
 	public abstract IDhTestTriangleRenderer getTestTriangleRenderer();
 	
+	/** 
+	 * this will NOT run on the render thread.
+	 * Render thread setup tasks should be handled
+	 * during the first rendered frame.
+	 */
 	public void bindRenderers()
 	{
 		SingletonInjector.INSTANCE.bind(AbstractDhRenderApiDefinition.class, this);

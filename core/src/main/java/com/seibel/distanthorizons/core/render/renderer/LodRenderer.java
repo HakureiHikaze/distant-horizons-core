@@ -101,7 +101,7 @@ public class LodRenderer
 	 * otherwise it will only render opaque LODs.
 	 */
 	public void render(RenderParams renderParams, IProfilerWrapper profiler)
-	{  this.renderLodPass(renderParams, profiler, false);  }
+	{  this.renderTerrain(renderParams, profiler, false);  }
 	
 	/**
 	 * This method is designed for Iris to be able 
@@ -110,9 +110,9 @@ public class LodRenderer
 	 * but shouldn't be activated as per deferWaterRendering.
 	 */
 	public void renderDeferred(RenderParams renderParams, IProfilerWrapper profiler)
-	{ this.renderLodPass(renderParams, profiler, true); }
+	{ this.renderTerrain(renderParams, profiler, true); }
 	
-	private void renderLodPass(RenderParams renderParams, IProfilerWrapper profiler, boolean runningDeferredPass)
+	private void renderTerrain(RenderParams renderParams, IProfilerWrapper profiler, boolean runningDeferredPass)
 	{
 		//====================//
 		// validate rendering //
@@ -201,7 +201,7 @@ public class LodRenderer
 			// opaque LODs
 			profiler.popPush("LOD Opaque");
 			
-			this.renderLodPass(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ true, profiler);
+			this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ true, profiler);
 			
 			// custom objects with SSAO
 			if (Config.Client.Advanced.Graphics.GenericRendering.enableGenericRendering.get())
@@ -229,7 +229,7 @@ public class LodRenderer
 				&& Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled)
 			{
 				profiler.popPush("LOD Transparent");
-				this.renderLodPass(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
+				this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
 			}
 			
 			// far plane clip fading
@@ -287,7 +287,7 @@ public class LodRenderer
 			if (Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled)
 			{
 				profiler.popPush("LOD Transparent");
-				this.renderLodPass(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
+				this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
 
 
 				if (Config.Client.Advanced.Graphics.Fog.enableDhFog.get()
@@ -327,7 +327,7 @@ public class LodRenderer
 	//===============//
 	//region
 	
-	private void renderLodPass(IDhTerrainRenderer lodRenderer, RenderBufferHandler lodBufferHandler, RenderParams renderEventParam, boolean opaquePass, IProfilerWrapper profilerWrapper)
+	private void renderTerrain(IDhTerrainRenderer terrainRenderer, RenderBufferHandler lodBufferHandler, RenderParams renderEventParam, boolean opaquePass, IProfilerWrapper profilerWrapper)
 	{
 		//===========//
 		// rendering //
@@ -338,7 +338,7 @@ public class LodRenderer
 		SortedArraySet<LodBufferContainer> lodBufferContainer = lodBufferHandler.getColumnRenderBuffers();
 		if (lodBufferContainer != null)
 		{
-			lodRenderer.render(renderEventParam, opaquePass, lodBufferContainer, profilerWrapper);
+			terrainRenderer.render(renderEventParam, opaquePass, lodBufferContainer, profilerWrapper);
 		}
 	}
 	
