@@ -500,8 +500,11 @@ public class LodQuadBuilder
 			return maxBufferByteSize;
 		}
 		
-		// how big a single VBO can be in bytes
-		int maxVboByteSize = 10 * 1024 * 1024; // 10 MB
+		// 2 MB
+		// note: this is relatively small (10 MB was the previous max) to reduce stuttering
+		// during the upload process by having smaller upload steps
+		int maxVboByteSize = 2 * 1024 * 1024; 
+		
 		int maxQuadsPerBuffer = maxVboByteSize / BYTES_PER_QUAD;
 		// integer truncation to remove decimal component
 		int fullSizedBuffer = maxQuadsPerBuffer * BYTES_PER_QUAD;

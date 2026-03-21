@@ -5,12 +5,11 @@ import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.enums.MinecraftTextFormat;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
-import com.seibel.distanthorizons.core.logging.f3.F3Screen;
+import com.seibel.distanthorizons.core.util.ExceptionUtil;
 import com.seibel.distanthorizons.core.util.TimerUtil;
 import com.seibel.distanthorizons.core.util.objects.RollingAverage;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftClientWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
-import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IProfilerWrapper;
 import com.seibel.distanthorizons.coreapi.ModInfo;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,27 +18,37 @@ import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 
 public class RenderThreadTaskHandler
 {
-	public static final DhLogger LOGGER = new DhLoggerBuilder()
+	private static final DhLogger LOGGER = new DhLoggerBuilder()
 		.fileLevelConfig(Config.Common.Logging.logRendererEventToFile)
 		.build();
 	
+	private static final DhLogger RATE_LIMITED_LOGGER = new DhLoggerBuilder()
+		.fileLevelConfig(Config.Common.Logging.logRendererEventToFile)
+		.maxCountPerSecond(4)
+		.build();
+	
 	private static final ConcurrentLinkedQueue<QueuedRunnable> RENDER_THREAD_RUNNABLE_QUEUE = new ConcurrentLinkedQueue<>();
-	private static final ConcurrentHashMap<String, RollingAverage> AVERAGE_MS_RUN_TIME_BY_TASK_NAME = new ConcurrentHashMap<>();
+	
+	private static final ConcurrentHashMap<String, RollingAverage> AVERAGE_NANO_RUN_TIME_BY_TASK_NAME = new ConcurrentHashMap<>();
 	private static final LongAdder COMPLETED_TASK_COUNTER = new LongAdder();
+	private static final NumberFormat DECIMAL_NUMBER_FORMAT = NumberFormat.getNumberInstance();
+	private static final NumberFormat INT_NUMBER_FORMAT = NumberFormat.getIntegerInstance();
+	private static final boolean LOG_SLOW_TASKS = false;
 	
 	private static final Timer TIMER = TimerUtil.CreateTimer("Cleanup timer");
 	private static final long MS_BETWEEN_CLEANUP_TICKS = 1_000L;
-	private static final long MS_BEFORE_RUN_CLEANUP_TIMER = 1_000L;
+	private static final long NANOS_BEFORE_RUN_CLEANUP_TIMER = TimeUnit.NANOSECONDS.convert(1_000L, TimeUnit.MILLISECONDS);
 	
 	
 	public static final RenderThreadTaskHandler INSTANCE = new RenderThreadTaskHandler();
 	
 	
-	private long msSinceTasksRun = System.currentTimeMillis();
+	private long nanoSinceTasksRun = System.nanoTime();
 	
 	
 	
@@ -89,45 +98,63 @@ public class RenderThreadTaskHandler
 	{
 		IMinecraftRenderWrapper MC_RENDER = SingletonInjector.INSTANCE.get(IMinecraftRenderWrapper.class);
 		
+		// https://fpstoms.com/
 		int frameLimit = MC_RENDER.getFrameLimit();
 		if (frameLimit <= 1)
 		{
-			frameLimit = 4; // 240 FPS
+			frameLimit = 240;
 		}
 		
-		// https://fpstoms.com/
+		
 		int msPerFrame = 1000 / frameLimit;
-		msPerFrame /= 2; // divide the time in half so we can only impact half of the framerate at worst
-		this.runRenderThreadTasks(msPerFrame);
+		long nanoPerFrame = msPerFrame * 1_000_000L;
+		nanoPerFrame /= 2; // divide the time in half so we can only impact half of the framerate at worst
+		this.runRenderThreadTasks(nanoPerFrame);
 	}
-	private void runRenderThreadTasks(long msMaxRunTime)
+	private void runRenderThreadTasks(long nanoMaxRunTime)
 	{
-		long startTimeMs = System.currentTimeMillis();
-		this.msSinceTasksRun = startTimeMs;
+		long loopStartTimeNano = System.nanoTime();
+		this.nanoSinceTasksRun = loopStartTimeNano;
 		
 		QueuedRunnable runnable = RENDER_THREAD_RUNNABLE_QUEUE.poll();
 		while(runnable != null)
 		{
+			long taskStartNano = System.nanoTime();
+			
 			runnable.run();
 			
 			// only try running for a limited amount of time to prevent lag spikes
-			long currentTimeMs = System.currentTimeMillis();
-			long runDuration = currentTimeMs - startTimeMs;
+			long taskNano = System.nanoTime() - taskStartNano;
+			long totalLoopNano = System.nanoTime() - loopStartTimeNano;
 			
 			// stat tracking
 			if (ModInfo.IS_DEV_BUILD)
 			{
-				if (!AVERAGE_MS_RUN_TIME_BY_TASK_NAME.containsKey(runnable.name))
+				if (!AVERAGE_NANO_RUN_TIME_BY_TASK_NAME.containsKey(runnable.name))
 				{
-					AVERAGE_MS_RUN_TIME_BY_TASK_NAME.put(runnable.name, new RollingAverage(1_000));
+					AVERAGE_NANO_RUN_TIME_BY_TASK_NAME.put(runnable.name, new RollingAverage(1_000));
 				}
-				AVERAGE_MS_RUN_TIME_BY_TASK_NAME.get(runnable.name).add(runDuration);
+				AVERAGE_NANO_RUN_TIME_BY_TASK_NAME.get(runnable.name).add(totalLoopNano);
 				
 				COMPLETED_TASK_COUNTER.increment();
 			}
 			
-			if (runDuration > msMaxRunTime)
+			
+			// estimate when our ending nano-time would be once the next task is run
+			long expectedNextTaskNano = totalLoopNano
+				// doubling this task's time gives a rough over-estimate of how long the next task should take	
+				+ (taskNano * 2);
+			// If the next task would push us over the max run time, stop now.
+			// This prevents stuttering at the cost of lower throughput. 
+			if (expectedNextTaskNano >= nanoMaxRunTime)
 			{
+				if (LOG_SLOW_TASKS 
+					&& totalLoopNano > nanoMaxRunTime)
+				{
+					// this task took longer than what we wanted
+					RATE_LIMITED_LOGGER.warn("["+runnable.name+"] slow, actual ["+totalLoopNano+"], allowed ["+nanoMaxRunTime+"].");
+				}
+				
 				break;
 			}
 			
@@ -141,9 +168,9 @@ public class RenderThreadTaskHandler
 	 */
 	private void manualCleanupTick()
 	{
-		long nowMs = System.currentTimeMillis();
-		long msSinceLast = nowMs - this.msSinceTasksRun;
-		if (msSinceLast < MS_BEFORE_RUN_CLEANUP_TIMER)
+		long nowNano = System.nanoTime();
+		long nanoSinceLast = nowNano - this.nanoSinceTasksRun;
+		if (nanoSinceLast < NANOS_BEFORE_RUN_CLEANUP_TIMER)
 		{
 			return;
 		}
@@ -153,7 +180,7 @@ public class RenderThreadTaskHandler
 		// Run the queued tasks on MC's executor (hopefully this should always run,
 		// even if DH's render code isn't being hit).
 		IMinecraftClientWrapper MC = SingletonInjector.INSTANCE.get(IMinecraftClientWrapper.class);
-		MC.executeOnRenderThread(() -> this.runRenderThreadTasks(250));
+		MC.executeOnRenderThread(() -> this.runRenderThreadTasks(500 * 1_000_000L));
 	}
 	
 	//endregion
@@ -164,6 +191,16 @@ public class RenderThreadTaskHandler
 	// debugging //
 	//===========//
 	///region
+	
+	/** 
+	 * if tasks are currently queued the debug
+	 * stats may not be zero after this method has been called.
+	 */
+	public void clearDebugStats()
+	{
+		AVERAGE_NANO_RUN_TIME_BY_TASK_NAME.clear();
+		COMPLETED_TASK_COUNTER.reset();
+	}
 	
 	public void addDebugMenuStringsToList(List<String> messageList)
 	{
@@ -181,29 +218,30 @@ public class RenderThreadTaskHandler
 		
 		
 		
-		NumberFormat numberFormat = F3Screen.NUMBER_FORMAT;
-		
-		String queueSize = numberFormat.format(RENDER_THREAD_RUNNABLE_QUEUE.size());
-		String completedCount = numberFormat.format(COMPLETED_TASK_COUNTER.sum());
+		String queueSize = DECIMAL_NUMBER_FORMAT.format(RENDER_THREAD_RUNNABLE_QUEUE.size());
+		String completedCount = DECIMAL_NUMBER_FORMAT.format(COMPLETED_TASK_COUNTER.sum());
 		
 		String messageHeader = "Render Tasks, Queue: "+o+queueSize+cf+", Done: "+g+completedCount+cf;
 		messageList.add(messageHeader);
 		
-		AVERAGE_MS_RUN_TIME_BY_TASK_NAME.forEach((name, rollingAverage) -> 
+		AVERAGE_NANO_RUN_TIME_BY_TASK_NAME.forEach((name, rollingAverage) -> 
 		{
 			// thread runtime
 			String runTimeAvgStr;
-			double runTimeAvgInMs = rollingAverage.getAverage();
-			if (!Double.isNaN(runTimeAvgInMs))
+			double runTimeAvgInNano = rollingAverage.getAverage();
+			if (!Double.isNaN(runTimeAvgInNano))
 			{
-				runTimeAvgStr = numberFormat.format(runTimeAvgInMs);
+				double runTimeAvgInMs = runTimeAvgInNano / 1_000_000.0;
+				runTimeAvgStr = DECIMAL_NUMBER_FORMAT.format(runTimeAvgInMs);
 			}
 			else
 			{
 				runTimeAvgStr = "<0";
 			}
 			
-			String message = name+" Avg: "+b+runTimeAvgStr+"ms"+cf+" #: "+y+rollingAverage.getLifetimeCount()+cf;
+			String lifetimeCount = INT_NUMBER_FORMAT.format(rollingAverage.getLifetimeCount());
+			
+			String message = name+" Avg: "+b+runTimeAvgStr+"ms"+cf+" #: "+y+lifetimeCount+cf;
 			messageList.add(message);
 		});
 	}
@@ -258,6 +296,11 @@ public class RenderThreadTaskHandler
 			}
 			catch (Exception e)
 			{
+				if (ExceptionUtil.isShutdownException(e))
+				{
+					return;
+				}
+				
 				RuntimeException error = new RuntimeException("Uncaught Exception during GL call execution. StackTrace: ["+(this.stackTrace != null ? "Present" : "Missing")+"] Error: ["+e.getMessage()+"]", e);
 				if (this.stackTrace != null)
 				{

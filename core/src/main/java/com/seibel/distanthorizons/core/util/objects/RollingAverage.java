@@ -113,6 +113,7 @@ public class RollingAverage
 	/** rounded to two decimals*/
 	public String getAverageRoundedString() { return String.format("%.2f", this.getAverage()); }
 	
+	/** how many items have been added to the rolling average since it's last {@link RollingAverage#clear()} */
 	public long getLifetimeCount() { return this.lifetimeCount; }
 	
 	//endregion

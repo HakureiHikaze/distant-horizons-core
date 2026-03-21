@@ -319,7 +319,7 @@ public class PhantomArrayListPool
 							pool.returnCheckout(checkout);
 							
 							if (pool.logGarbageCollectedStacks
-									&& checkout.allocationStackTrace != null) // stack trace shouldn't be null, but just in case
+								&& checkout.allocationStackTrace != null) // stack trace shouldn't be null, but just in case
 							{
 								putAndIncrementTrackingString(checkout.allocationStackTrace, allocationStackTraceCountPairList);
 							}
