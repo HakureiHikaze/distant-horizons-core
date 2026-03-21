@@ -96,9 +96,6 @@ public class CloudRenderHandler
 		};
 	
 	
-	private boolean disabledWarningLogged = false;
-	
-	
 	
 	//=============//
 	// constructor //
@@ -287,7 +284,7 @@ public class CloudRenderHandler
 				CloudParams cloudParams = new CloudParams(textureWidth, x, z);
 				boxGroup.setPreRenderFunc((renderParam) -> this.preRender(renderParam, cloudParams));
 				
-				renderer.add(boxGroup);
+				this.renderer.add(boxGroup);
 				this.boxGroupByOffset[x+CLOUD_INSTANCE_RADIUS_COUNT][z+CLOUD_INSTANCE_RADIUS_COUNT] = boxGroup;
 			}
 		}
@@ -318,17 +315,6 @@ public class CloudRenderHandler
 		{
 			return;
 		}
-		
-		//if (!this.renderer.getInstancedRenderingAvailable())
-		//{
-		//	if (!this.disabledWarningLogged)
-		//	{
-		//		this.disabledWarningLogged = true;
-		//		LOGGER.warn("Instanced rendering unavailable, cloud rendering disabled.");
-		//	}
-		//	boxGroup.setActive(false);
-		//	return;
-		//}
 		
 		IClientLevelWrapper clientLevelWrapper = this.level.getClientLevelWrapper();
 		if (clientLevelWrapper == null)

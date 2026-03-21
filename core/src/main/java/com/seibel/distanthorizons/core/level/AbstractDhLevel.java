@@ -80,6 +80,7 @@ public abstract class AbstractDhLevel implements IDhLevel
 	//=============//
 	// constructor //
 	//=============//
+	//region
 	
 	protected AbstractDhLevel() { }
 	
@@ -135,11 +136,14 @@ public abstract class AbstractDhLevel implements IDhLevel
 		}
 	}
 	
+	//endregion
+	
 	
 	
 	//=================//
 	// default methods //
 	//=================//
+	//region
 	
 	@Override
 	public void updateChunkAsync(IChunkWrapper chunkWrapper, int chunkHash)
@@ -208,11 +212,14 @@ public abstract class AbstractDhLevel implements IDhLevel
 			});
 	}
 	
+	//endregion
+	
 	
 	
 	//=======//
 	// repos //
 	//=======//
+	//region
 	
 	@Override
 	public int getChunkHash(DhChunkPos pos)
@@ -226,11 +233,14 @@ public abstract class AbstractDhLevel implements IDhLevel
 		return (dto != null) ? dto.chunkHash : 0;
 	}
 	
+	//endregion
+	
 	
 	
 	//=================//
 	// beacon handling //
 	//=================//
+	//region
 	
 	@Override
 	public void updateBeaconBeamsForSectionPos(long sectionPos, List<BeaconBeamDTO> activeBeamList)
@@ -361,6 +371,8 @@ public abstract class AbstractDhLevel implements IDhLevel
 	@Override
 	@Nullable
 	public BeaconBeamRepo getBeaconBeamRepo() { return this.beaconBeamRepo; }
+	
+	//endregion
 	
 	
 	
