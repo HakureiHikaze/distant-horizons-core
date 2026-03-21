@@ -1,6 +1,7 @@
 package com.seibel.distanthorizons.core.wrapperInterfaces.render;
 
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
+import com.seibel.distanthorizons.core.jar.EPlatform;
 import com.seibel.distanthorizons.core.render.renderer.AbstractDebugWireframeRenderer;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.objects.IDhGenericObjectVertexBufferContainer;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.objects.ILodContainerUniformBufferWrapper;
@@ -17,6 +18,16 @@ public abstract class AbstractDhRenderApiDefinition implements IBindable
 	
 	/** Used for debugging */
 	public abstract String getApiName();
+	
+	private final boolean useSingleIbo = (EPlatform.get() != EPlatform.MACOS);
+	/**
+	 * Mac has a problem where binding an IBO that's longer than the VBO
+	 * can cause OpenGL to render past the end of the VBO, throwing random junk
+	 * on the screen. <br>
+	 * To fix this we have to use individual IBOs for each VBO, which
+	 * is slower due to having to construct new IBOs.
+	 */
+	public boolean useSingleIbo() { return this.useSingleIbo; }
 	
 	//endregion
 	

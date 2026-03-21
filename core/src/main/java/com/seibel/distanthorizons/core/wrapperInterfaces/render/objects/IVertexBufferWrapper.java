@@ -19,13 +19,16 @@
 
 package com.seibel.distanthorizons.core.wrapperInterfaces.render.objects;
 
+import com.seibel.distanthorizons.core.wrapperInterfaces.render.AbstractDhRenderApiDefinition;
 import com.seibel.distanthorizons.coreapi.interfaces.dependencyInjection.IBindable;
 
 import java.nio.ByteBuffer;
 
 public interface IVertexBufferWrapper extends IBindable, AutoCloseable
 {
-	void upload(ByteBuffer buffer, int vertexCount);
+	void uploadVertexBuffer(ByteBuffer buffer, int vertexCount);
+	/** Does nothing if {@link AbstractDhRenderApiDefinition#useSingleIbo()} returns true */
+	void uploadIndexBuffer(ByteBuffer buffer, int vertexCount);
 	
 	@Override
 	void close();
