@@ -185,24 +185,34 @@ public class PhantomArrayListPool
 				else
 				{
 					// this reference is pointing to null,
-					// the checkout must have been garbage collected,
-					// that means we don't have enough memory
+					// the checkout was garbage collected
 					if (!lowMemoryWarningLogged)
 					{
-						lowMemoryWarningLogged = true;
+						// Complain if there isn't much free ram.
+						// Some garbage collectors may remove our soft references unnecessarily
+						// even when there is free space, and this should prevent the warning from
+						// popping up unnecessarily.
 						
-						String message = MinecraftTextFormat.ORANGE + "Distant Horizons: Insufficient memory detected." + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
+						long freeMemoryBytes = Runtime.getRuntime().freeMemory();
+						
+						long expectedFreeMemoryBytes = 1_073_741_824 /* 1 Gibibyte */ / 8; // 128 MibiBytes
+						if (freeMemoryBytes < expectedFreeMemoryBytes)
+						{
+							lowMemoryWarningLogged = true;
+							
+							String message = MinecraftTextFormat.ORANGE + "Distant Horizons: Insufficient memory detected." + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
 								"This may cause stuttering or crashing. \n" +
 								"Potential causes: \n" +
 								"1. your allocated memory isn't high enough \n" +
 								"2. your DH CPU preset is too high \n" +
 								"3. your DH quality preset is too high \n" +
 								"4. you have other memory hungry mod(s)";
-						
-						LOGGER.warn(message);
-						if (Config.Common.Logging.Warning.showPoolInsufficientMemoryWarning.get())
-						{
-							ClientApi.INSTANCE.showChatMessageNextFrame(message);
+							
+							LOGGER.warn(message);
+							if (Config.Common.Logging.Warning.showPoolInsufficientMemoryWarning.get())
+							{
+								ClientApi.INSTANCE.showChatMessageNextFrame(message);
+							}
 						}
 					}
 					
