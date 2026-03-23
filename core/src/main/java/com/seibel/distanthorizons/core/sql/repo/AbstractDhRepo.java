@@ -25,9 +25,11 @@ import com.seibel.distanthorizons.core.sql.DatabaseUpdater;
 import com.seibel.distanthorizons.core.sql.DbConnectionClosedException;
 import com.seibel.distanthorizons.core.sql.dto.IBaseDTO;
 import com.seibel.distanthorizons.core.sql.repo.phantoms.AutoClosableTrackingWrapper;
+import com.seibel.distanthorizons.core.util.ExceptionUtil;
 import com.seibel.distanthorizons.core.util.KeyedLockContainer;
 import com.seibel.distanthorizons.coreapi.ModInfo;
 import com.seibel.distanthorizons.core.logging.DhLogger;
+import com.seibel.distanthorizons.coreapi.util.StringUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -496,19 +498,11 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 				Connection connection = CONNECTIONS_BY_CONNECTION_STRING.remove(connectionString);
 				if (connection != null)
 				{
+					// don't try closing an already closed connection
 					if (!connection.isClosed())
 					{
 						LOGGER.info("Closing database connection: [" + connectionString + "]");
 						connection.close();
-					}
-					else
-					{
-						// these warnings can be ignored in release builds, as long as the connection is closed it doesn't really matter
-						// TODO fix duplicate closes
-						if (ModInfo.IS_DEV_BUILD)
-						{
-							LOGGER.warn("Attempting to close already closed database connection: [" + connectionString + "]");
-						}
 					}
 				}
 			}
@@ -560,21 +554,12 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 						LOGGER.warn(stringBuilder.toString());
 					}
 					
-					
+					// don't try closing an already closed connection
 					if (!this.connection.isClosed())
 					{
 						LOGGER.info("Closing database connection: [" + this.connectionString + "]...");
 						this.connection.close();
 						LOGGER.info("Finished closing database connection: [" + this.connectionString + "]");
-					}
-					else
-					{
-						// these warnings can be ignored in release builds, as long as the connection is closed it doesn't really matter
-						// TODO fix duplicate closes
-						if (ModInfo.IS_DEV_BUILD)
-						{
-							LOGGER.warn("Attempting to close already closed database connection: [" + this.connectionString + "]");
-						}
 					}
 				}
 				ACTIVE_CONNECTION_STRINGS_BY_REPO.remove(this);
