@@ -168,7 +168,8 @@ public class LodRequestModule implements Closeable
 			}
 		}
 		dataFileHandler.clearRetrievalQueue();
-		worldGenState.closeAsync(true).join(); //TODO: Make it async.
+		// synchronized shutdown necessary to make sure the tasks are all handled correctly
+		worldGenState.closeAsync(true).join();
 		dataFileHandler.removeWorldGenCompleteListener(this.onWorldGenCompleteListener);
 	}
 	
@@ -198,7 +199,8 @@ public class LodRequestModule implements Closeable
 			
 			if (worldGenState != null)
 			{
-				worldGenState.closeAsync(true).join(); //TODO: Make it async.
+				// synchronized shutdown necessary to make sure the tasks are all handled correctly
+				worldGenState.closeAsync(true).join();
 			}
 		}
 	}
@@ -388,17 +390,17 @@ public class LodRequestModule implements Closeable
 			this.progressUpdateThreadRunning = false;
 			
 			return this.retrievalQueue.startClosingAsync(true, doInterrupt)
-					.exceptionally(e ->
-							{
-								LOGGER.error("Error during first stage of generation queue shutdown, Error: ["+e.getMessage()+"].", e);
-								return null;
-							}
-					).thenRun(this.retrievalQueue::close)
-					.exceptionally(e ->
-					{
-						LOGGER.error("Error during second stage of generation queue shutdown, Error: ["+e.getMessage()+"].", e);
-						return null;
-					});
+				.exceptionally(e ->
+				{
+					LOGGER.error("Error during first stage of generation queue shutdown, Error: ["+e.getMessage()+"].", e);
+					return null;
+				}
+				).thenRun(this.retrievalQueue::close)
+				.exceptionally(e ->
+				{
+					LOGGER.error("Error during second stage of generation queue shutdown, Error: ["+e.getMessage()+"].", e);
+					return null;
+				});
 		}
 		
 		
