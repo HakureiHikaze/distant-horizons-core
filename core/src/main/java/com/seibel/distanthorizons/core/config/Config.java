@@ -19,7 +19,6 @@
 
 package com.seibel.distanthorizons.core.config;
 
-import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.enums.config.*;
 import com.seibel.distanthorizons.api.enums.config.quickOptions.*;
 import com.seibel.distanthorizons.api.enums.rendering.*;
@@ -27,14 +26,12 @@ import com.seibel.distanthorizons.api.enums.worldGeneration.EDhApiDistantGenerat
 import com.seibel.distanthorizons.api.enums.worldGeneration.EDhApiDistantGeneratorProgressDisplayLocation;
 import com.seibel.distanthorizons.core.config.eventHandlers.*;
 import com.seibel.distanthorizons.core.config.eventHandlers.presets.*;
-import com.seibel.distanthorizons.core.config.listeners.ConfigChangeListener;
 import com.seibel.distanthorizons.core.config.types.*;
 import com.seibel.distanthorizons.core.config.types.enums.*;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.util.NativeDialogUtil;
-import com.seibel.distanthorizons.core.wrapperInterfaces.IWrapperFactory;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftSharedWrapper;
 import com.seibel.distanthorizons.coreapi.ModInfo;
 import com.seibel.distanthorizons.core.logging.DhLogger;
@@ -146,8 +143,11 @@ public class Config
 				public static ConfigCategory quality = new ConfigCategory.Builder().set(Quality.class).build();
 				public static ConfigUISpacer qualitySpacer = new ConfigUISpacer.Builder().build();
 				
-				public static ConfigUiLinkedEntry quickEnableSsao = new ConfigUiLinkedEntry(Ssao.enableSsao);
-				public static ConfigCategory ssao = new ConfigCategory.Builder().set(Ssao.class).build();
+				
+				public static ConfigEntry<Boolean> enableSsao = new ConfigEntry.Builder<Boolean>()
+					.set(true)
+					.comment("Enable Screen Space Ambient Occlusion")
+					.build();
 				public static ConfigUISpacer ssaoSpacer = new ConfigUISpacer.Builder().build();
 				
 				
@@ -358,17 +358,6 @@ public class Config
 							.build();	
 				}
 				
-				public static class Ssao
-				{
-					public static ConfigUIComment ssaoHeader = new ConfigUIComment.Builder().setParentConfigClass(Ssao.class).build();
-					
-					public static ConfigEntry<Boolean> enableSsao = new ConfigEntry.Builder<Boolean>()
-							.set(true)
-							.comment("Enable Screen Space Ambient Occlusion")
-							.build();
-					
-				}
-				
 				public static class GenericRendering
 				{
 					public static ConfigUIComment genericRendererHeader = new ConfigUIComment.Builder().setParentConfigClass(GenericRendering.class).build();
@@ -424,14 +413,6 @@ public class Config
 							+ "Changes will only be seen when the world is re-loaded.\n"
 							+ "")
 						.build();
-					
-					public static ConfigEntry<Boolean> enableInstancedRendering = new ConfigEntry.Builder<Boolean>()
-							.set(true)
-							.comment(""
-									+ "Can be disabled to use much slower but more compatible direct rendering. \n"
-									+ "Disabling this can be used to fix some crashes on Mac. \n"
-									+ "")
-							.build();
 				}
 				
 				public static class Fog
@@ -565,7 +546,7 @@ public class Config
 								.build();
 						
 						public static ConfigEntry<Float> heightFogBaseHeight = new ConfigEntry.Builder<Float>()
-								.setMinDefaultMax(-4096.0f, 80.0f, 4096.0f)
+								.setMinDefaultMax(-3_000_000.0f, 80.0f, 3_000_000.0f)
 								.comment("If the height fog is calculated around a set height, what is that height position?")
 								.build();
 						
@@ -910,7 +891,7 @@ public class Config
 								+ EDhApiRendererMode.DISABLED + ": Disable rendering")
 						.build();
 				
-				public static ConfigEntry<EDhApiDebugRendering> debugRendering = new ConfigEntry.Builder<EDhApiDebugRendering>()
+				public static ConfigEntry<EDhApiDebugRendering> debugRenderingColors = new ConfigEntry.Builder<EDhApiDebugRendering>()
 						.set(EDhApiDebugRendering.OFF)
 						.comment(""
 								+ "Should specialized colors/rendering modes be used? \n"
@@ -922,6 +903,13 @@ public class Config
 								+ "")
 						.addListener(ReloadLodsConfigEventHandler.DELAYED_INSTANCE)
 						.build();
+				
+				public static ConfigEntry<Boolean> enableWhiteWorld = new ConfigEntry.Builder<Boolean>()
+					.set(false)
+					.comment(""
+						+ "Stops vertex colors from being passed. \n"
+						+ "Useful for debugging shaders")
+					.build();
 				
 				public static ConfigEntry<Boolean> lodOnlyMode = new ConfigEntry.Builder<Boolean>()
 						.set(false)
@@ -949,13 +937,6 @@ public class Config
 						+ "F8 - cycle through the different debug rendering modes \n"
 						+ "")
 					.build();
-				
-				public static ConfigEntry<Boolean> enableWhiteWorld = new ConfigEntry.Builder<Boolean>()
-						.set(false)
-						.comment(""
-								+ "Stops vertex colors from being passed. \n"
-								+ "Useful for debugging shaders")
-						.build();
 				
 				public static ConfigEntry<Boolean> showOverlappingQuadErrors = new ConfigEntry.Builder<Boolean>()
 						.set(false)
@@ -1017,15 +998,6 @@ public class Config
 							.set(false)
 							.comment("Render LOD section status?")
 							.build();
-					public static ConfigEntry<Boolean> showRenderSectionToggling = new ConfigEntry.Builder<Boolean>()
-							.set(false)
-							.comment("" +
-									"A white box will be drawn when an LOD starts rendering \n" +
-									"and a purple box when an LOD stops rendering. \n" +
-									"\n" +
-									"This can be used to debug Quad Tree holes.\n" +
-									"")
-							.build();
 					
 					public static ConfigEntry<Boolean> showQuadTreeRenderStatus = new ConfigEntry.Builder<Boolean>()
 							.set(false)
@@ -1075,13 +1047,6 @@ public class Config
 									+ EDhApiGLErrorHandlingMode.LOG_THROW + ": write to the log and throw an exception. \n"
 									+ "           Warning: this should only be enabled when debugging the LOD renderer \n"
 									+ "           as it may break Minecraft's renderer when an exception is thrown. \n"
-									+ "")
-							.build();
-					
-					public static ConfigEntry<EDhApiGpuUploadMethod> glUploadMode = new ConfigEntry.Builder<EDhApiGpuUploadMethod>()
-							.set(EDhApiGpuUploadMethod.AUTO)
-							.comment(""
-									+ "\n"
 									+ "")
 							.build();
 					
@@ -1167,7 +1132,7 @@ public class Config
 					
 					public static ConfigEntry<Boolean> showQueuedChunkUpdateCount = new ConfigEntry.Builder<Boolean>()
 							.set(true)
-							.comment("Shows how many chunks are queud for processing and the max count that can be queued.")
+							.comment("Shows how many chunks are queued for processing and the max count that can be queued.")
 							.build();
 					
 					public static ConfigEntry<Boolean> showLevelStatus = new ConfigEntry.Builder<Boolean>()

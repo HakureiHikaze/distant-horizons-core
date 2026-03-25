@@ -328,7 +328,7 @@ public class ColumnRenderBufferBuilder
 		
 		int color;
 		boolean fullBright = false;
-		EDhApiDebugRendering debugging = Config.Client.Advanced.Debugging.debugRendering.get();
+		EDhApiDebugRendering debugging = Config.Client.Advanced.Debugging.debugRenderingColors.get();
 		switch (debugging)
 		{
 			case OFF:

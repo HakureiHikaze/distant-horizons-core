@@ -211,7 +211,7 @@ public class LodRenderer
 			}
 			
 			// SSAO
-			if (Config.Client.Advanced.Graphics.Ssao.enableSsao.get())
+			if (Config.Client.Advanced.Graphics.enableSsao.get())
 			{
 				profiler.popPush("LOD SSAO");
 				this.ssaoRenderer.render(renderParams);

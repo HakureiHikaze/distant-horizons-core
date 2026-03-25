@@ -172,49 +172,18 @@
     "This is the same as vanilla Biome Blending settings for LOD area. \n\nNote that anything other than '0' will greatly effect Lod building time\nand increase triangle count. The cost on chunk generation speed is also \nquite large if set to too high.\n\n'0' equals to Vanilla Biome Blending of '1x1', \n'1' equals to Vanilla Biome Blending of '3x3', \n'2' equals to Vanilla Biome Blending of '5x5'... \n",
 
 
-  
-  "distanthorizons.config.client.advanced.graphics.ssao":
-    "Ambient Occlusion",
 
-  "distanthorizons.config.client.advanced.graphics.ssao.enableSsao":
+  "distanthorizons.config.client.advanced.graphics.enableSsao":
     "Enable Ambient Occlusion",
-  "distanthorizons.config.client.advanced.graphics.ssao.enableSsao.@tooltip":
+  "distanthorizons.config.client.advanced.graphics.enableSsao.@tooltip":
     "Ambient Occlusion adds depth to the lighting of blocks.",
-  "distanthorizons.config.client.advanced.graphics.ssao.sampleCount":
-    "Sample Count",
-  "distanthorizons.config.client.advanced.graphics.ssao.sampleCount.@tooltip":
-    "Determines how many points in space are sampled for the occlusion test. \nHigher numbers will improve quality and reduce banding, but will increase GPU load.",
-  "distanthorizons.config.client.advanced.graphics.ssao.radius":
-    "Radius",
-  "distanthorizons.config.client.advanced.graphics.ssao.radius.@tooltip":
-    "Determines the radius Screen Space Ambient Occlusion is applied, measured in blocks.",
-  "distanthorizons.config.client.advanced.graphics.ssao.strength":
-    "Strength",
-  "distanthorizons.config.client.advanced.graphics.ssao.strength.@tooltip":
-    "Determines how dark the Screen Space Ambient Occlusion effect will be.",
-  "distanthorizons.config.client.advanced.graphics.ssao.bias":
-    "Bias",
-  "distanthorizons.config.client.advanced.graphics.ssao.bias.@tooltip":
-    "Increasing the value can reduce banding at the cost of reducing the strength of the effect.",
-  "distanthorizons.config.client.advanced.graphics.ssao.minLight":
-    "Min Light",
-  "distanthorizons.config.client.advanced.graphics.ssao.minLight.@tooltip":
-    "Determines how dark the occlusion shadows can be. \n0 = totally black at the corners \n1 = no shadow",
-  "distanthorizons.config.client.advanced.graphics.ssao.blurRadius":
-    "Blur Radius",
-  "distanthorizons.config.client.advanced.graphics.ssao.blurRadius.@tooltip":
-    "The radius, measured in pixels, that blurring is calculated for the SSAO. \nHigher numbers will reduce banding at the cost of GPU performance.",
-  "distanthorizons.config.client.advanced.graphics.ssao.fadeDistanceInBlocks":
-    "Fade Distance",
-  "distanthorizons.config.client.advanced.graphics.ssao.fadeDistanceInBlocks.@tooltip":
-    "The distance in blocks from the camera where the SSAO will fade out to. \nThis is done to prevent banding and noise at extreme distances.",
 
 
 
   "distanthorizons.config.client.advanced.graphics.genericRendering":
     "Generic Object Rendering",
   "distanthorizons.config.client.advanced.graphics.genericRendering.enableGenericRendering":
-    "Enable Rendering",
+    "Enable Generic Rendering",
   "distanthorizons.config.client.advanced.graphics.genericRendering.enableGenericRendering.@tooltip":
     "If true non terrain objects will be rendered in DH's terrain. \nThis includes beacon beams and clouds.",
   "distanthorizons.config.client.advanced.graphics.genericRendering.enableBeaconRendering":
@@ -369,7 +338,7 @@
   "distanthorizons.config.client.advanced.graphics.culling.reduceOverdrawWithFastMovement.@tooltip":
     "If set to true the overdraw prevention radius will get closer \nto the camera when flying/moving quickly. \n\nThis helps reduce issues where Minecraft can't load or \ngenerate chunks fast enough to keep up with DH.",
   "distanthorizons.config.client.advanced.graphics.culling.enableCaveCulling":
-    "Cave Culling",
+    "Enable Cave Culling",
   "distanthorizons.config.client.advanced.graphics.culling.enableCaveCulling.@tooltip":
     "If enabled caves will be culled \n\nAdditional Info: Currently this cull all faces \n with skylight value of 0 under the cave culling height in dimensions that \n do not have a ceiling. \n",
   "distanthorizons.config.client.advanced.graphics.culling.caveCullingHeight":
@@ -462,8 +431,8 @@
 
   "distanthorizons.config.client.advanced.debugging.rendererMode":
     "Renderer Mode",
-  "distanthorizons.config.client.advanced.debugging.debugRendering":
-    "Debug Rendering",
+  "distanthorizons.config.client.advanced.debugging.debugRenderingColors":
+    "Debug Rendering Colors",
   "distanthorizons.config.client.advanced.debugging.lodOnlyMode":
   "Only Render LODs",
   "distanthorizons.config.client.advanced.debugging.lodOnlyMode.@tooltip":

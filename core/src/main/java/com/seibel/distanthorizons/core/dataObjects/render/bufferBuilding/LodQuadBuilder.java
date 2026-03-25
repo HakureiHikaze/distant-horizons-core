@@ -32,7 +32,6 @@ import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.util.ColorUtil;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
-import com.seibel.distanthorizons.core.wrapperInterfaces.render.renderPass.IDhTerrainRenderer;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
 import org.lwjgl.system.MemoryUtil;
 
@@ -132,7 +131,7 @@ public class LodQuadBuilder
 		
 		this.clientLevelWrapper = clientLevelWrapper;
 		
-		this.debugRenderingMode = Config.Client.Advanced.Debugging.debugRendering.get();
+		this.debugRenderingMode = Config.Client.Advanced.Debugging.debugRenderingColors.get();
 		this.grassSideRenderingMode = Config.Client.Advanced.Graphics.Quality.grassSideRendering.get();
 		
 	}

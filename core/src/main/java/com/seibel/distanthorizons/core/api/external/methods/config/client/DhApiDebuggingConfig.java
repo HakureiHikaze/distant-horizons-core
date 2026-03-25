@@ -34,7 +34,7 @@ public class DhApiDebuggingConfig implements IDhApiDebuggingConfig
 	
 	
 	public IDhApiConfigValue<EDhApiDebugRendering> debugRendering()
-	{ return new DhApiConfigValue<EDhApiDebugRendering, EDhApiDebugRendering>(Config.Client.Advanced.Debugging.debugRendering); }
+	{ return new DhApiConfigValue<EDhApiDebugRendering, EDhApiDebugRendering>(Config.Client.Advanced.Debugging.debugRenderingColors); }
 	
 	public IDhApiConfigValue<Boolean> debugKeybindings()
 	{ return new DhApiConfigValue<Boolean, Boolean>(Config.Client.Advanced.Debugging.enableDebugKeybindings); }
