@@ -1053,7 +1053,7 @@
     
   "distanthorizons.config.enum.EDhApiRendererMode.DEFAULT":
     "Default",
-  "distanthorizons.config.enum.EDhApiRendererMode.DEBUG":
+  "distanthorizons.config.enum.EDhApiRendererMode.DEBUG_TRIANGLE":
     "Debug Triangle",
   "distanthorizons.config.enum.EDhApiRendererMode.DISABLED":
     "Disabled",

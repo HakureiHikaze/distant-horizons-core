@@ -906,7 +906,7 @@ public class Config
 								+ "What renderer is active? \n"
 								+ "\n"
 								+ EDhApiRendererMode.DEFAULT + ": Default lod renderer \n"
-								+ EDhApiRendererMode.DEBUG + ": Debug testing renderer \n"
+								+ EDhApiRendererMode.DEBUG_TRIANGLE + ": Debug testing renderer \n"
 								+ EDhApiRendererMode.DISABLED + ": Disable rendering")
 						.build();
 				

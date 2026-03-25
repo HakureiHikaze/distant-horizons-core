@@ -39,14 +39,14 @@ public class DhApiConfigTest
 	public void ConfigTest()
 	{
 		ConfigEntry<EDhApiRendererMode> coreConfig = new ConfigEntry.Builder<EDhApiRendererMode>()
-			.set(EDhApiRendererMode.DEBUG)
+			.set(EDhApiRendererMode.DEBUG_TRIANGLE)
 			.build();
 		
 		DhApiConfigValue<EDhApiRendererMode, Boolean> apiConfig = new DhApiConfigValue<>(coreConfig, new RenderModeEnabledConverter());
 		
 		// start with no API value
 		Assert.assertNull("API Value shouldn't be set yet", apiConfig.getApiValue());
-		Assert.assertEquals("underlying config should be 'DEBUG'", EDhApiRendererMode.DEBUG, coreConfig.get());
+		Assert.assertEquals("underlying config should be 'DEBUG'", EDhApiRendererMode.DEBUG_TRIANGLE, coreConfig.get());
 		
 		
 		// set API value
@@ -62,7 +62,7 @@ public class DhApiConfigTest
 		// clear API value
 		apiConfig.clearValue();
 		Assert.assertNull("API Value should be null", apiConfig.getApiValue());
-		Assert.assertEquals("underlying config should be 'DEBUG'", EDhApiRendererMode.DEBUG, coreConfig.get());
+		Assert.assertEquals("underlying config should be 'DEBUG'", EDhApiRendererMode.DEBUG_TRIANGLE, coreConfig.get());
 		
 		
 	}
