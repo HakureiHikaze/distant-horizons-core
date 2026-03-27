@@ -179,13 +179,13 @@ public class ThreadPoolUtil
 			return false;
 		}
 		
-		PriorityTaskPicker.Executor executor = getRenderLoadingExecutor();
-		if (executor != null
-			&& executor.getQueueSize() > 0)
-		{
-			// pause if LODs are being loaded for rendering
-			return false;
-		}
+		//PriorityTaskPicker.Executor executor = getRenderLoadingExecutor();
+		//if (executor != null
+		//	&& executor.getQueueSize() > 0)
+		//{
+		//	// pause if LODs are being loaded for rendering
+		//	return false;
+		//}
 		
 		return true;
 	}
