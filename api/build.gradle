@@ -2,10 +2,22 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     id "java"
-
-    id "com.github.johnrengelman.shadow" version '8.1.1' apply false
+    id "com.gradleup.shadow"
 }
 
+repositories {
+    mavenCentral()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 8
+    options.encoding = "UTF-8"
+}
+
+dependencies {
+    implementation "org.apache.logging.log4j:log4j-api:${rootProject.log4j_version}"
+    testImplementation "junit:junit:4.13"
+}
 
 shadowJar {
     // required for basic shadowJar setup
@@ -21,7 +33,7 @@ task addSourcesToCompiledJar(type: ShadowJar) {
     doFirst {
         System.out.println("Adding source files from: \n" +
                 "[" + sourceJarPath + "] to compiled API jar: \n" +
-                "[" + shadowJar.archivePath + "]")
+                "[" + shadowJar.archiveFile.get().asFile + "]")
         
         // Validate the input JAR file
         if (!secondJarFile.exists()) {
@@ -42,7 +54,7 @@ task addSourcesToCompiledJar(type: ShadowJar) {
     }
     
     // set the jars to merge
-    from shadowJar.archivePath
+    from shadowJar.archiveFile.get().asFile
     from secondJarFile
     
     // alternative method to Include the source files in the combined JAR

@@ -1,18 +1,23 @@
 plugins {
     id "java"
-    id "com.github.johnrengelman.shadow" version '8.1.1' apply false // Set this to true if you're using the standalone Core project
+    id "com.gradleup.shadow"
 }
 
-apply plugin: "application"
+repositories {
+    mavenCentral()
+    maven { url "https://repo.enonic.com/public/" }
+}
 
-application {
-    mainClass.set("com.seibel.distanthorizons.core.jar.JarMain")
+tasks.withType(JavaCompile).configureEach {
+    options.release = 8
+    options.encoding = "UTF-8"
 }
 
 configurations {
     shadowedArtifact // Used by DH to specify that we want to implement the shadowed core JAR file instead of the regular JAR file
     shade
     implementation.extendsFrom shade
+    testImplementation.extendsFrom compileOnly
 }
 
 OperatingSystem os = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.currentOperatingSystem;
@@ -20,38 +25,46 @@ OperatingSystem os = org.gradle.nativeplatform.platform.internal.DefaultNativePl
 // Set the OS lwjgl is using to the current os
 project.ext.lwjglNatives = "natives-" + os.toFamilyName()
 
-dependencies { // All of these dependencies are in Vanilla Minecraft, but we need to depend on it as we arent importing Minecraft in the core
-    // Imports most of lwjgl's libraries (well, only the ones that we need)
-    implementation platform("org.lwjgl:lwjgl-bom:${rootProject.lwjgl_version}")
+dependencies {
+    // API project dependency
+    implementation project(":api")
 
-    // REMEMBER: Dont shadow stuff here, these are just the libs that are included in Minecraft so that the core can use
-    implementation "org.lwjgl:lwjgl"
-    implementation "org.lwjgl:lwjgl-assimp"
-    implementation "org.lwjgl:lwjgl-glfw"
-    // OpenGL is removed since DH now handles rendering in the "Common" project
-    // so we can use OpenGL for old MC versions and Blaze3D (IE Vulkan) for newer ones
-//    implementation "org.lwjgl:lwjgl-openal"
-//    implementation "org.lwjgl:lwjgl-opengl"
-    implementation "org.lwjgl:lwjgl-stb"
-    implementation "org.lwjgl:lwjgl-tinyfd"
-    runtimeOnly "org.lwjgl:lwjgl::$lwjglNatives"
-    runtimeOnly "org.lwjgl:lwjgl-assimp::$lwjglNatives"
-    runtimeOnly "org.lwjgl:lwjgl-glfw::$lwjglNatives"
-//    runtimeOnly "org.lwjgl:lwjgl-openal::$lwjglNatives"
-//    runtimeOnly "org.lwjgl:lwjgl-opengl::$lwjglNatives"
-    runtimeOnly "org.lwjgl:lwjgl-stb::$lwjglNatives"
-    runtimeOnly "org.lwjgl:lwjgl-tinyfd::$lwjglNatives"
+    // MC-provided libraries (available at runtime via Minecraft)
+    compileOnly platform("org.lwjgl:lwjgl-bom:${rootProject.lwjgl_version}")
+    compileOnly "org.lwjgl:lwjgl"
+    compileOnly "org.lwjgl:lwjgl-assimp"
+    compileOnly "org.lwjgl:lwjgl-glfw"
+    compileOnly "org.lwjgl:lwjgl-stb"
+    compileOnly "org.lwjgl:lwjgl-tinyfd"
+    testRuntimeOnly platform("org.lwjgl:lwjgl-bom:${rootProject.lwjgl_version}")
+    testRuntimeOnly "org.lwjgl:lwjgl::$lwjglNatives"
+    testRuntimeOnly "org.lwjgl:lwjgl-assimp::$lwjglNatives"
+    testRuntimeOnly "org.lwjgl:lwjgl-glfw::$lwjglNatives"
+    testRuntimeOnly "org.lwjgl:lwjgl-stb::$lwjglNatives"
+    testRuntimeOnly "org.lwjgl:lwjgl-tinyfd::$lwjglNatives"
 
-    // FIXME for some reason this line doesn't actually shade in the library
-//    shade "it.unimi.dsi:fastutil:${rootProject.fastutil_version}" // Add our own fastutil version
+    compileOnly("org.apache.logging.log4j:log4j-api:${rootProject.log4j_version}")
+    compileOnly("org.apache.logging.log4j:log4j-core:${rootProject.log4j_version}")
+    compileOnly("it.unimi.dsi:fastutil:${rootProject.fastutil_version}")
+    compileOnly("org.joml:joml:${rootProject.joml_version}")
+    compileOnly("io.netty:netty-buffer:${rootProject.netty_version}")
+    compileOnly("org.jetbrains:annotations:16.0.2")
+    compileOnly("com.google.code.findbugs:jsr305:3.0.2")
+    compileOnly("com.google.common:google-collect:0.5")
+    compileOnly("com.google.guava:guava:31.1-jre")
 
+    // DH's bundled libraries (shadowed + relocated in loader jars)
+    implementation("com.github.luben:zstd-jni:${rootProject.zstd_version}")
+    implementation("org.lz4:lz4-java:${rootProject.lz4_version}")
+    implementation("org.tukaani:xz:${rootProject.xz_version}")
+    implementation("org.xerial:sqlite-jdbc:${rootProject.sqlite_jdbc_version}")
+    implementation("com.electronwill.night-config:toml:${rootProject.nightconfig_version}")
+    implementation("com.electronwill.night-config:json:${rootProject.nightconfig_version}")
 
-    // Some other dependencies
-    implementation("org.jetbrains:annotations:16.0.2")
-    implementation("com.google.code.findbugs:jsr305:3.0.2")
-    implementation("com.google.common:google-collect:0.5")
-    implementation("com.google.guava:guava:31.1-jre")
-    
+    // JUnit (core tests only)
+    compileOnly("junit:junit:4.13")
+    compileOnly("org.junit.jupiter:junit-jupiter:5.8.2")
+    compileOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
 }
 
 artifacts {
