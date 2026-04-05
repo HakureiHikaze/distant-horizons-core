@@ -68,8 +68,6 @@ public interface IMinecraftRenderWrapper extends IBindable
 	
 	Color getSkyColor();
 	
-	double getFov(float partialTicks);
-	
 	/** Measured in chunks */
 	int getRenderDistance();
 	
