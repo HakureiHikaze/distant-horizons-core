@@ -143,179 +143,176 @@ public class LodRenderer
 		//region
 		
 		ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderSetupEvent.class, renderParams);
-		profiler.push("LOD GL setup");
-		
-		if (!this.renderersBound)
+		try (IProfilerWrapper.IProfileBlock terrainRender_profile = profiler.push("LOD GL setup")) // starts the new profile block for most DH rendering
 		{
-			this.bindRenderers();
-			this.renderersBound = true;
-		}
-		
-		RenderBufferHandler renderBufferHandler = renderParams.renderBufferHandler;
-		IDhGenericRenderer genericRenderer = renderParams.genericRenderer;
-		
-		
-		this.metaRenderer.runRenderPassSetup(renderParams);
-		
-		if (!this.vanillaSettingsOverridden)
-		{
-			// only do this once, that way they can still be reverted if desired
-			if (Config.Client.Advanced.Graphics.overrideVanillaGraphicsSettings.get())
+			
+			if (!this.renderersBound)
 			{
-				LOGGER.info("Overriding vanilla MC settings to better fit Distant Horizons... This behavior can be disabled in the Distant Horizons config.");
+				this.bindRenderers();
+				this.renderersBound = true;
+			}
+			
+			RenderBufferHandler renderBufferHandler = renderParams.renderBufferHandler;
+			IDhGenericRenderer genericRenderer = renderParams.genericRenderer;
+			
+			
+			this.metaRenderer.runRenderPassSetup(renderParams);
+			
+			if (!this.vanillaSettingsOverridden)
+			{
+				// only do this once, that way they can still be reverted if desired
+				if (Config.Client.Advanced.Graphics.overrideVanillaGraphicsSettings.get())
+				{
+					LOGGER.info("Overriding vanilla MC settings to better fit Distant Horizons... This behavior can be disabled in the Distant Horizons config.");
+					
+					MC.disableVanillaClouds();
+					MC.disableVanillaChunkFadeIn();
+					MC.disableFabulousTransparency();
+				}
 				
-				MC.disableVanillaClouds();
-				MC.disableVanillaChunkFadeIn();
-				MC.disableFabulousTransparency();
+				this.vanillaSettingsOverridden = true;
 			}
 			
-			this.vanillaSettingsOverridden = true;
-		}
-		
-		if (firstPass)
-		{
-			// we only need to sort/cull the LODs at the start of the frame
-			profiler.popPush("LOD build render list");
-			renderBufferHandler.buildRenderList(renderParams);
-		}
-		
-		//endregion
-		
-		
-		
-		//===========//
-		// rendering //
-		//===========//
-		
-		if (!runningDeferredPass)
-		{
-			this.metaRenderer.clearDhDepthAndColorTextures(renderParams);
-			
-			
-			
-			//=========================//
-			// opaque and non-deferred //
-			// transparent rendering   //
-			//=========================//
-			
-			// opaque LODs
-			profiler.popPush("LOD Opaque");
-			
-			this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ true, profiler);
-			
-			// custom objects with SSAO
-			if (Config.Client.Advanced.Graphics.GenericRendering.enableGenericRendering.get())
+			if (firstPass)
 			{
-				profiler.popPush("Custom Objects");
-				genericRenderer.render(renderParams, profiler, true);
+				// we only need to sort/cull the LODs at the start of the frame
+				profiler.popPush("LOD build render list");
+				renderBufferHandler.buildRenderList(renderParams);
 			}
 			
-			// SSAO
-			if (Config.Client.Advanced.Graphics.enableSsao.get())
+			//endregion
+			
+			
+			
+			//===========//
+			// rendering //
+			//===========//
+			
+			if (!runningDeferredPass)
 			{
-				profiler.popPush("LOD SSAO");
-				this.ssaoRenderer.render(renderParams);
-			}
-			
-			// custom objects without SSAO
-			if (Config.Client.Advanced.Graphics.GenericRendering.enableGenericRendering.get())
-			{
-				profiler.popPush("Custom Objects");
-				genericRenderer.render(renderParams, profiler, false);
-			}
-			
-			// combined pass transparent rendering
-			if (!deferTransparentRendering 
-				&& Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled)
-			{
-				profiler.popPush("LOD Transparent");
-				this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
-			}
-			
-			// far plane clip fading
-			if (Config.Client.Advanced.Graphics.Quality.dhFadeFarClipPlane.get()
-				&& IRIS_ACCESSOR == null)
-			{
-				profiler.popPush("Fade Far Clip Fade");
-				this.farFadeRenderer.render(renderParams);
-			}
-			
-			// fog
-			if (Config.Client.Advanced.Graphics.Fog.enableDhFog.get() 
-				// this is done to fix issues with: underwater fog, blindness effect, etc.
-				|| renderParams.vanillaFogEnabled)
-			{
-				profiler.popPush("LOD Fog");
-
-				this.fogRenderer.render(renderParams);
-			}
-			
-			
-			
-			//=================//
-			// debug rendering //
-			//=================//
-			
-			if (Config.Client.Advanced.Debugging.DebugWireframe.enableRendering.get())
-			{
-				profiler.popPush("Debug wireframes");
-
-				// Note: this can be very slow if a lot of boxes are being rendered
-				this.debugWireframeRenderer.render(renderParams);
-			}
-			
-			
-			
-			//=============================//
-			// Apply to the MC Framebuffer //
-			//=============================//
-			
-			boolean cancelApplyShader = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeApplyShaderRenderEvent.class, renderParams);
-			if (!cancelApplyShader)
-			{
-				profiler.popPush("Apply to MC");
-				this.metaRenderer.applyToMcTexture(renderParams);
-			}
-			
-		}
-		else
-		{
-			//====================//
-			// deferred rendering //
-			//====================//
-
-			if (Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled)
-			{
-				profiler.popPush("LOD Transparent");
-				this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
-
-
+				this.metaRenderer.clearDhDepthAndColorTextures(renderParams);
+				
+				
+				
+				//=========================//
+				// opaque and non-deferred //
+				// transparent rendering   //
+				//=========================//
+				
+				// opaque LODs
+				profiler.popPush("LOD Opaque");
+				
+				this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ true, profiler);
+				
+				// custom objects with SSAO
+				if (Config.Client.Advanced.Graphics.GenericRendering.enableGenericRendering.get())
+				{
+					profiler.popPush("Custom Objects");
+					genericRenderer.render(renderParams, profiler, true);
+				}
+				
+				// SSAO
+				if (Config.Client.Advanced.Graphics.enableSsao.get())
+				{
+					profiler.popPush("LOD SSAO");
+					this.ssaoRenderer.render(renderParams);
+				}
+				
+				// custom objects without SSAO
+				if (Config.Client.Advanced.Graphics.GenericRendering.enableGenericRendering.get())
+				{
+					profiler.popPush("Custom Objects");
+					genericRenderer.render(renderParams, profiler, false);
+				}
+				
+				// combined pass transparent rendering
+				if (!deferTransparentRendering
+					&& Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled)
+				{
+					profiler.popPush("LOD Transparent");
+					this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
+				}
+				
+				// far plane clip fading
+				if (Config.Client.Advanced.Graphics.Quality.dhFadeFarClipPlane.get()
+					&& IRIS_ACCESSOR == null)
+				{
+					profiler.popPush("Fade Far Clip Fade");
+					this.farFadeRenderer.render(renderParams);
+				}
+				
+				// fog
 				if (Config.Client.Advanced.Graphics.Fog.enableDhFog.get()
 					// this is done to fix issues with: underwater fog, blindness effect, etc.
 					|| renderParams.vanillaFogEnabled)
 				{
 					profiler.popPush("LOD Fog");
-
+					
 					this.fogRenderer.render(renderParams);
 				}
+				
+				
+				
+				//=================//
+				// debug rendering //
+				//=================//
+				
+				if (Config.Client.Advanced.Debugging.DebugWireframe.enableRendering.get())
+				{
+					profiler.popPush("Debug wireframes");
+					
+					// Note: this can be very slow if a lot of boxes are being rendered
+					this.debugWireframeRenderer.render(renderParams);
+				}
+				
+				
+				
+				//=============================//
+				// Apply to the MC Framebuffer //
+				//=============================//
+				
+				boolean cancelApplyShader = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeApplyShaderRenderEvent.class, renderParams);
+				if (!cancelApplyShader)
+				{
+					profiler.popPush("Apply to MC");
+					this.metaRenderer.applyToMcTexture(renderParams);
+				}
+				
 			}
+			else
+			{
+				//====================//
+				// deferred rendering //
+				//====================//
+				
+				if (Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled)
+				{
+					profiler.popPush("LOD Transparent");
+					this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
+					
+					
+					if (Config.Client.Advanced.Graphics.Fog.enableDhFog.get()
+						// this is done to fix issues with: underwater fog, blindness effect, etc.
+						|| renderParams.vanillaFogEnabled)
+					{
+						profiler.popPush("LOD Fog");
+						
+						this.fogRenderer.render(renderParams);
+					}
+				}
+			}
+			
+			
+			
+			//================//
+			// render cleanup //
+			//================//
+			
+			profiler.popPush("LOD cleanup");
+			ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderCleanupEvent.class, renderParams);
+			
+			this.metaRenderer.runRenderPassCleanup(renderParams);
 		}
-		
-		
-		
-		//================//
-		// render cleanup //
-		//================//
-		
-		profiler.popPush("LOD cleanup");
-		ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderCleanupEvent.class, renderParams);
-		
-		this.metaRenderer.runRenderPassCleanup(renderParams);
-		
-		
-		
-		// end of internal LOD profiling
-		profiler.pop();
 	}
 	
 	//endregion

@@ -145,6 +145,7 @@ public class ClientApi
 	private Vec3d lastCameraPosForSpeedCheck = new Vec3d();
 	private long msSinceLastSpeedCheck = 0L;
 	
+	public static long firstRenderTimeMs = 0;
 	
 	
 	
@@ -159,7 +160,7 @@ public class ClientApi
 	//==============//
 	// world events //
 	//==============//
-	///region
+	//region
 	
 	/**
 	 * May be fired slightly before or after the associated
@@ -237,14 +238,14 @@ public class ClientApi
 		this.waitingClientLevels.clear();
 	}
 	
-	///endregion
+	//endregion
 	
 	
 	
 	//==============//
 	// level events //
 	//==============//
-	///region
+	//region
 	
 	public void clientLevelUnloadEvent(IClientLevelWrapper level)
 	{
@@ -356,14 +357,14 @@ public class ClientApi
 		}
 	}
 	
-	///endregion
+	//endregion
 	
 	
 	
 	//============//
 	// networking //
 	//============//
-	///region
+	//region
 	
 	/**
 	 * Forwards a decoded message into the registered handlers.
@@ -396,14 +397,14 @@ public class ClientApi
 		}
 	}
 	
-	///endregion
+	//endregion
 	
 	
 	
 	//===============//
 	// LOD rendering //
 	//===============//
-	///region
+	//region
 	
 	/** Should be called before {@link ClientApi#renderDeferredLodsForShaders} */
 	public void renderLods() { this.renderLodLayer(false); }
@@ -414,261 +415,259 @@ public class ClientApi
 	 */
 	public void renderDeferredLodsForShaders() { this.renderLodLayer(true); }
 	
-	public static long firstRenderTimeMs = 0;
-	
 	private void renderLodLayer(boolean renderingDeferredLayer)
 	{
 		IProfilerWrapper profiler = MC_CLIENT.getProfiler();
-		profiler.push("DH-RenderLevel");
-		
-		
-		
-		//===========//
-		// debugging //
-		//===========//
-		//region
-		
-		//DhApiTerrainDataRepo.asyncDebugMethod(
-		//	RENDER_STATE.clientLevelWrapper,
-		//	MC_CLIENT.getPlayerBlockPos().getX(),
-		//	MC_CLIENT.getPlayerBlockPos().getY(),
-		//	MC_CLIENT.getPlayerBlockPos().getZ()
-		//);
-		
-		//endregion
-		
-		
-		
-		//=====================//
-		// render thread tasks //
-		//=====================//
-		///region
-		
-		// only run these tasks once per frame
-		if (!renderingDeferredLayer)
+		try (IProfilerWrapper.IProfileBlock dhRender_profile = profiler.push("DH-RenderLevel"))
 		{
-			profiler.push("DH render thread tasks");
 			
 			
 			
-			//===============//
-			// chat messages //
-			//===============//
+			//===========//
+			// debugging //
+			//===========//
+			//region
 			
-			this.sendQueuedChatMessages();
+			//DhApiTerrainDataRepo.asyncDebugMethod(
+			//	RENDER_STATE.clientLevelWrapper,
+			//	MC_CLIENT.getPlayerBlockPos().getX(),
+			//	MC_CLIENT.getPlayerBlockPos().getY(),
+			//	MC_CLIENT.getPlayerBlockPos().getZ()
+			//);
+			
+			//endregion
 			
 			
 			
-			//======================//
-			// GL Proxy queued jobs //
-			//======================//
+			//=====================//
+			// render thread tasks //
+			//=====================//
+			//region
 			
-			try
+			// only run these tasks once per frame
+			if (!renderingDeferredLayer)
 			{
-				// these tasks always need to be called, regardless of whether the renderer is enabled or not to prevent memory leaks
-				RenderThreadTaskHandler.INSTANCE.runRenderThreadTasks();
+				try (IProfilerWrapper.IProfileBlock renderTask_profile = profiler.push("DH render thread tasks"))
+				{
+					//===============//
+					// chat messages //
+					//===============//
+					
+					this.sendQueuedChatMessages();
+					
+					
+					
+					//======================//
+					// GL Proxy queued jobs //
+					//======================//
+					//region
+					
+					try
+					{
+						// these tasks always need to be called, regardless of whether the renderer is enabled or not to prevent memory leaks
+						RenderThreadTaskHandler.INSTANCE.runRenderThreadTasks();
+					}
+					catch (Exception e)
+					{
+						LOGGER.error("Unexpected issue running render thread tasks, error: [" + e.getMessage() + "].", e);
+					}
+					
+					//endregion
+					
+					
+					
+					//==============//
+					// camera speed //
+					//==============//
+					//region
+					
+					long nowMs = System.currentTimeMillis();
+					if (this.msSinceLastSpeedCheck + MIN_MS_BETWEEN_SPEED_CHECKS < nowMs)
+					{
+						// calc time since last check
+						double secSinceLastCheck = (nowMs - this.msSinceLastSpeedCheck) / 1_000.0;
+						this.msSinceLastSpeedCheck = nowMs;
+						
+						// get the distance traveled since last frame
+						Vec3d camPos = MC_RENDER.getCameraExactPosition();
+						double distanceInBlocks = camPos.getDistance(this.lastCameraPosForSpeedCheck);
+						double speed = distanceInBlocks / secSinceLastCheck;
+						
+						// record new values for next check
+						this.cameraSpeedRollingAverage.add(speed);
+						this.lastCameraPosForSpeedCheck = camPos;
+					}
+					
+					//endregion
+				}
 			}
-			catch (Exception e)
+			
+			//endregion
+			
+			
+			
+			
+			//=================//
+			// parameter setup //
+			//=================//
+			//region
+			
+			EDhApiRenderPass renderPass;
+			if (DhApiRenderProxy.INSTANCE.getDeferTransparentRendering())
 			{
-				LOGGER.error("Unexpected issue running render thread tasks, error: [" + e.getMessage() + "].", e);
-			}
-			
-			
-			
-			//==============//
-			// camera speed //
-			//==============//
-			
-			long nowMs = System.currentTimeMillis();
-			if (this.msSinceLastSpeedCheck + MIN_MS_BETWEEN_SPEED_CHECKS < nowMs)
-			{
-				// calc time since last check
-				double secSinceLastCheck = (nowMs - this.msSinceLastSpeedCheck) / 1_000.0;
-				this.msSinceLastSpeedCheck = nowMs;
-				
-				// get the distance traveled since last frame
-				Vec3d camPos = MC_RENDER.getCameraExactPosition();
-				double distanceInBlocks = camPos.getDistance(this.lastCameraPosForSpeedCheck);
-				double speed = distanceInBlocks / secSinceLastCheck;
-				
-				// record new values for next check
-				this.cameraSpeedRollingAverage.add(speed);
-				this.lastCameraPosForSpeedCheck = camPos;
-			}
-			
-			
-			profiler.pop();
-		}
-		
-		///endregion
-		
-		
-		
-		
-		//=================//
-		// parameter setup //
-		//=================//
-		///region
-		
-		EDhApiRenderPass renderPass;
-		if (DhApiRenderProxy.INSTANCE.getDeferTransparentRendering())
-		{
-			if (renderingDeferredLayer)
-			{
-				renderPass = EDhApiRenderPass.TRANSPARENT;
+				if (renderingDeferredLayer)
+				{
+					renderPass = EDhApiRenderPass.TRANSPARENT;
+				}
+				else
+				{
+					renderPass = EDhApiRenderPass.OPAQUE;
+				}
 			}
 			else
 			{
-				renderPass = EDhApiRenderPass.OPAQUE;
-			}
-		}
-		else
-		{
-			renderPass = EDhApiRenderPass.OPAQUE_AND_TRANSPARENT;
-		}
-		
-		// A global render state variable is used since MC has split up their
-		// render prep and actual rendering into different threads/methods
-		// this is annoying since it's possible to start a render with only
-		// partially complete info, but there isn't a better option at the moment
-		RenderParams renderParams = new RenderParams(renderPass, RENDER_STATE);
-		
-		///endregion
-		
-		
-		
-		//============//
-		// validation //
-		//============//
-		///region
-		
-		if (firstRenderTimeMs == 0)
-		{
-			firstRenderTimeMs = System.currentTimeMillis();
-		}
-		
-		String validationMessage = renderParams.getValidationErrorMessage(firstRenderTimeMs);
-		if (validationMessage != null)
-		{
-			// store the error message so it can be seen on the F3 screen
-			this.lastRenderParamValidationMessage = validationMessage;
-			return;
-		}
-		else
-		{
-			this.lastRenderParamValidationMessage = null;
-		}
-		
-		if (this.rendererDisabledBecauseOfExceptions)
-		{
-			// re-enable rendering if the user toggles DH rendering
-			if (!Config.Client.quickEnableRendering.get())
-			{
-				LOGGER.info("DH Renderer re-enabled after exception. Some rendering issues may occur. Please reboot Minecraft if you see any rendering issues.");
-				this.rendererDisabledBecauseOfExceptions = false;
-				Config.Client.quickEnableRendering.set(true);
+				renderPass = EDhApiRenderPass.OPAQUE_AND_TRANSPARENT;
 			}
 			
-			return;
-		}
-		
-		if (Config.Client.Advanced.Debugging.rendererMode.get() == EDhApiRendererMode.DISABLED)
-		{
-			return;
-		}
-		
-		///endregion
-		
-		
-		
-		//===========//
-		// rendering //
-		//===========//
-		///region
-		
-		try
-		{
-			// render pass //
-			if (Config.Client.Advanced.Debugging.rendererMode.get() == EDhApiRendererMode.DEFAULT)
+			// A global render state variable is used since MC has split up their
+			// render prep and actual rendering into different threads/methods
+			// this is annoying since it's possible to start a render with only
+			// partially complete info, but there isn't a better option at the moment
+			RenderParams renderParams = new RenderParams(renderPass, RENDER_STATE);
+			
+			//endregion
+			
+			
+			
+			//============//
+			// validation //
+			//============//
+			//region
+			
+			if (firstRenderTimeMs == 0)
 			{
-				if (!renderingDeferredLayer)
+				firstRenderTimeMs = System.currentTimeMillis();
+			}
+			
+			String validationMessage = renderParams.getValidationErrorMessage(firstRenderTimeMs);
+			if (validationMessage != null)
+			{
+				// store the error message so it can be seen on the F3 screen
+				this.lastRenderParamValidationMessage = validationMessage;
+				return;
+			}
+			else
+			{
+				this.lastRenderParamValidationMessage = null;
+			}
+			
+			if (this.rendererDisabledBecauseOfExceptions)
+			{
+				// re-enable rendering if the user toggles DH rendering
+				if (!Config.Client.quickEnableRendering.get())
 				{
-					boolean renderingCancelled = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderEvent.class, renderParams);
-					if (!renderingCancelled)
+					LOGGER.info("DH Renderer re-enabled after exception. Some rendering issues may occur. Please reboot Minecraft if you see any rendering issues.");
+					this.rendererDisabledBecauseOfExceptions = false;
+					Config.Client.quickEnableRendering.set(true);
+				}
+				
+				return;
+			}
+			
+			if (Config.Client.Advanced.Debugging.rendererMode.get() == EDhApiRendererMode.DISABLED)
+			{
+				return;
+			}
+			
+			//endregion
+			
+			
+			
+			//===========//
+			// rendering //
+			//===========//
+			//region
+			
+			try
+			{
+				// render pass //
+				if (Config.Client.Advanced.Debugging.rendererMode.get() == EDhApiRendererMode.DEFAULT)
+				{
+					if (!renderingDeferredLayer)
 					{
-						LodRenderer.INSTANCE.render(renderParams, profiler);
+						boolean renderingCancelled = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderEvent.class, renderParams);
+						if (!renderingCancelled)
+						{
+							LodRenderer.INSTANCE.render(renderParams, profiler);
+						}
+						
+						if (!DhApi.Delayed.renderProxy.getDeferTransparentRendering())
+						{
+							ApiEventInjector.INSTANCE.fireAllEvents(DhApiAfterRenderEvent.class, null);
+						}
 					}
-					
-					if (!DhApi.Delayed.renderProxy.getDeferTransparentRendering())
+					else
 					{
-						ApiEventInjector.INSTANCE.fireAllEvents(DhApiAfterRenderEvent.class, null);
+						boolean renderingCancelled = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeDeferredRenderEvent.class, renderParams);
+						if (!renderingCancelled)
+						{
+							LodRenderer.INSTANCE.renderDeferred(renderParams, profiler);
+						}
+						
+						
+						if (DhApi.Delayed.renderProxy.getDeferTransparentRendering())
+						{
+							ApiEventInjector.INSTANCE.fireAllEvents(DhApiAfterRenderEvent.class, null);
+						}
 					}
 				}
 				else
 				{
-					boolean renderingCancelled = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeDeferredRenderEvent.class, renderParams);
-					if (!renderingCancelled)
+					if (!renderingDeferredLayer)
 					{
-						LodRenderer.INSTANCE.renderDeferred(renderParams, profiler);
-					}
-					
-					
-					if (DhApi.Delayed.renderProxy.getDeferTransparentRendering())
-					{
-						ApiEventInjector.INSTANCE.fireAllEvents(DhApiAfterRenderEvent.class, null);
+						IDhMetaRenderer metaRenderer = SingletonInjector.INSTANCE.get(IDhMetaRenderer.class);
+						IDhTestTriangleRenderer testRenderer = SingletonInjector.INSTANCE.get(IDhTestTriangleRenderer.class);
+						if (testRenderer != null
+							&& metaRenderer != null)
+						{
+							// meta renderer needed for render state/texture
+							// for setup on some APIs (IE openGL)
+							metaRenderer.runRenderPassSetup(renderParams);
+							
+							testRenderer.render(renderParams);
+							
+							metaRenderer.runRenderPassCleanup(renderParams);
+						}
+						else
+						{
+							RATE_LIMITED_LOGGER.warn("Unable to find singleton [" + IDhTestTriangleRenderer.class.getSimpleName() + "]");
+						}
 					}
 				}
 			}
-			else
+			catch (Exception e)
 			{
-				if (!renderingDeferredLayer)
-				{
-					IDhMetaRenderer metaRenderer = SingletonInjector.INSTANCE.get(IDhMetaRenderer.class);
-					IDhTestTriangleRenderer testRenderer = SingletonInjector.INSTANCE.get(IDhTestTriangleRenderer.class);
-					if (testRenderer != null
-						&& metaRenderer != null)
-					{
-						// meta renderer needed for render state/texture
-						// for setup on some APIs (IE openGL)
-						metaRenderer.runRenderPassSetup(renderParams);
-						
-						testRenderer.render(renderParams);
-						
-						metaRenderer.runRenderPassCleanup(renderParams);
-					}
-					else
-					{
-						RATE_LIMITED_LOGGER.warn("Unable to find singleton [" + IDhTestTriangleRenderer.class.getSimpleName() + "]");
-					}
-				}
+				this.rendererDisabledBecauseOfExceptions = true;
+				LOGGER.error("Unexpected Renderer error in render pass [" + renderPass + "]. Error: " + e.getMessage(), e);
+				
+				MC_CLIENT.sendChatMessage(MinecraftTextFormat.DARK_RED + "" + MinecraftTextFormat.BOLD + "ERROR: Distant Horizons renderer has encountered an exception!" + MinecraftTextFormat.CLEAR_FORMATTING);
+				MC_CLIENT.sendChatMessage(MinecraftTextFormat.DARK_RED + "Renderer disabled to try preventing GL state corruption." + MinecraftTextFormat.CLEAR_FORMATTING);
+				MC_CLIENT.sendChatMessage(MinecraftTextFormat.DARK_RED + "Toggle DH rendering via the config UI to re-activate DH rendering." + MinecraftTextFormat.CLEAR_FORMATTING);
+				MC_CLIENT.sendChatMessage(MinecraftTextFormat.DARK_RED + "Error: " + MinecraftTextFormat.CLEAR_FORMATTING + e);
 			}
-		}
-		catch (Exception e)
-		{
-			this.rendererDisabledBecauseOfExceptions = true;
-			LOGGER.error("Unexpected Renderer error in render pass [" + renderPass + "]. Error: " + e.getMessage(), e);
 			
-			MC_CLIENT.sendChatMessage(MinecraftTextFormat.DARK_RED + "" + MinecraftTextFormat.BOLD + "ERROR: Distant Horizons renderer has encountered an exception!" + MinecraftTextFormat.CLEAR_FORMATTING);
-			MC_CLIENT.sendChatMessage(MinecraftTextFormat.DARK_RED + "Renderer disabled to try preventing GL state corruption." + MinecraftTextFormat.CLEAR_FORMATTING);
-			MC_CLIENT.sendChatMessage(MinecraftTextFormat.DARK_RED + "Toggle DH rendering via the config UI to re-activate DH rendering." + MinecraftTextFormat.CLEAR_FORMATTING);
-			MC_CLIENT.sendChatMessage(MinecraftTextFormat.DARK_RED + "Error: " + MinecraftTextFormat.CLEAR_FORMATTING + e);
+			//endregion
 		}
-		
-		///endregion
-		
-		
-		
-		profiler.pop(); // end LOD
 	}
 	
-	///endregion
+	//endregion
 	
 	
 	
 	//================//
 	// fade rendering //
 	//================//
-	///region
+	//region
 	
 	/** 
 	 * The first fade pass.
@@ -731,14 +730,14 @@ public class ClientApi
 		}
 	}
 	
-	///endregion
+	//endregion
 	
 	
 	
 	//==========//
 	// keyboard //
 	//==========//
-	///region
+	//region
 	
 	/** Trigger once on key press, with CLIENT PLAYER. */
 	public void keyPressedEvent(int glfwKey)
@@ -767,14 +766,14 @@ public class ClientApi
 		}
 	}
 	
-	///endregion
+	//endregion
 	
 	
 	
 	//======//
 	// chat //
 	//======//
-	///region
+	//region
 	
 	private void sendQueuedChatMessages()
 	{
@@ -908,7 +907,7 @@ public class ClientApi
 	 */
 	public void showOverlayMessageNextFrame(String message) { this.overlayMessageQueueForNextFrame.add(message); }
 	
-	///endregion
+	//endregion
 	
 	
 	
