@@ -23,7 +23,10 @@ import com.seibel.distanthorizons.api.enums.rendering.EDhApiBlockMaterial;
 import com.seibel.distanthorizons.api.interfaces.IDhApiUnsafeWrapper;
 
 /**
- * A Minecraft version independent way of handling Blocks.
+ * A Minecraft version independent way of handling Blocks. <br><br>
+ * 
+ * Note: the wrapped object (IE the object returned by {@link IDhApiUnsafeWrapper#getWrappedMcObject}) 
+ * will be null if this object is wrapping air.
  *
  * @author James Seibel
  * @version 2023-6-11
