@@ -70,8 +70,6 @@ public abstract class AbstractOptifineAccessor implements IOptifineAccessor
 		return null;
 	}
 	
-	public static boolean optifinePresent() { return getOptifineFogField() != null; }
-	
 	
 	
 	//===================//
