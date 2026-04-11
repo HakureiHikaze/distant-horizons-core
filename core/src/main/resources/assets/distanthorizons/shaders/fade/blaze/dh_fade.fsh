@@ -41,8 +41,8 @@ void main()
     
     
     
-    // the DH texture will have white if nothing was written to that pixel.
-    if (dhColor == vec4(1))
+    // ignore anything that DH hasn't drawn to
+    if (dhColor.a == 0.0f)
     {
         // if not done vanilla clouds will render incorrectly at night
         dhColor = combinedMcDhColor;

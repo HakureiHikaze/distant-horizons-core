@@ -52,8 +52,7 @@ void main()
     
     
     // ignore anything that DH hasn't drawn to
-    // We don't use DH's depth here because it would prevent the fade from running before DH has loaded
-    if (dhColor == vec4(1))
+    if (dhColor.a == 0.0f)
     {
         // if not done vanilla clouds will render incorrectly at night
         dhColor = combinedMcDhColor;
