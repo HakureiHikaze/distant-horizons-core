@@ -94,7 +94,10 @@ public class GitlabGetter
 		{
 			try
 			{
-				pipelineInfo.put(pipeline, WebDownloader.parseWebJsonList(this.GitProjID + "pipelines/" + pipeline + "/jobs"));
+				pipelineInfo.put(pipeline, WebDownloader.parseWebJsonList(this.GitProjID + "pipelines/" + pipeline + "/jobs?per_page=100")); 
+				// max page size is 100, 
+				// if we ever support more than 100 MC versions this logic will need to handle pagination
+				// https://docs.gitlab.com/api/rest/#pagination
 			}
 			catch (Exception e)
 			{
