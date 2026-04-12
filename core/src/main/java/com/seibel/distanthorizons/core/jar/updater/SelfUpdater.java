@@ -28,16 +28,13 @@ import com.seibel.distanthorizons.core.jar.installer.GitlabGetter;
 import com.seibel.distanthorizons.core.jar.installer.ModrinthGetter;
 import com.seibel.distanthorizons.core.jar.installer.WebDownloader;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
-import com.seibel.distanthorizons.core.logging.f3.F3Screen;
-import com.seibel.distanthorizons.core.util.NativeDialogUtil;
 import com.seibel.distanthorizons.core.wrapperInterfaces.IVersionConstants;
+import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftClientWrapper;
 import com.seibel.distanthorizons.coreapi.ModInfo;
 import com.seibel.distanthorizons.coreapi.util.StringUtil;
 import com.seibel.distanthorizons.coreapi.util.jar.DeleteOnUnlock;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 
-import javax.swing.*;
-import java.awt.*;
 import java.io.*;
 import java.net.URLEncoder;
 import java.nio.file.Files;
@@ -58,6 +55,8 @@ import java.util.zip.ZipFile;
 public class SelfUpdater
 {
 	private static final DhLogger LOGGER = new DhLoggerBuilder().build();
+	
+	private static final IMinecraftClientWrapper MC_CLIENT = SingletonInjector.INSTANCE.get(IMinecraftClientWrapper.class);
 	
 	/** As we cannot delete(or replace) the jar while the mod is running, we just have this to delete it once the game closes */
 	public static boolean deleteOldJarOnJvmShutdown = false;
@@ -264,7 +263,7 @@ public class SelfUpdater
 			{
 				try
 				{
-					NativeDialogUtil.showDialog(ModInfo.READABLE_NAME, successMessage, "ok", "info");
+					MC_CLIENT.showDialog(ModInfo.READABLE_NAME, successMessage, "ok", "info");
 				}
 				catch (Exception ignore) { }
 			}).start();
@@ -287,7 +286,7 @@ public class SelfUpdater
 			LOGGER.error(failMessage, e);
 			try
 			{
-				NativeDialogUtil.showDialog(ModInfo.READABLE_NAME, failMessage, "ok", "error");
+				MC_CLIENT.showDialog(ModInfo.READABLE_NAME, failMessage, "ok", "error");
 			}
 			catch (Exception ignore) { }
 			
@@ -386,7 +385,7 @@ public class SelfUpdater
 			{
 				try
 				{
-					NativeDialogUtil.showDialog(ModInfo.READABLE_NAME, successMessage, "ok", "info");
+					MC_CLIENT.showDialog(ModInfo.READABLE_NAME, successMessage, "ok", "info");
 				}
 				catch (Exception ignore) { }
 			}).start();
@@ -424,7 +423,7 @@ public class SelfUpdater
 			LOGGER.error(failMessage, e);
 			try
 			{
-				NativeDialogUtil.showDialog(ModInfo.READABLE_NAME, failMessage, "ok", "error");
+				MC_CLIENT.showDialog(ModInfo.READABLE_NAME, failMessage, "ok", "error");
 			}
 			catch (Exception ignore) { }
 			

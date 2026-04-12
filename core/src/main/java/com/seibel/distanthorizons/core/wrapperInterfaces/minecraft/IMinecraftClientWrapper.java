@@ -21,6 +21,7 @@ package com.seibel.distanthorizons.core.wrapperInterfaces.minecraft;
 
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos;
 import com.seibel.distanthorizons.core.pos.DhChunkPos;
+import com.seibel.distanthorizons.core.render.RenderThreadTaskHandler;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
 import com.seibel.distanthorizons.coreapi.interfaces.dependencyInjection.IBindable;
 
@@ -113,16 +114,18 @@ public interface IMinecraftClientWrapper extends IBindable
 	void crashMinecraft(String errorMessage, Throwable exception);
 	
 	/** 
-	 * This is only designed to be used internally by {@link GLProxy}
+	 * This is only designed to be used internally by {@link RenderThreadTaskHandler}
 	 * since it handles task frame limiting (reducing/preventing stuttering)
 	 * whereas this method causes the task to be run whenever MC decides to 
 	 * (likely all at once the next frame). <br><br>
 	 * 
 	 * Any tasks submitted here will be run on the render thread. 
 	 * 
-	 * @see GLProxy#queueRunningOnRenderThread(Runnable) 
+	 * @see RenderThreadTaskHandler 
 	 */
 	void executeOnRenderThread(Runnable runnable);
+	
+	void showDialog(String title, String message, String dialogType, String iconType);
 	
 	
 	

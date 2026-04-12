@@ -31,7 +31,7 @@ import com.seibel.distanthorizons.core.config.types.enums.*;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
-import com.seibel.distanthorizons.core.util.NativeDialogUtil;
+import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftClientWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftSharedWrapper;
 import com.seibel.distanthorizons.coreapi.ModInfo;
 import com.seibel.distanthorizons.core.logging.DhLogger;
@@ -1210,9 +1210,11 @@ public class Config
 					});
 					public static void onButtonPressed()
 					{
+						IMinecraftClientWrapper mcClient = SingletonInjector.INSTANCE.get(IMinecraftClientWrapper.class);
+						
 						LOGGER.info("Attempting to show tinyfd message box...");
-						boolean buttonPress = NativeDialogUtil.showDialog("Button pressed!", "UITester dialog", "ok", "info");
-						LOGGER.info("dialog returned with ["+(buttonPress ? "TRUE" : "FALSE")+"]");
+						mcClient.showDialog("Button pressed!", "UITester dialog", "ok", "info");
+						LOGGER.info("dialog closed");
 					}
 					
 					public static ConfigCategory categoryTest = new ConfigCategory.Builder().set(CategoryTest.class).build();
