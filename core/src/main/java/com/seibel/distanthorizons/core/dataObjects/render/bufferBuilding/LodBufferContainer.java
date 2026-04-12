@@ -259,9 +259,9 @@ public class LodBufferContainer implements AutoCloseable
 		{
 			ByteBuffer buffer = vertexBuffers.get(i);
 			int size = buffer.limit() - buffer.position();
-			int vertexCount = size / LodQuadBuilder.BYTES_PER_VERTEX;
-			
-			ByteBuffer indexBuffer = IndexBufferBuilder.createBuffer(vertexCount);
+			int maxVertexCount = size / LodQuadBuilder.BYTES_PER_VERTEX;
+			int quadCount = (maxVertexCount / 4);
+			ByteBuffer indexBuffer = IndexBufferBuilder.createBuffer(quadCount);
 			indexBuffers.add(indexBuffer);
 		}
 		
