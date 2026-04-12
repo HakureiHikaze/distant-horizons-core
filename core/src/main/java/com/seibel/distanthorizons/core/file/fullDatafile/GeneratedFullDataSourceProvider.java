@@ -27,7 +27,7 @@ import com.seibel.distanthorizons.core.file.fullDatafile.V2.FullDataSourceProvid
 import com.seibel.distanthorizons.core.util.delayedSaveCache.DelayedDataSourceSaveCache;
 import com.seibel.distanthorizons.core.file.structure.ISaveStructure;
 import com.seibel.distanthorizons.core.generation.DhLightingEngine;
-import com.seibel.distanthorizons.core.generation.IFullDataSourceRetrievalQueue;
+import com.seibel.distanthorizons.core.generation.queues.IFullDataSourceRetrievalQueue;
 import com.seibel.distanthorizons.core.generation.tasks.DataSourceRetrievalResult;
 import com.seibel.distanthorizons.core.generation.tasks.ERetrievalResultState;
 import com.seibel.distanthorizons.core.level.IDhLevel;

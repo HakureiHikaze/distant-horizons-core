@@ -27,7 +27,9 @@ import com.seibel.distanthorizons.core.enums.MinecraftTextFormat;
 import com.seibel.distanthorizons.core.file.fullDatafile.V2.FullDataSourceProviderV2;
 import com.seibel.distanthorizons.core.file.fullDatafile.RemoteFullDataSourceProvider;
 import com.seibel.distanthorizons.core.file.structure.ISaveStructure;
-import com.seibel.distanthorizons.core.generation.RemoteWorldRetrievalQueue;
+import com.seibel.distanthorizons.core.generation.queues.RemoteWorldRetrievalQueue;
+import com.seibel.distanthorizons.core.generation.queues.AbstractLodRequestState;
+import com.seibel.distanthorizons.core.generation.queues.LodRequestModule;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.multiplayer.client.ClientNetworkState;
@@ -396,12 +398,10 @@ public class DhClientLevel extends AbstractDhLevel implements IDhClientLevel
 	//================//
 	//region
 	
-	private static class LodRequestState extends LodRequestModule.AbstractLodRequestState
+	private static class LodRequestState extends AbstractLodRequestState
 	{
 		LodRequestState(DhClientLevel clientLevel, ClientNetworkState networkState)
-		{
-			this.retrievalQueue = new RemoteWorldRetrievalQueue(networkState, clientLevel);
-		}
+		{ super(clientLevel, new RemoteWorldRetrievalQueue(networkState, clientLevel)); }
 	}
 	
 	//endregion

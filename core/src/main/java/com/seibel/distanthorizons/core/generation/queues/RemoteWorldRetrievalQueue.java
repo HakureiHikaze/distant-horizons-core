@@ -1,4 +1,4 @@
-package com.seibel.distanthorizons.core.generation;
+package com.seibel.distanthorizons.core.generation.queues;
 
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.file.fullDatafile.V2.FullDataSourceProviderV2;
@@ -15,7 +15,6 @@ import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.WorldGenUtil;
 import com.seibel.distanthorizons.core.util.objects.RollingAverage;
 import com.seibel.distanthorizons.core.logging.DhLogger;
-import com.seibel.distanthorizons.core.util.threading.ThreadPoolUtil;
 
 import java.util.concurrent.*;
 

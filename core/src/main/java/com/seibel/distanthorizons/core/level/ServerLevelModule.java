@@ -23,7 +23,10 @@ import com.seibel.distanthorizons.api.interfaces.override.worldGenerator.IDhApiW
 import com.seibel.distanthorizons.core.file.fullDatafile.GeneratedFullDataSourceProvider;
 import com.seibel.distanthorizons.core.file.structure.ISaveStructure;
 import com.seibel.distanthorizons.core.generation.BatchGenerator;
-import com.seibel.distanthorizons.core.generation.WorldGenerationQueue;
+import com.seibel.distanthorizons.core.generation.queues.IFullDataSourceRetrievalQueue;
+import com.seibel.distanthorizons.core.generation.queues.WorldGenerationQueue;
+import com.seibel.distanthorizons.core.generation.queues.AbstractLodRequestState;
+import com.seibel.distanthorizons.core.generation.queues.LodRequestModule;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.coreapi.DependencyInjection.WorldGeneratorInjector;
 import com.seibel.distanthorizons.core.logging.DhLogger;
@@ -75,9 +78,11 @@ public class ServerLevelModule implements AutoCloseable
 	// helper classes //
 	//================//
 	
-	public static class LodRequestState extends LodRequestModule.AbstractLodRequestState
+	public static class LodRequestState extends AbstractLodRequestState
 	{
 		LodRequestState(IDhServerLevel level)
+		{ super(level, createRetrievalQueue(level)); }
+		private static IFullDataSourceRetrievalQueue createRetrievalQueue(IDhServerLevel level)
 		{
 			IDhApiWorldGenerator worldGenerator = WorldGeneratorInjector.INSTANCE.get(level.getLevelWrapper());
 			if (worldGenerator == null)
@@ -88,8 +93,10 @@ public class ServerLevelModule implements AutoCloseable
 				// since core world generator's should have the lowest override priority
 				WorldGeneratorInjector.INSTANCE.bind(level.getLevelWrapper(), worldGenerator);
 			}
-			this.retrievalQueue = new WorldGenerationQueue(worldGenerator, level);
+			return new WorldGenerationQueue(worldGenerator, level);
 		}
+		
+		
 		
 	}
 	
