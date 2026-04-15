@@ -31,7 +31,7 @@ import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListChec
 import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListPool;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
-import com.seibel.distanthorizons.core.util.ColorUtil;
+import com.seibel.distanthorizons.coreapi.util.ColorUtil;
 import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.RenderDataPointUtil;
 import com.seibel.distanthorizons.core.dataObjects.render.columnViews.ColumnRenderView;

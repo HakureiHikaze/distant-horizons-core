@@ -17,7 +17,7 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.seibel.distanthorizons.core.util;
+package com.seibel.distanthorizons.coreapi.util;
 
 import java.awt.*;
 
@@ -88,6 +88,16 @@ public class ColorUtil
 	public static int getBlue(int color) { return color & 0xFF; }
 	/** @param newBlue should be a value between 0 and 255 */
 	public static int setBlue(int color, int newBlue) { return (getAlpha(color) << 24) | (getRed(color) << 16) | (getGreen(color) << 8) | newBlue; }
+	
+	/** @throws IllegalArgumentException if the given int value is out of the range 0 - 255 (exclusive) */
+	public static void throwIfColorValueOutOfIntRange(String colorName, int value) throws IllegalArgumentException
+	{
+		if (value < 0
+			|| value > 255)
+		{
+			throw new IllegalArgumentException("["+colorName+"] with the value ["+value+"] is out of the expected range 0 - 255 (exclusive).");
+		}
+	}
 	
 	
 	

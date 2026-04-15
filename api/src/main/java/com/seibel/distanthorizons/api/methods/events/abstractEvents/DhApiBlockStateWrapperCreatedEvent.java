@@ -61,11 +61,12 @@ public abstract class DhApiBlockStateWrapperCreatedEvent implements IDhApiEvent<
 		 * Note: modifying this object won't change anything
 		 * a new wrapper will be created after this event finishes.
 		 */
-		public final IDhApiBlockStateWrapper blockStateWrapper;
+		private final IDhApiBlockStateWrapper blockStateWrapper;
 		
 		private boolean overridesSet = false;
 		private EDhApiBlockMaterial blockMaterial = null;
 		private Integer opacity = null;
+		private Boolean allowApiColorOverride = null;
 		
 		
 		
@@ -73,16 +74,15 @@ public abstract class DhApiBlockStateWrapperCreatedEvent implements IDhApiEvent<
 		// constructor //
 		//=============//
 		
-		public EventParam(IDhApiBlockStateWrapper blockStateWrapper)
-		{
-			this.blockStateWrapper = blockStateWrapper;
-		}
+		public EventParam(IDhApiBlockStateWrapper blockStateWrapper) { this.blockStateWrapper = blockStateWrapper; }
 		
 		
 		
 		//=================//
 		// getters/setters //
 		//=================//
+		
+		public IDhApiBlockStateWrapper getBlockStateWrapper() { return this.blockStateWrapper; }
 		
 		/** if set this will override the value currently set in the given {@link IDhApiBlockStateWrapper} */
 		public void setBlockMaterial(EDhApiBlockMaterial blockMaterial) 
@@ -99,6 +99,14 @@ public abstract class DhApiBlockStateWrapperCreatedEvent implements IDhApiEvent<
 			this.overridesSet = true;
 		}
 		public Integer getOpacity() { return this.opacity; }
+		
+		/** if set to true this {@link IDhApiBlockStateWrapper} will trigger {@link DhApiBlockColorOverrideEvent} */
+		public void setAllowApiColorOverride(boolean allowApiColorOverride) 
+		{
+			this.allowApiColorOverride = allowApiColorOverride;
+			this.overridesSet = true;
+		}
+		public Boolean getAllowApiColorOverride() { return this.allowApiColorOverride; }
 		
 		/** If true then one or more options for this block were set to be changed */
 		public boolean getOverridesSet() { return this.overridesSet; }

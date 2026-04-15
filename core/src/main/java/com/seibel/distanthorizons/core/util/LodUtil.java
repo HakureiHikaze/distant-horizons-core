@@ -22,6 +22,7 @@ package com.seibel.distanthorizons.core.util;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.wrapperInterfaces.block.IBlockStateWrapper;
 import com.seibel.distanthorizons.core.logging.DhLogger;
+import com.seibel.distanthorizons.coreapi.util.ColorUtil;
 
 /**
  * This class holds methods and constants that may be used in multiple places.

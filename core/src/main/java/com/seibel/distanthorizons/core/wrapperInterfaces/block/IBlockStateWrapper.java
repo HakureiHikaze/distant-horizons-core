@@ -20,6 +20,7 @@
 package com.seibel.distanthorizons.core.wrapperInterfaces.block;
 
 import com.seibel.distanthorizons.api.interfaces.block.IDhApiBlockStateWrapper;
+import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBlockColorOverrideEvent;
 import com.seibel.distanthorizons.core.util.LodUtil;
 
 import java.awt.*;
@@ -59,6 +60,11 @@ public interface IBlockStateWrapper extends IDhApiBlockStateWrapper
 	 * IE Iron, diamond, gold, etc. 
 	 */
 	boolean isBeaconBaseBlock();
+	/**
+	 * if true this block can have its color overridden
+	 * by {@link DhApiBlockColorOverrideEvent}
+	 */
+	boolean allowApiColorOverride();
 	
 	Color getMapColor();
 	Color getBeaconTintColor();
