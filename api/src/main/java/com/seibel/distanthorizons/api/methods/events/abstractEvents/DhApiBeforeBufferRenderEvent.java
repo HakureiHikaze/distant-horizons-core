@@ -27,7 +27,7 @@ import com.seibel.distanthorizons.api.objects.math.DhApiVec3f;
 
 /**
  * Called before Distant Horizons starts rendering a buffer. <br>
- * This event cannot be cancelled, use {@link DhApiBeforeRenderEvent} if you want to cancel rendering.
+ * This event cannot be canceled, use {@link DhApiBeforeRenderEvent} if you want to cancel rendering.
  * 
  * @author James Seibel
  * @version 2023-1-31

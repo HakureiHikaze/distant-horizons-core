@@ -31,7 +31,10 @@ import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhAp
  * @author James Seibel
  * @version 2025-6-9
  * @since API 4.1.0
+ * @deprecated Only used for the legacy OpenGL renderer <Br>
+ *             Using {@link DhApiAfterColorDepthTextureCreatedEvent} instead is recommended.
  */
+@Deprecated
 public abstract class DhApiBeforeColorDepthTextureCreatedEvent implements IDhApiEvent<DhApiTextureCreatedParam>
 {
 	/** Fired before Distant Horizons creates. */

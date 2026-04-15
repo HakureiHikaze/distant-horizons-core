@@ -190,7 +190,12 @@ public class LodRenderer
 			
 			if (!runningDeferredPass)
 			{
-				this.metaRenderer.clearDhDepthAndColorTextures(renderParams);
+				// needs to be fired after all the textures have been created/bound
+				boolean clearTextures = !ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeTextureClearEvent.class, renderParams);
+				if (clearTextures)
+				{
+					this.metaRenderer.clearDhDepthAndColorTextures(renderParams);
+				}
 				
 				
 				
@@ -201,6 +206,8 @@ public class LodRenderer
 				
 				// opaque LODs
 				profiler.popPush("LOD Opaque");
+				
+				ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderPassEvent.class, renderParams);
 				
 				this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ true, profiler);
 				
@@ -287,6 +294,8 @@ public class LodRenderer
 				
 				if (Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled)
 				{
+					ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderPassEvent.class, renderParams);
+					
 					profiler.popPush("LOD Transparent");
 					this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
 					
@@ -329,8 +338,6 @@ public class LodRenderer
 		//===========//
 		// rendering //
 		//===========//
-		
-		ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderPassEvent.class, renderEventParam);
 		
 		SortedArraySet<LodBufferContainer> lodBufferContainer = lodBufferHandler.getColumnRenderBuffers();
 		if (lodBufferContainer != null)
