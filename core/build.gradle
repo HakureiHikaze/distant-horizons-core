@@ -50,7 +50,6 @@ dependencies {
     compileOnly("io.netty:netty-buffer:${rootProject.netty_version}")
     compileOnly("org.jetbrains:annotations:16.0.2")
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
-    compileOnly("com.google.common:google-collect:0.5")
     compileOnly("com.google.guava:guava:31.1-jre")
 
     // DH's bundled libraries (shadowed + relocated in loader jars)
