@@ -23,25 +23,27 @@ dependencies {
     testImplementation "junit:junit:4.13"
 }
 
-shadowJar {
-    // required for basic shadowJar setup
-    configurations = [project.configurations.shadow]
+java {
+    withSourcesJar()
 }
 
 task addSourcesToCompiledJar(type: ShadowJar) {
+
+    mustRunAfter sourcesJar
     
-    def sourceJarPath = "build/libs/DistantHorizons-api-${rootProject.versionStr}-sources.jar"
-    def secondJarFile = file(sourceJarPath)
+    // the compiled "-all" jar is used since it's available at the time this task is run 
+    def compiledJarPath = "build/libs/api-api-${rootProject.versionStr}-all.jar"
+    def compiledJarFile = file(compiledJarPath)
     
     // doFirst is so these only run when the task is actually executed
     doFirst {
-        System.out.println("Adding source files from: \n" +
-                "[" + sourceJarPath + "] to compiled API jar: \n" +
+        System.out.println("Adding class files from: \n" +
+                "[" + compiledJarPath + "] to source API jar: \n" +
                 "[" + shadowJar.archiveFile.get().asFile + "]")
         
         // Validate the input JAR file
-        if (!secondJarFile.exists()) {
-            throw new GradleException("Second JAR file not found: [${secondJarFile}]")
+        if (!compiledJarFile.exists()) {
+            throw new GradleException("Compiled JAR file not found: [${compiledJarFile}]")
         }
     }
     
@@ -49,17 +51,16 @@ task addSourcesToCompiledJar(type: ShadowJar) {
     archiveFileName.set("DistantHorizonsApi-${rootProject.api_version}.jar")
     
     // Set the destination directory for the combined JAR file
-    destinationDirectory = file('build/libs/merged/')
+    destinationDirectory = file('build/libs/')
     
     // Set the input JAR files to be combined
     from sourceSets.main.allJava
     from {
-        configurations.shadow.collect { it.isDirectory() ? it : zipTree(it) }
+        project.configurations.shadow.collect { it.isDirectory() ? it : zipTree(it) }
     }
     
-    // set the jars to merge
-    from shadowJar.archiveFile.get().asFile
-    from secondJarFile
+    // add the class files
+    from zipTree(compiledJarFile)
     
     // alternative method to Include the source files in the combined JAR
     // and/or see which files are being included
@@ -92,6 +93,12 @@ task addSourcesToCompiledJar(type: ShadowJar) {
         }
     }
     
+}
+
+shadowJar {
+    // required for basic shadowJar setup
+    configurations = [project.configurations.shadow]
+    finalizedBy(addSourcesToCompiledJar)
 }
 
 javadoc {
