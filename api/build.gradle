@@ -27,12 +27,13 @@ java {
     withSourcesJar()
 }
 
-task addSourcesToCompiledJar(type: ShadowJar) {
+task createReleaseApiJar(type: ShadowJar) {
 
     mustRunAfter sourcesJar
+    dependsOn shadowJar
     
     // the compiled "-all" jar is used since it's available at the time this task is run 
-    def compiledJarPath = "build/libs/api-api-${rootProject.versionStr}-all.jar"
+    def compiledJarPath = "build/libs/DistantHorizonsApi-${rootProject.api_version}-all.jar"
     def compiledJarFile = file(compiledJarPath)
     
     // doFirst is so these only run when the task is actually executed
@@ -47,11 +48,8 @@ task addSourcesToCompiledJar(type: ShadowJar) {
         }
     }
     
-    // Set the name of the combined JAR file
-    archiveFileName.set("DistantHorizonsApi-${rootProject.api_version}.jar")
-    
-    // Set the destination directory for the combined JAR file
-    destinationDirectory = file('build/libs/')
+    archiveFileName.set("DistantHorizonsApi-${rootProject.api_version}-combined.jar") // jar name
+    destinationDirectory = file('build/libs/') // jar location
     
     // Set the input JAR files to be combined
     from sourceSets.main.allJava
@@ -94,11 +92,12 @@ task addSourcesToCompiledJar(type: ShadowJar) {
     }
     
 }
+// always create a combined jar for easy deployment
+assemble.dependsOn(createReleaseApiJar)
 
 shadowJar {
     // required for basic shadowJar setup
     configurations = [project.configurations.shadow]
-    finalizedBy(addSourcesToCompiledJar)
 }
 
 javadoc {
@@ -110,3 +109,17 @@ javadoc {
         addStringOption('Xdoclint:all,-missing', '-quiet')
     }
 }
+
+// set the jar name
+def configureJar = { task ->
+    // outputs in the format:
+    // "DistantHorizonsApi-6.0.0.jar"
+    // "DistantHorizonsApi-6.0.0-sources.jar"
+    task.archiveBaseName = rootProject.api_name
+    task.archiveVersion = rootProject.api_version
+}
+configureJar(tasks.named("jar").get())
+configureJar(tasks.named("sourcesJar").get())
+configureJar(tasks.named("shadowJar").get())
+
+
