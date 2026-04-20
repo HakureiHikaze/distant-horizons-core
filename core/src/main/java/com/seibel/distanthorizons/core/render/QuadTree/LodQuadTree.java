@@ -245,14 +245,19 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		//===================//
 		//region
 		
+		// remove out of bounds sections
 		this.setCenterBlockPos(playerPos, (renderSection) ->
 		{
-			// removing out of bounds sections
 			if (renderSection != null)
 			{
 				this.fullDataSourceProvider.removeRetrievalRequestIf((long genPos) -> DhSectionPos.contains(renderSection.pos, genPos));
-				this.missingGenerationPosSet.remove(renderSection.pos);
-				this.queuedGenerationPosSet.remove(renderSection.pos);
+				
+				// unfortunately we have to fully go through each set
+				// since a removed position may be larger than the multiple generated positions
+				// it contains
+				this.missingGenerationPosSet.removeIf((Long genPos) -> DhSectionPos.contains(renderSection.pos, genPos));
+				this.queuedGenerationPosSet.removeIf((Long genPos) -> DhSectionPos.contains(renderSection.pos, genPos));
+				
 				renderSection.close();
 			}
 		});
