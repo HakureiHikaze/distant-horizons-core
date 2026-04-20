@@ -372,8 +372,6 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		//=========================//
 		//region
 		
-		// also handles disabling beacons
-		
 		for (QuadNode<LodRenderSection> node : this.tickNodeHolder.getDisableNodes())
 		{
 			if (node == null || node.value == null) { continue; }
@@ -476,7 +474,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	//=========================//
 	// tick - recursive update //
 	//=========================//
-	///region
+	//region
 	
 	private void recursivelyUpdateRenderSectionNode(
 		@NotNull DhBlockPos2D playerPos, 
@@ -490,7 +488,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		// get/create the node //
 		// and render section  //
 		//=====================//
-		///region
+		//region
 		
 		// create the node
 		if (quadNode == null)
@@ -511,7 +509,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 			quadNode.setValue(sectionPos, renderSection);
 		}
 		
-		///endregion
+		//endregion
 		
 		
 		
@@ -519,7 +517,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		// handle enabling, loading,     //
 		// and disabling render sections //
 		//===============================//
-		///region
+		//region
 		
 		// load every node for rendering
 		if (!renderSection.gpuUploadInProgress()
@@ -548,7 +546,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 			throw new IllegalStateException("LodQuadTree shouldn't be updating renderSections below the expected detail level: [" + expectedDetailLevel + "].");
 		}
 		
-		///endregion
+		//endregion
 	}
 	private void onDetailLevelTooHigh(
 		@NotNull DhBlockPos2D playerPos, 
@@ -622,7 +620,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	}
 	
 	
-	///endregion
+	//endregion
 	
 	//=====================//
 	// tick - work queuing //

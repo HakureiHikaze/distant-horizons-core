@@ -355,7 +355,7 @@ public class QuadTree<T>
 	//region
 	
 	public void setCenterBlockPos(DhBlockPos2D newCenterPos) { this.setCenterBlockPos(newCenterPos, null); }
-	public void setCenterBlockPos(DhBlockPos2D newCenterPos, Consumer<? super T> removedItemConsumer)
+	public void setCenterBlockPos(DhBlockPos2D newCenterPos, @Nullable Consumer<? super T> removedItemConsumer)
 	{
 		this.centerBlockPos = newCenterPos;
 		
@@ -373,11 +373,14 @@ public class QuadTree<T>
 		// remove out of bounds root nodes
 		this.topRingList.moveTo(expectedCenterPos.getX(), expectedCenterPos.getY(), (quadNode) ->
 		{
-			if (quadNode != null && removedItemConsumer != null)
+			if (quadNode != null)
 			{
 				quadNode.deleteAllChildren(removedItemConsumer);
 				
-				removedItemConsumer.accept(quadNode.value);
+				if (removedItemConsumer != null)
+				{
+					removedItemConsumer.accept(quadNode.value);
+				}
 			}
 		});
 	}

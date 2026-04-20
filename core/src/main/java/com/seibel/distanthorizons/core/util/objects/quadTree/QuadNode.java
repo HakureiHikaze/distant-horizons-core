@@ -325,7 +325,7 @@ public class QuadNode<T>
 	
 	public void deleteAllChildren() { this.deleteAllChildren(null); }
 	/** @param removedItemConsumer is only fired for non-null nodes, however the value passed in may be null */
-	public void deleteAllChildren(Consumer<? super T> removedItemConsumer)
+	public void deleteAllChildren(@Nullable Consumer<? super T> removedItemConsumer)
 	{
 		for (int i = 0; i < 4; i++)
 		{
