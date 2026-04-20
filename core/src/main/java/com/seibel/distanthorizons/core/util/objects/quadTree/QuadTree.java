@@ -359,19 +359,11 @@ public class QuadTree<T>
 	{
 		this.centerBlockPos = newCenterPos;
 		
-		MovableGridRingList.Pos2D expectedCenterPos = new MovableGridRingList.Pos2D(
-				BitShiftUtil.divideByPowerOfTwo(this.centerBlockPos.x, this.treeRootDetailLevel),
-				BitShiftUtil.divideByPowerOfTwo(this.centerBlockPos.z, this.treeRootDetailLevel));
+		int newCenterPosX = BitShiftUtil.divideByPowerOfTwo(this.centerBlockPos.x, this.treeRootDetailLevel);
+		int newCenterPosZ = BitShiftUtil.divideByPowerOfTwo(this.centerBlockPos.z, this.treeRootDetailLevel);
 		
-		if (this.topRingList.getCenter().equals(expectedCenterPos))
-		{
-			// tree doesn't need to be moved
-			return;
-		}
-		
-		
-		// remove out of bounds root nodes
-		this.topRingList.moveTo(expectedCenterPos.getX(), expectedCenterPos.getY(), (quadNode) ->
+		// remove out of bound root nodes
+		this.topRingList.moveTo(newCenterPosX, newCenterPosZ, (quadNode) ->
 		{
 			if (quadNode != null)
 			{
@@ -383,6 +375,53 @@ public class QuadTree<T>
 				}
 			}
 		});
+		
+		// remove out of bound child nodes
+		this.topRingList.forEach((rootNode) ->
+		{
+			this.recursivelyClearOutOfBoundNodes(rootNode, removedItemConsumer);
+		});
+		
+	}
+	private void recursivelyClearOutOfBoundNodes(@Nullable QuadNode<T> quadNode, @Nullable Consumer<? super T> removedItemConsumer)
+	{
+		// nodes shouldn't be null, but just in case
+		if (quadNode == null)
+		{
+			return;
+		}
+		
+		// go over each child node
+		for (int i = 0; i < 4; i++)
+		{
+			QuadNode<T> childNode = quadNode.getChildByIndex(i);
+			if (childNode == null
+				|| childNode.value == null)
+			{
+				// no need to go any deeper if this node is already empty
+				continue;
+			}
+			
+			// clear nodes from the bottom up
+			this.recursivelyClearOutOfBoundNodes(childNode, removedItemConsumer);
+			
+			// clear this node if out of bounds
+			if (!this.isSectionPosInBounds(childNode.sectionPos))
+			{
+				T oldValue = childNode.value;
+				
+				// We don't remove the node until the root is removed since there isn't an
+				// easy way to do so.
+				// However, from outside the tree a null value is equivalent to the node 
+				// not existing, so it should work fine.
+				childNode.value = null;
+				
+				if (removedItemConsumer != null)
+				{
+					removedItemConsumer.accept(oldValue);
+				}
+			}
+		}
 	}
 	
 	public final DhBlockPos2D getCenterBlockPos() { return this.centerBlockPos; }

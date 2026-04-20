@@ -245,7 +245,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		//===================//
 		//region
 		
-		// remove out of bounds sections
+		// remove out of bound sections
 		this.setCenterBlockPos(playerPos, (renderSection) ->
 		{
 			if (renderSection != null)
@@ -497,7 +497,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		
 		// create the node
 		if (quadNode == null)
-		{   
+		{
 			rootNode.setValue(sectionPos, new LodRenderSection(sectionPos, this, this.level, this.fullDataSourceProvider));
 			quadNode = rootNode.getNode(sectionPos);
 		}
@@ -505,6 +505,16 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		{
 			LodUtil.assertNotReach("Unable to add node with pos ["+DhSectionPos.toString(sectionPos)+"] to tree root ["+rootNode+"].");
 		}
+		
+		
+		// Skip sections that are out-of-bounds.
+		// If not done some sections will appear and/or generate 
+		// outside the desired render distance
+		if (!this.isSectionPosInBounds(quadNode.sectionPos))
+		{
+			return;
+		}
+		
 		
 		// make sure the render section is created (shouldn't be necessary, but just in case)
 		LodRenderSection renderSection = quadNode.value;
@@ -1120,6 +1130,17 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	public void debugRender(AbstractDebugWireframeRenderer debugRenderer)
 	{
 		this.populateListWithEnabledRenderSections(this.debugNodeList);
+		
+		//// can be uncommented for debugging/finding a specific position
+		//debugRenderer.makeParticle(
+		//	new AbstractDebugWireframeRenderer.BoxParticle(
+		//		new AbstractDebugWireframeRenderer.Box(
+		//			DhSectionPos.encode((byte)7, 3,-1)
+		//			, -64, 400,
+		//			0.1f, 
+		//			Color.YELLOW),
+		//		0.5, 0f
+		//	));
 		
 		for (int i = 0; i < this.debugNodeList.size(); i++)
 		{
