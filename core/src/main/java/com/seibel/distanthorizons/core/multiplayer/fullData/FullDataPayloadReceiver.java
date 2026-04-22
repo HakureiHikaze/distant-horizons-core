@@ -7,10 +7,10 @@ import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.network.INetworkObject;
 import com.seibel.distanthorizons.core.network.messages.fullData.FullDataSplitMessage;
 import com.seibel.distanthorizons.core.sql.dto.FullDataSourceV2DTO;
-import com.seibel.distanthorizons.core.util.LodUtil;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 
+import java.util.Objects;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +21,7 @@ public class FullDataPayloadReceiver implements AutoCloseable
 			.build();
 	
 	private final ConcurrentMap<Integer, CompositeByteBuf> buffersById = CacheBuilder.newBuilder()
-			.expireAfterAccess(10, TimeUnit.SECONDS)
+		.expireAfterAccess(30, TimeUnit.SECONDS)
 			.<Integer, CompositeByteBuf>build().asMap();
 	
 	@Override
@@ -56,7 +56,7 @@ public class FullDataPayloadReceiver implements AutoCloseable
 	public FullDataSourceV2DTO decodeDataSource(FullDataPayload payload)
 	{
 		CompositeByteBuf compositeByteBuffer = this.buffersById.get(payload.dtoBufferId);
-		LodUtil.assertTrue(compositeByteBuffer != null, "decoded data source missing byte buffer");
+		Objects.requireNonNull(compositeByteBuffer, "Unable to get a complete buffer for a received payload. Ignore this if it doesn't spam similar errors");
 		
 		try
 		{
