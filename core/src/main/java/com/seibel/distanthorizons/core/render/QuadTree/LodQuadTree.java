@@ -598,23 +598,20 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 			}
 		}
 		
-		
-		if (childNodeRenderCount >= 4)
+		boolean isRootNode = (quadNode == rootNode);
+		if (isRootNode)
+		{
+			// Never render the root node.
+			// This is done to prevent flashing when moving across root node
+			// boundaries.
+			// Otherwise, when moving, new empty nodes will be added at the edge of the tree
+			// which will require the root node to render to cover the "empty" area.
+			this.tickNodeHolder.addDisableNode(quadNode);
+			return false;
+		}
+		else if (childNodeRenderCount >= 4)
 		{
 			this.tickNodeHolder.addDisableNode(quadNode);
-			
-			
-			/*
-			DEBUG_RENDERER.makeParticle(
-				new AbstractDebugWireframeRenderer.BoxParticle(
-					new AbstractDebugWireframeRenderer.Box(
-						quadNode.sectionPos
-						, -64, 80,
-						0.0f, 
-						Color.BLUE),
-					0.25, 0f
-				));
-			 */
 			
 			// all children can render,
 			// the area will be filled when rendering
@@ -623,7 +620,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		else
 		{
 			boolean nodeCanRender = quadNode.value != null
-									&& quadNode.value.gpuUploadComplete();
+									&& quadNode.value.canRender();
 			if (nodeCanRender)
 			{
 				// not all child positions are loaded yet, this one should be rendered instead
@@ -634,7 +631,6 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 			{
 				this.tickNodeHolder.addDisableNode(quadNode);
 			}
-			
 			
 			return nodeCanRender;
 		}
@@ -654,14 +650,18 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		}
 		
 		if (quadNode.value != null 
-			&& quadNode.value.gpuUploadComplete())
+			&& quadNode.value.canRender())
 		{
 			if (!this.tickNodeHolder.getEnabledNodes().contains(parentNode))
+			{
 				this.tickNodeHolder.addEnableDeleteChildrenNode(quadNode);
+				return true;
+			}
 			else
+			{
 				this.tickNodeHolder.addDisableNode(quadNode);
-			
-			return true; // TODO broken, will enable sections even if parent is enabled
+				return false;
+			}
 		}
 		else
 		{
@@ -1211,7 +1211,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 			{
 				color = Color.ORANGE;
 			}
-			else if (!renderSection.gpuUploadComplete())
+			else if (!renderSection.canRender())
 			{
 				// uploaded but the buffer is missing
 				color = Color.PINK;

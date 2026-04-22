@@ -349,10 +349,12 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 	//=================//
 	//region
 	
-	/** aka "canRender()" */
+	public boolean canRender() { return this.renderBufferContainer != null; }
 	public boolean gpuUploadComplete() 
 	{ 
 		return this.renderBufferContainer != null
+			// render dirty is here so we can trigger new GPU uploads
+			// even if the render data is present
 			&& !this.renderDataDirty; 
 	}
 	
@@ -383,7 +385,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 		{
 			color = Color.yellow;
 		}
-		else if (this.gpuUploadComplete())
+		else if (this.canRender())
 		{
 			//color = Color.cyan;
 			return;
