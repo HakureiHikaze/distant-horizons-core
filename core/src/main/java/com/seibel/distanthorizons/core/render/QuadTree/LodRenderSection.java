@@ -427,6 +427,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 		}
 		
 		
+		this.setRenderingEnabled(false);
 		if (this.renderBufferContainer != null)
 		{
 			this.renderBufferContainer.close();
