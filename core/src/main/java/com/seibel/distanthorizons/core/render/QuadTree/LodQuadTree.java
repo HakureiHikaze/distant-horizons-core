@@ -246,21 +246,37 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		//region
 		
 		// remove out of bound sections
-		this.setCenterBlockPos(playerPos, (renderSection) ->
-		{
-			if (renderSection != null)
+		this.setCenterBlockPos(playerPos, 
+			// remove completely out of bound nodes
+			// (the root node is no longer in bounds)
+			(renderSection) ->
 			{
-				this.fullDataSourceProvider.removeRetrievalRequestIf((long genPos) -> DhSectionPos.contains(renderSection.pos, genPos));
-				
-				// unfortunately we have to fully go through each set
-				// since a removed position may be larger than the multiple generated positions
-				// it contains
-				this.missingGenerationPosSet.removeIf((Long genPos) -> DhSectionPos.contains(renderSection.pos, genPos));
-				this.queuedGenerationPosSet.removeIf((Long genPos) -> DhSectionPos.contains(renderSection.pos, genPos));
-				
-				renderSection.close();
+				if (renderSection != null)
+				{
+					this.fullDataSourceProvider.removeRetrievalRequestIf((long genPos) -> DhSectionPos.contains(renderSection.pos, genPos));
+					
+					// unfortunately we have to fully go through each set
+					// since a removed position may be larger than the multiple generated positions
+					// it contains
+					this.missingGenerationPosSet.removeIf((Long genPos) -> DhSectionPos.contains(renderSection.pos, genPos));
+					this.queuedGenerationPosSet.removeIf((Long genPos) -> DhSectionPos.contains(renderSection.pos, genPos));
+					
+					renderSection.close();
+				}
+			},
+			// mutate partially out of bound nodes
+			// (the root node is still in bounds, but this individual child node isn't)
+			(renderSection) ->
+			{
+				if (renderSection != null)
+				{
+					// when this node comes back into render distance
+					// we'll need to re-load it since the full data
+					// may have been modified while it was out of bounds
+					renderSection.renderDataDirty = true;
+				}
 			}
-		});
+		);
 		
 		//endregion
 		
@@ -309,7 +325,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 					continue;
 				}
 				
-				node.value.retreivedMissingSectionsForRetreival = false;
+				node.value.queuedMissingSectionsForRetrieval = false;
 			}
 		}
 		
@@ -452,9 +468,9 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 						
 						// since this section wants to render
 						// check if it needs any generation to do so
-						if (!node.value.retreivedMissingSectionsForRetreival)
+						if (!node.value.queuedMissingSectionsForRetrieval)
 						{
-							node.value.retreivedMissingSectionsForRetreival = true;
+							node.value.queuedMissingSectionsForRetrieval = true;
 							this.tryQueuePosForRetrieval(node.value.pos); // can be quite slow
 						}
 					}
@@ -481,27 +497,6 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	//=========================//
 	//region
 	
-	@NotNull
-	private QuadNode<LodRenderSection> tryAddNodeToTree(
-		@NotNull QuadNode<LodRenderSection> rootNode,
-		@Nullable QuadNode<LodRenderSection> quadNode,
-		long sectionPos // section pos is needed here since the quad node may be null
-		)
-	{
-		// create the node
-		if (quadNode == null)
-		{
-			rootNode.setValue(sectionPos, new LodRenderSection(sectionPos, this, this.level, this.fullDataSourceProvider));
-			quadNode = rootNode.getNode(sectionPos);
-		}
-		if (quadNode == null)
-		{
-			LodUtil.assertNotReach("Unable to add node with pos ["+DhSectionPos.toString(sectionPos)+"] to tree root ["+rootNode+"].");
-		}
-		
-		return quadNode;
-	}
-	
 	/** @return true if the node at this position has uploaded its render data */
 	private boolean recursivelyUpdateRenderSectionNode(
 		@NotNull DhBlockPos2D playerPos, 
@@ -520,13 +515,15 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		quadNode = this.tryAddNodeToTree(rootNode, quadNode, sectionPos);
 		
 		
-		//// Skip sections that are out-of-bounds.
-		//// If not done some sections will appear and/or generate 
-		//// outside the desired render distance
-		//if (!this.isSectionPosInBounds(quadNode.sectionPos))
-		//{
-		//	return true;
-		//}
+		// Skip sections that are out-of-bounds.
+		// If not done some sections will appear and/or generate 
+		// outside the desired render distance
+		if (!this.isSectionPosInBounds(quadNode.sectionPos))
+		{
+			this.tickNodeHolder.addDisableNode(quadNode);
+			this.recursivelyDisableChildNodes(quadNode);
+			return true;
+		}
 		
 		
 		// make sure the render section is created (shouldn't be necessary, but just in case)
@@ -629,6 +626,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 			{
 				// not all child positions are loaded yet, this one should be rendered instead
 				this.tickNodeHolder.addEnableNode(quadNode);
+				this.recursivelyDisableChildNodes(quadNode);
 			}
 			else
 			{
@@ -639,6 +637,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 			return nodeCanRender;
 		}
 	}
+	
 	/** @return true if the node at this position has uploaded its render data */
 	private boolean onDesiredDetailLevel(
 		@NotNull QuadNode<LodRenderSection> quadNode,
@@ -655,15 +654,55 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		if (quadNode.value != null 
 			&& quadNode.value.gpuUploadComplete())
 		{
-			this.tickNodeHolder.addEnableDeleteChildrenNode(quadNode);
-			return true;
+			if (!this.tickNodeHolder.getEnabledNodes().contains(parentNode))
+				this.tickNodeHolder.addEnableDeleteChildrenNode(quadNode);
+			else
+				this.tickNodeHolder.addDisableNode(quadNode);
+			
+			return true; // TODO broken, will enable sections even if parent is enabled
 		}
 		else
 		{
+			this.tickNodeHolder.addDisableNode(quadNode);
 			return false;
 		}
 	}
 	
+	
+	@NotNull
+	private QuadNode<LodRenderSection> tryAddNodeToTree(
+		@NotNull QuadNode<LodRenderSection> rootNode,
+		@Nullable QuadNode<LodRenderSection> quadNode,
+		long sectionPos // section pos is needed here since the quad node may be null
+		)
+	{
+		// create the node
+		if (quadNode == null)
+		{
+			rootNode.setValue(sectionPos, new LodRenderSection(sectionPos, this, this.level, this.fullDataSourceProvider));
+			quadNode = rootNode.getNode(sectionPos);
+		}
+		if (quadNode == null)
+		{
+			LodUtil.assertNotReach("Unable to add node with pos ["+DhSectionPos.toString(sectionPos)+"] to tree root ["+rootNode+"].");
+		}
+		
+		return quadNode;
+	}
+	
+	private void recursivelyDisableChildNodes(@NotNull QuadNode<LodRenderSection> quadNode)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			QuadNode<LodRenderSection> childNode = quadNode.getChildByIndex(i);
+			this.tickNodeHolder.removeEnableAndDisableNode(childNode);
+			
+			if (childNode != null)
+			{
+				this.recursivelyDisableChildNodes(childNode);
+			}
+		}
+	}
 	
 	//endregion
 	

@@ -63,21 +63,39 @@ public class QuadTreeTickNodeHolder
 	{
 		if(this.presentNodes.add(node))
 		{
-			// not a big fan of having to check every node to prevent overlaps, but it does work
-			this.nodesToEnable.removeIf((QuadNode<LodRenderSection> checkNode) ->
+			// in James testing as of 4-21-2026
+			// this should no longer be needed to prevent overlaps,
+			// however I'm keeping it here as a quick fix solution if 
+			// the problem comes up again
+			if (false)
 			{
-				boolean contained = DhSectionPos.contains(node.sectionPos, checkNode.sectionPos);
-				if (contained)
+				// not a big fan of having to check every node to prevent overlaps, but it does work
+				this.nodesToEnable.removeIf((QuadNode<LodRenderSection> checkNode) ->
 				{
-					this.nodesToDisable.add(checkNode);
-				}
-				
-				return contained;
-			});
+					boolean contained = DhSectionPos.contains(node.sectionPos, checkNode.sectionPos);
+					if (contained)
+					{
+						this.nodesToDisable.add(checkNode);
+					}
+					
+					return contained;
+				});
+			}
 			
 			this.nodesToEnable.add(node);
 		}
 	}
+	
+	/**  */
+	public void removeEnableAndDisableNode(QuadNode<LodRenderSection> node)
+	{
+		this.nodesToEnable.remove(node);
+		this.nodesToEnableDeleteChildrenList.remove(node);
+		
+		this.presentNodes.add(node); // should already be present, but re-added just in case
+		this.nodesToDisable.add(node); // node shouldn't be rendered since it's being disabled by a parent
+	}
+	
 	public HashSet<QuadNode<LodRenderSection>> getEnabledNodes() { return this.nodesToEnable; }
 	
 	

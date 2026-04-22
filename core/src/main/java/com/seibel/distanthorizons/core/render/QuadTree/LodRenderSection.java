@@ -34,11 +34,8 @@ import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos2D;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.render.renderer.AbstractDebugWireframeRenderer;
-import com.seibel.distanthorizons.core.render.renderer.BeaconRenderHandler;
 import com.seibel.distanthorizons.core.render.renderer.IDebugRenderable;
 import com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding.LodBufferContainer;
-import com.seibel.distanthorizons.core.sql.dto.BeaconBeamDTO;
-import com.seibel.distanthorizons.core.sql.repo.BeaconBeamRepo;
 import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.threading.PriorityTaskPicker;
 import com.seibel.distanthorizons.core.util.threading.ThreadPoolUtil;
@@ -48,10 +45,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.WillNotClose;
 import java.awt.*;
-import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A render section represents an area that could be rendered.
@@ -75,8 +70,16 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 	
 	
 	private boolean renderingEnabled = false;
-	private boolean beaconsRendering = false;
-	public boolean retreivedMissingSectionsForRetreival = false;
+	/** 
+	 * Used when a node goes out of render distance
+	 * but isn't removed from the underlying quad tree structure. <br><br>
+	 * 
+	 * In those cases we should act as if the node was removed
+	 * for cached render data caching purposes, but not
+	 * for re-creating missing nodes.
+	 */
+	public boolean renderDataDirty = false;
+	public boolean queuedMissingSectionsForRetrieval = false;
 	
 	/** this reference is necessary so we can determine what VBO to render */
 	public LodBufferContainer renderBufferContainer; 
@@ -320,6 +323,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 			
 			// upload complete
 			this.renderBufferContainer = buffer.buffersUploaded ? buffer : null;
+			this.renderDataDirty = false;
 			
 			if (previousContainer != null)
 			{
@@ -345,7 +349,12 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 	//=================//
 	//region
 	
-	public boolean gpuUploadComplete() { return this.renderBufferContainer != null; }
+	/** aka "canRender()" */
+	public boolean gpuUploadComplete() 
+	{ 
+		return this.renderBufferContainer != null
+			&& !this.renderDataDirty; 
+	}
 	
 	public boolean getRenderingEnabled() { return this.renderingEnabled; }
 	public void setRenderingEnabled(boolean enabled) { this.renderingEnabled = enabled;}
