@@ -91,10 +91,27 @@ public class LodRequestModule implements Closeable
 	{
 		try
 		{
+			// Initial wait is to prevent an issue
+			// where this starts before the child object's constructor finishes,
+			// causing null pointers on final non-null references.
+			// The try-catch in the while loop should also handle this
+			// but this way we shouldn't have error logs.
+			Thread.sleep(500);
+			
+			// run until the threadpool is shut down
 			while (!Thread.interrupted())
 			{
-				Thread.sleep(20);
-				this.tick();
+				try
+				{
+					Thread.sleep(20);
+					
+					this.tick();
+				}
+				catch (InterruptedException e) { throw e; }
+				catch (Exception e)
+				{
+					LOGGER.error("Unexpected error in [" + LodRequestModule.class.getSimpleName() + "] tick loop, error: [" + e.getMessage() + "].", e);
+				}
 			}
 		}
 		catch (InterruptedException ignore) { }
