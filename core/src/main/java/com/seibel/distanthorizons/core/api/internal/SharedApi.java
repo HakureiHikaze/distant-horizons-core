@@ -211,7 +211,7 @@ public class SharedApi
 		}
 		
 		// ignore updates if the world is read-only
-		if (DhApiWorldProxy.INSTANCE.getReadOnly())
+		if (DhApiWorldProxy.INSTANCE.tryGetReadOnly())
 		{
 			return;
 		}

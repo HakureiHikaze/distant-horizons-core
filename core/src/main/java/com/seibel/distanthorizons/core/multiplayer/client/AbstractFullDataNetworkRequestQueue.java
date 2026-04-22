@@ -151,8 +151,7 @@ public abstract class AbstractFullDataNetworkRequestQueue implements IDebugRende
 	
 	public synchronized boolean tick(DhBlockPos2D targetPos)
 	{
-		if (DhApiWorldProxy.INSTANCE.worldLoaded() 
-			&& DhApiWorldProxy.INSTANCE.getReadOnly())
+		if (DhApiWorldProxy.INSTANCE.tryGetReadOnly())
 		{
 			return false;
 		}

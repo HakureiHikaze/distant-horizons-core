@@ -113,6 +113,23 @@ public class DhApiWorldProxy implements IDhApiWorldProxy
 		return this.isReadOnly; 
 	}
 	
+	/** 
+	 * Returns false if no world is loaded.
+	 * Can be used in places where the world state might be a bit more questionable
+	 * without having to worry about the {@link IllegalStateException} thrown by
+	 * {@link DhApiWorldProxy#getReadOnly()}
+	 */
+	public boolean tryGetReadOnly()
+	{
+		if (SharedApi.getAbstractDhWorld() == null)
+		{
+			// no world is loaded, use the default value for the next world
+			return false;
+		}
+		
+		return this.isReadOnly;
+	}
+	
 	
 	
 	//================//

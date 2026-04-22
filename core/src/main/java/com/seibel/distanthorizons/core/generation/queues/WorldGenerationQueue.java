@@ -202,7 +202,7 @@ public class WorldGenerationQueue implements IFullDataSourceRetrievalQueue, IDeb
 	private synchronized void tryQueueNewWorldGenRequestsAsync()
 	{
 		if (!DhApiWorldProxy.INSTANCE.worldLoaded()
-			|| DhApiWorldProxy.INSTANCE.getReadOnly())
+			|| DhApiWorldProxy.INSTANCE.tryGetReadOnly())
 		{
 			return;
 		}

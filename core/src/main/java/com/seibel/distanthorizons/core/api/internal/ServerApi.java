@@ -122,7 +122,7 @@ public class ServerApi
 	
 	public void serverPlayerJoinEvent(IServerPlayerWrapper player)
 	{
-		if (DhApiWorldProxy.INSTANCE.worldLoaded() && DhApiWorldProxy.INSTANCE.getReadOnly())
+		if (DhApiWorldProxy.INSTANCE.tryGetReadOnly())
 		{
 			return;
 		}
@@ -136,7 +136,7 @@ public class ServerApi
 	}
 	public void serverPlayerDisconnectEvent(IServerPlayerWrapper player)
 	{
-		if (DhApiWorldProxy.INSTANCE.worldLoaded() && DhApiWorldProxy.INSTANCE.getReadOnly())
+		if (DhApiWorldProxy.INSTANCE.tryGetReadOnly())
 		{
 			return;
 		}
@@ -150,7 +150,7 @@ public class ServerApi
 	}
 	public void serverPlayerLevelChangeEvent(IServerPlayerWrapper player, IServerLevelWrapper originLevel, IServerLevelWrapper destinationLevel)
 	{
-		if (DhApiWorldProxy.INSTANCE.worldLoaded() && DhApiWorldProxy.INSTANCE.getReadOnly())
+		if (DhApiWorldProxy.INSTANCE.tryGetReadOnly())
 		{
 			return;
 		}
@@ -170,7 +170,7 @@ public class ServerApi
 	 */
 	public void pluginMessageReceived(IServerPlayerWrapper player, @NotNull AbstractNetworkMessage message)
 	{
-		if (DhApiWorldProxy.INSTANCE.worldLoaded() && DhApiWorldProxy.INSTANCE.getReadOnly())
+		if (DhApiWorldProxy.INSTANCE.tryGetReadOnly())
 		{
 			return;
 		}

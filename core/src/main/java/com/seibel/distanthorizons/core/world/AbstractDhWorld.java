@@ -64,7 +64,7 @@ public abstract class AbstractDhWorld implements IDhWorld, Closeable
 		String levelCountStr = F3Screen.NUMBER_FORMAT.format(this.getLoadedLevelCount());
 		
 		String readOnlyStr = "";
-		if (DhApiWorldProxy.INSTANCE.getReadOnly())
+		if (DhApiWorldProxy.INSTANCE.tryGetReadOnly())
 		{
 			readOnlyStr += " - ReadOnly";
 		}
