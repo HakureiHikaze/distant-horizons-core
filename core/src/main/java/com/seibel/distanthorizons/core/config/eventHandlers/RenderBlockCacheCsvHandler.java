@@ -32,7 +32,9 @@ import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.wrapperInterfaces.IWrapperFactory;
 import com.seibel.distanthorizons.coreapi.util.StringUtil;
 
-public class RenderBlockCacheCsvHandler implements IConfigListener
+import java.util.Timer;
+
+public class RenderBlockCacheCsvHandler extends AbstractDelayedConfigEventHandler
 {
 	private static final DhLogger LOGGER = new DhLoggerBuilder().build();
 	
@@ -43,18 +45,22 @@ public class RenderBlockCacheCsvHandler implements IConfigListener
 	//=============//
  	// constructor //
 	//=============//
+	//region
 	
 	/** private since we only ever need one handler at a time */
-	private RenderBlockCacheCsvHandler() { }
+	private RenderBlockCacheCsvHandler() { super(AbstractDelayedConfigEventHandler.DEFAULT_TIMEOUT_IN_MS); }
+	
+	//endregion
 	
 	
 	
 	//=================//
 	// config handling //
 	//=================//
+	//region
 	
 	@Override
-	public void onConfigValueSet()
+	public void onConfigTimeout()
 	{
 		IWrapperFactory wrapperFactory = SingletonInjector.INSTANCE.get(IWrapperFactory.class);
 		if (wrapperFactory != null)
@@ -63,6 +69,8 @@ public class RenderBlockCacheCsvHandler implements IConfigListener
 			DhApi.Delayed.renderProxy.clearRenderDataCache();
 		}
 	}
+	
+	//endregion
 	
 	
 	
