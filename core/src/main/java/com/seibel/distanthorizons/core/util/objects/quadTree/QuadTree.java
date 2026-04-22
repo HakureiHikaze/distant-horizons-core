@@ -67,7 +67,7 @@ public class QuadTree<T>
 	 * defines how many blocks the center needs to move in blocks
 	 * before we check for out-of-bound nodes.
 	 */
-	private int blockDistanceForNodeClearing = FullDataSourceV2.WIDTH;
+	private int blockDistanceForNodeClearing;
 	
 	
 	
@@ -81,10 +81,13 @@ public class QuadTree<T>
 	 *
 	 * @param diameterInBlocks equivalent to the distance between the two opposing sides
 	 */
-	public QuadTree(int diameterInBlocks, DhBlockPos2D centerBlockPos, byte treeLeafDetailLevel)
+	public QuadTree(
+		int diameterInBlocks, int blockDistanceForNodeClearing,
+		DhBlockPos2D centerBlockPos, byte treeLeafDetailLevel)
 	{
 		this.centerBlockPos = centerBlockPos;
 		this.diameterInBlocks = diameterInBlocks;
+		this.blockDistanceForNodeClearing = blockDistanceForNodeClearing;
 		
 		this.treeLeafDetailLevel = treeLeafDetailLevel;
 		// the min detail level must be greater than 0 (to prevent divide by 0 errors) and greater than the maximum detail level
@@ -137,18 +140,22 @@ public class QuadTree<T>
 	public int leafNodeCount()
 	{
 		int count = 0;
-		for (QuadNode<T> node : this.topRingList)
+		for (QuadNode<T> rootNode : this.topRingList)
 		{
-			if (node == null)
+			if (rootNode == null)
 			{
 				continue;
 			}
 			
-			Iterator<QuadNode<T>> leafNodeIterator = node.getLeafNodeIterator();
+			Iterator<QuadNode<T>> leafNodeIterator = rootNode.getLeafNodeIterator();
 			while (leafNodeIterator.hasNext())
 			{
-				leafNodeIterator.next();
-				count++;
+				QuadNode<T> node = leafNodeIterator.next();
+				if (node != null
+					&& this.isSectionPosInBounds(node.sectionPos))
+				{
+					count++;
+				}
 			}
 		}
 		
@@ -243,32 +250,32 @@ public class QuadTree<T>
 		int ringListPosX = DhSectionPos.getX(rootPos);
 		int ringListPosZ = DhSectionPos.getZ(rootPos);
 		
-		QuadNode<T> topQuadNode = this.topRingList.get(ringListPosX, ringListPosZ);
-		if (topQuadNode == null)
+		QuadNode<T> rootQuadNode = this.topRingList.get(ringListPosX, ringListPosZ);
+		if (rootQuadNode == null)
 		{
 			if (!setNewValue)
 			{
 				return null;
 			}
 			
-			topQuadNode = new QuadNode<T>(rootPos, this.treeLeafDetailLevel);
-			boolean successfullyAdded = this.topRingList.set(ringListPosX, ringListPosZ, topQuadNode);
+			rootQuadNode = new QuadNode<T>(rootPos, this.treeLeafDetailLevel);
+			boolean successfullyAdded = this.topRingList.set(ringListPosX, ringListPosZ, rootQuadNode);
 			if (!successfullyAdded)
 			{
-				LodUtil.assertNotReach("Failed to add top quadTree node at position: " + rootPos);
+				LodUtil.assertNotReach("Failed to add root quadTree node at position: ["+DhSectionPos.toString(rootPos)+"]");
 			}
 		}
 		
-		if (!DhSectionPos.contains(topQuadNode.sectionPos, pos))
+		if (!DhSectionPos.contains(rootQuadNode.sectionPos, pos))
 		{
-			LodUtil.assertNotReach("failed to get a root node that contains the input position: " + pos + " root node pos: " + topQuadNode.sectionPos);
+			LodUtil.assertNotReach("failed to get a root node that contains the input position: " + pos + " root node pos: " + rootQuadNode.sectionPos);
 		}
 		
 		
-		QuadNode<T> returnNode = topQuadNode.getNode(pos);
+		QuadNode<T> returnNode = rootQuadNode.getNode(pos);
 		if (setNewValue)
 		{
-			topQuadNode.setValue(pos, newValue);
+			rootQuadNode.setValue(pos, newValue);
 		}
 		return returnNode;
 	}
@@ -373,10 +380,10 @@ public class QuadTree<T>
 	{
 		// did we move significantly?
 		boolean ringListMoved = false;
-		int newCenterPosX = BitShiftUtil.divideByPowerOfTwo(this.centerBlockPos.x, this.treeRootDetailLevel);
-		int newCenterPosZ = BitShiftUtil.divideByPowerOfTwo(this.centerBlockPos.z, this.treeRootDetailLevel);
-		if (this.topRingList.getCenter().getX() == newCenterPosX
-			&& this.topRingList.getCenter().getY() == newCenterPosZ)
+		int newCenterPosX = BitShiftUtil.divideByPowerOfTwo(newCenterPos.x, this.treeRootDetailLevel);
+		int newCenterPosZ = BitShiftUtil.divideByPowerOfTwo(newCenterPos.z, this.treeRootDetailLevel);
+		if (this.topRingList.getCenter().getX() != newCenterPosX
+			|| this.topRingList.getCenter().getY() != newCenterPosZ)
 		{
 			ringListMoved = true;
 		}
@@ -384,7 +391,7 @@ public class QuadTree<T>
 		// did we move a little bit?
 		boolean recalculateOutOfBoundNodes = false;
 		int centerBlockDistance = this.centerBlockPos.manhattanDist(newCenterPos);
-		if (centerBlockDistance < this.blockDistanceForNodeClearing)
+		if (centerBlockDistance >= this.blockDistanceForNodeClearing)
 		{
 			recalculateOutOfBoundNodes = true;
 		}
