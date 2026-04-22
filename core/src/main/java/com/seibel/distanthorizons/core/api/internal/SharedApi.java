@@ -74,7 +74,6 @@ public class SharedApi
 	//region
 	
 	private SharedApi() { }
-	public static void init() { Initializer.init(); }
 	
 	//endregion
 	

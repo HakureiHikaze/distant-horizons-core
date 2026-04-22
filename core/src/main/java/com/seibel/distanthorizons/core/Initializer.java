@@ -54,7 +54,7 @@ public class Initializer
 	
 	
 	
-	public static void init()
+	public static void preConfigInit()
 	{
 		//============================//
 		// check referenced libraries //
@@ -177,6 +177,11 @@ public class Initializer
 		
 		//endregion
 		
+	}
+	
+	/** fired after DH's config has been set up */
+	public static void postConfigInit()
+	{
 		
 		
 		//==============================//
@@ -238,8 +243,7 @@ public class Initializer
 		
 		//endregion
 		
-		
-		
 	}
+	
 	
 }
