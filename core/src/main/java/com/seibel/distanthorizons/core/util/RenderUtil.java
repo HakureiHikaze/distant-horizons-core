@@ -123,7 +123,16 @@ public class RenderUtil
 			// At low render distances this hides the vanilla RD border
 			
 			int chunkRenderDistance = MC_RENDER.getRenderDistance();
-			if (chunkRenderDistance <= 2)
+			
+			if (IRIS_ACCESSOR != null
+				&& IRIS_ACCESSOR.isShaderPackInUse())
+			{
+				// shaders handle the near clip plane/overdraw differently, best to play it
+				// safe and have the plane really close otherwise
+				// there might be cutouts on the screen edges
+				overdraw = 0.2f;
+			}
+			else if (chunkRenderDistance <= 2)
 			{
 				overdraw = 0.2f;
 			}
