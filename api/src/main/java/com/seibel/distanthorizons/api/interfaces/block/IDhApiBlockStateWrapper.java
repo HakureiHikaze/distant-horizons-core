@@ -43,6 +43,12 @@ public interface IDhApiBlockStateWrapper extends IDhApiUnsafeWrapper
 	boolean isLiquid();
 	
 	/**
+	 * Returns a value between 0 (fully transparent) and 16 (fully opaque).
+	 * @since 6.1.0 
+	 */
+	int getOpacity();
+	
+	/**
 	 * Returns the full serialized form of the given block
 	 * as defined by DH's serialization methods.
 	 * @since API 3.0.0 
