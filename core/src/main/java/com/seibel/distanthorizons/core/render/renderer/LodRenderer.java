@@ -225,8 +225,6 @@ public class LodRenderer
 				// opaque LODs
 				profiler.popPush("LOD Opaque");
 				
-				ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderPassEvent.class, renderParams);
-				
 				this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ true, profiler);
 				
 				// custom objects with SSAO
@@ -311,8 +309,6 @@ public class LodRenderer
 				
 				if (Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled)
 				{
-					ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderPassEvent.class, renderParams);
-					
 					profiler.popPush("LOD Transparent");
 					this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
 					
