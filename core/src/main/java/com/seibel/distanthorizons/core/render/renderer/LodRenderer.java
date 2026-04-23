@@ -180,6 +180,24 @@ public class LodRenderer
 				renderBufferHandler.buildRenderList(renderParams);
 			}
 			
+			
+			boolean renderFog;
+			Boolean apiFogOverride = Config.Client.Advanced.Graphics.Fog.enableDhFog.getApiValue();
+			if (apiFogOverride != null)
+			{
+				// use whatever the API dictates if set
+				// (this could cause issues when underwater if a shader or something
+				// doesn't add their own, but that's relatively unlikely)
+				renderFog = apiFogOverride;
+			}
+			else
+			{
+				renderFog = Config.Client.Advanced.Graphics.Fog.enableDhFog.get();
+				// allow enabling fog when: underwater fog, blind, etc.
+				// otherwise LODs won't appear correctly
+				renderFog |= renderParams.vanillaFogEnabled;
+			}
+			
 			//endregion
 			
 			
@@ -249,9 +267,8 @@ public class LodRenderer
 				}
 				
 				// fog
-				if (Config.Client.Advanced.Graphics.Fog.enableDhFog.get()
-					// this is done to fix issues with: underwater fog, blindness effect, etc.
-					|| renderParams.vanillaFogEnabled)
+				
+				if (renderFog)
 				{
 					profiler.popPush("LOD Fog");
 					
@@ -300,9 +317,7 @@ public class LodRenderer
 					this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
 					
 					
-					if (Config.Client.Advanced.Graphics.Fog.enableDhFog.get()
-						// this is done to fix issues with: underwater fog, blindness effect, etc.
-						|| renderParams.vanillaFogEnabled)
+					if (renderFog)
 					{
 						profiler.popPush("LOD Fog");
 						
