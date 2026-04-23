@@ -107,16 +107,24 @@ public abstract class DhApiBlockColorOverrideEvent implements IDhApiEvent<DhApiB
 		public IDhApiLevelWrapper getLevelWrapper() { return levelWrapper; }
 		
 		public int getColorAsInt() { return this.colorAsInt; }
+		public int getAlpha() { return ColorUtil.getAlpha(this.colorAsInt); }
 		public int getRed() { return ColorUtil.getRed(this.colorAsInt); }
 		public int getGreen() { return ColorUtil.getGreen(this.colorAsInt); }
 		public int getBlue() { return ColorUtil.getBlue(this.colorAsInt); }
-		public void setColor(int red, int green, int blue) throws IllegalArgumentException
+		public void setColor(int red, int green, int blue) throws IllegalArgumentException { setColor(255, red, green, blue); }
+		/** 
+		 * Note: when if you set a partially transparent alpha channel the underlying {@link IDhApiBlockStateWrapper#getOpacity()}
+		 * method should also return a non-opaque value.
+		 * Otherwise LODs may behave incorrectly.
+		 */
+		public void setColor(int alpha, int red, int green, int blue) throws IllegalArgumentException
 		{
+			ColorUtil.throwIfColorValueOutOfIntRange("alpha", alpha);
 			ColorUtil.throwIfColorValueOutOfIntRange("red", red);
 			ColorUtil.throwIfColorValueOutOfIntRange("green", green);
 			ColorUtil.throwIfColorValueOutOfIntRange("blue", blue);
 			
-			this.colorAsInt = ColorUtil.rgbToInt(red, green, blue);
+			this.colorAsInt = ColorUtil.argbToInt(alpha, red, green, blue);
 		}
 		
 		/** @return the block's X value in the world */
