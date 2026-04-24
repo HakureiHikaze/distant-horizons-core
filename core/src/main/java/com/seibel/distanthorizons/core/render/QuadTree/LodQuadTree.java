@@ -1202,6 +1202,17 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	{
 		this.populateListWithEnabledRenderSections(this.debugNodeList);
 		
+		//// can be uncommented for debugging/finding a specific position
+		//debugRenderer.makeParticle(
+		//	new AbstractDebugWireframeRenderer.BoxParticle(
+		//		new AbstractDebugWireframeRenderer.Box(
+		//			DhSectionPos.encode((byte)7, 3,-1)
+		//			, -64, 400,
+		//			0.1f, 
+		//			Color.YELLOW),
+		//		0.5, 0f
+		//	));
+		
 		for (int i = 0; i < this.debugNodeList.size(); i++)
 		{
 			LodRenderSection renderSection = this.debugNodeList.get(i);
