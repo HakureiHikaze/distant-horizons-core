@@ -451,6 +451,21 @@ public class RenderDataPointReducingList extends AbstractPhantomArrayList
 			this.setBigger(smaller, bigger);
 		}
 		
+		if (writeIndex == 0)
+		{
+			// if every data point in the list is NULL (0) the write index will be 0,
+			// and in order to prevent accessing index -1 below, 
+			// setting the write index to 1 is needed.
+			
+			// This shouldn't happen normally, however if the lod data is slightly malformed
+			// (which is specifically the case for the commonly shared wyncraft LODs)
+			// this check is needed.
+			// It would probably be best to fix the 6 or so NULL datapoints that are next
+			// to each other in the full data source, but for now this fix works.
+			
+			writeIndex = 1;
+		}
+		
 		this.smallest = this.sortingArray.getShort(0);
 		this.biggest = this.sortingArray.getShort(writeIndex - 1);
 		this.setSmaller(this.getSmallest(), NULL);
