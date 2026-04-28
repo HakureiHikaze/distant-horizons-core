@@ -29,8 +29,10 @@ import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos2D;
 import com.seibel.distanthorizons.core.render.QuadTree.LodQuadTree;
 import com.seibel.distanthorizons.core.render.RenderBufferHandler;
 import com.seibel.distanthorizons.core.util.LodUtil;
+import com.seibel.distanthorizons.core.util.math.Vec3d;
 import com.seibel.distanthorizons.core.wrapperInterfaces.IWrapperFactory;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftClientWrapper;
+import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.renderPass.IDhGenericRenderer;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
 import com.seibel.distanthorizons.core.logging.DhLogger;
@@ -44,6 +46,7 @@ public class ClientLevelModule implements Closeable, IDataSourceUpdateListenerFu
 {
 	private static final DhLogger LOGGER = new DhLoggerBuilder().build();
 	private static final IMinecraftClientWrapper MC_CLIENT = SingletonInjector.INSTANCE.get(IMinecraftClientWrapper.class);
+	private static final IMinecraftRenderWrapper MC_RENDER = SingletonInjector.INSTANCE.get(IMinecraftRenderWrapper.class);
 	private static final IWrapperFactory WRAPPER_FACTORY = SingletonInjector.INSTANCE.get(IWrapperFactory.class);
 	
 	private final IDhClientLevel clientLevel;
@@ -106,7 +109,10 @@ public class ClientLevelModule implements Closeable, IDataSourceUpdateListenerFu
 			this.ClientRenderStateRef.set(clientRenderState);
 		}
 		
-		clientRenderState.quadtree.tryTick(new DhBlockPos2D(MC_CLIENT.getPlayerBlockPos()));
+		// use camera position instead of player pos so free cam mods work better
+		Vec3d cameraDoublePos = MC_RENDER.getCameraExactPosition();
+		DhBlockPos2D cameraBlockPos = new DhBlockPos2D((int)cameraDoublePos.x, (int)cameraDoublePos.z);
+		clientRenderState.quadtree.tryTick(cameraBlockPos);
 	}
 	
 	
