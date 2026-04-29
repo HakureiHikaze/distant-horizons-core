@@ -26,6 +26,7 @@ import com.seibel.distanthorizons.core.dependencyInjection.ModAccessorInjector;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
+import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.render.DhApiRenderProxy;
 import com.seibel.distanthorizons.core.render.RenderBufferHandler;
 import com.seibel.distanthorizons.core.render.RenderParams;
@@ -35,6 +36,8 @@ import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IProfilerWrap
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IIrisAccessor;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.renderPass.*;
 import com.seibel.distanthorizons.coreapi.DependencyInjection.ApiEventInjector;
+
+import java.awt.*;
 
 /**
  * This is where all the magic happens. <br>
@@ -285,6 +288,22 @@ public class LodRenderer
 					
 					// Note: this can be very slow if a lot of boxes are being rendered
 					this.debugWireframeRenderer.render(renderParams);
+				}
+				
+				
+				if (Config.Client.Advanced.Debugging.PositionFinder.positionFinderEnable.get())
+				{
+					// can be used to find specific positions when debugging
+					this.debugWireframeRenderer.renderBox(new AbstractDebugWireframeRenderer.Box(
+						DhSectionPos.encode(
+							Config.Client.Advanced.Debugging.PositionFinder.positionFinderDetailLevel.get().byteValue(),
+							Config.Client.Advanced.Debugging.PositionFinder.positionFinderXPos.get(),
+							Config.Client.Advanced.Debugging.PositionFinder.positionFinderZPos.get()),
+						Config.Client.Advanced.Debugging.PositionFinder.positionFinderMinBlockY.get(),
+						Config.Client.Advanced.Debugging.PositionFinder.positionFinderMaxBlockY.get(),
+						Config.Client.Advanced.Debugging.PositionFinder.positionFinderMarginPercent.get(),
+						Color.GREEN
+					));
 				}
 				
 				

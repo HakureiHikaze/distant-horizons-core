@@ -533,6 +533,26 @@
 
 
 
+  "distanthorizons.config.client.advanced.debugging.positionFinderDebugging":
+    "Position Finder",
+
+  "distanthorizons.config.client.advanced.debugging.positionFinderDebugging.positionFinderEnable":
+    "Enable Position Finder",
+  "distanthorizons.config.client.advanced.debugging.positionFinderDebugging.positionFinderDetailLevel":
+    "Absolute Detail Level",
+  "distanthorizons.config.client.advanced.debugging.positionFinderDebugging.positionFinderXPos":
+    "Pos X",
+  "distanthorizons.config.client.advanced.debugging.positionFinderDebugging.positionFinderZPos":
+    "Pos Z",
+  "distanthorizons.config.client.advanced.debugging.positionFinderDebugging.positionFinderMinBlockY":
+    "Min Block Y",
+  "distanthorizons.config.client.advanced.debugging.positionFinderDebugging.positionFinderMaxBlockY":
+    "Max Block Y",
+  "distanthorizons.config.client.advanced.debugging.positionFinderDebugging.positionFinderMarginPercent":
+    "Margin %",
+    
+
+
   "distanthorizons.config.client.advanced.debugging.f3Screen":
     "F3 Screen",
 

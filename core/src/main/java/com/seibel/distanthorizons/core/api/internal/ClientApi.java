@@ -63,6 +63,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.awt.*;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -160,7 +161,7 @@ public class ClientApi
 	//==============//
 	// world events //
 	//==============//
-	//region
+	//region world events
 	
 	/**
 	 * May be fired slightly before or after the associated
@@ -245,7 +246,7 @@ public class ClientApi
 	//==============//
 	// level events //
 	//==============//
-	//region
+	//region level events
 	
 	public void clientLevelUnloadEvent(IClientLevelWrapper level)
 	{
@@ -364,7 +365,7 @@ public class ClientApi
 	//============//
 	// networking //
 	//============//
-	//region
+	//region networking
 	
 	/**
 	 * Forwards a decoded message into the registered handlers.
@@ -404,7 +405,7 @@ public class ClientApi
 	//===============//
 	// LOD rendering //
 	//===============//
-	//region
+	//region lod rendering
 	
 	/** Should be called before {@link ClientApi#renderDeferredLodsForShaders} */
 	public void renderLods() { this.renderLodLayer(false); }
@@ -428,12 +429,16 @@ public class ClientApi
 			//===========//
 			//region
 			
-			//DhApiTerrainDataRepo.asyncDebugMethod(
-			//	RENDER_STATE.clientLevelWrapper,
-			//	MC_CLIENT.getPlayerBlockPos().getX(),
-			//	MC_CLIENT.getPlayerBlockPos().getY(),
-			//	MC_CLIENT.getPlayerBlockPos().getZ()
-			//);
+			// only run these tasks once per frame
+			if (!renderingDeferredLayer)
+			{
+				//DhApiTerrainDataRepo.asyncDebugMethod(
+				//	RENDER_STATE.clientLevelWrapper,
+				//	MC_CLIENT.getPlayerBlockPos().getX(),
+				//	MC_CLIENT.getPlayerBlockPos().getY(),
+				//	MC_CLIENT.getPlayerBlockPos().getZ()
+				//);
+			}
 			
 			//endregion
 			
@@ -667,7 +672,7 @@ public class ClientApi
 	//================//
 	// fade rendering //
 	//================//
-	//region
+	//region fade rendering
 	
 	/** 
 	 * The first fade pass.
@@ -737,7 +742,7 @@ public class ClientApi
 	//==========//
 	// keyboard //
 	//==========//
-	//region
+	//region keyboard
 	
 	/** Trigger once on key press, with CLIENT PLAYER. */
 	public void keyPressedEvent(int glfwKey)
@@ -773,7 +778,7 @@ public class ClientApi
 	//======//
 	// chat //
 	//======//
-	//region
+	//region chat
 	
 	private void sendQueuedChatMessages()
 	{

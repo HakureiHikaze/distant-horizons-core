@@ -61,7 +61,7 @@ public class LodQuadBuilder
 	public static final int BYTES_PER_QUAD = BYTES_PER_VERTEX * 4;
 	
 	public static final int[][][] DIRECTION_VERTEX_IBO_QUAD = new int[][][]
-	///region
+	//region
 		{
 			// X,Z //
 			{ // UP
@@ -109,7 +109,7 @@ public class LodQuadBuilder
 				{0, 0}, // 3
 			},
 		};
-	///endregion
+	//endregion
 	
 	private int premergeCount = 0;
 	

@@ -964,6 +964,7 @@ public class Config
 				public static ConfigCategory debugWireframe = new ConfigCategory.Builder().set(DebugWireframe.class).build();
 				public static ConfigCategory openGl = new ConfigCategory.Builder().set(OpenGl.class).build();
 				public static ConfigCategory columnBuilderDebugging = new ConfigCategory.Builder().set(ColumnBuilderDebugging.class).build();
+				public static ConfigCategory positionFinderDebugging = new ConfigCategory.Builder().set(PositionFinder.class).build();
 				public static ConfigCategory f3Screen = new ConfigCategory.Builder().set(F3Screen.class).build();
 				public static ConfigCategory exampleConfigScreen = new ConfigCategory.Builder().set(ExampleConfigScreen.class).build();
 				
@@ -1092,6 +1093,36 @@ public class Config
 							.setAppearance(EConfigEntryAppearance.ONLY_IN_GUI)
 							.addListener(ReloadLodsConfigEventHandler.INSTANT_INSTANCE)
 							.build();
+					
+				}
+				
+				public static class PositionFinder
+				{
+					//public static ConfigUIComment positionFinderHeader = new ConfigUIComment.Builder().setParentConfigClass(ColumnBuilderDebugging.class).build();
+
+					public static ConfigEntry<Boolean> positionFinderEnable = new ConfigEntry.Builder<Boolean>()
+						.set(false)
+						.build();
+					
+					public static ConfigEntry<Integer> positionFinderDetailLevel = new ConfigEntry.Builder<Integer>()
+						.set((int) DhSectionPos.SECTION_MINIMUM_DETAIL_LEVEL)
+						.build();
+					public static ConfigEntry<Integer> positionFinderXPos = new ConfigEntry.Builder<Integer>()
+						.set(0)
+						.build();
+					public static ConfigEntry<Integer> positionFinderZPos = new ConfigEntry.Builder<Integer>()
+						.set(0)
+						.build();
+					
+					public static ConfigEntry<Integer> positionFinderMinBlockY = new ConfigEntry.Builder<Integer>()
+						.set(-64)
+						.build();
+					public static ConfigEntry<Integer> positionFinderMaxBlockY = new ConfigEntry.Builder<Integer>()
+						.set(125)
+						.build();
+					public static ConfigEntry<Float> positionFinderMarginPercent = new ConfigEntry.Builder<Float>()
+						.set(0.0f)
+						.build();
 					
 				}
 				
