@@ -341,13 +341,24 @@ public class ColumnBox
 			
 			
 			// Apply light to the range [adjMinY, adjMaxY)
-			applyLightToRange(segments, newSegments, adjMinY, adjMaxY, lightToApply);
+			applyLightToRangeAndPopulateNewSgements(segments, newSegments, adjMinY, adjMaxY, lightToApply);
+			{
+				// swap references so we can use the newly populated segments
+				LongArrayList temp = segments;
+				segments = newSegments;
+				newSegments = temp;
+			}
 			
 			// Fill overhang area [adjMaxY, adjAboveMinY) with adjSkyLight
 			short adjAboveMinY = RenderDataPointUtil.getYMin(adjAbovePoint);
 			if (adjMaxY < adjAboveMinY)
 			{
-				applyLightToRange(segments, newSegments, adjMaxY, adjAboveMinY, adjSkyLight);
+				applyLightToRangeAndPopulateNewSgements(segments, newSegments, adjMaxY, adjAboveMinY, adjSkyLight);
+				{
+					LongArrayList temp = segments;
+					segments = newSegments;
+					newSegments = temp;
+				}
 			}
 		}
 		
@@ -373,10 +384,11 @@ public class ColumnBox
 	/**
 	 * Apply the new light value over the given y range,
 	 * splitting segments as needed
+	 * and putting the new segments into "newSegments"
 	 * <p>
 	 * source: claude.ai
 	 */
-	private static void applyLightToRange(
+	private static void applyLightToRangeAndPopulateNewSgements(
 			LongArrayList segments, LongArrayList newSegments, 
 			short rangeStart, short rangeEnd, 
 			byte newLight)
@@ -419,9 +431,6 @@ public class ColumnBox
 				newSegments.add(YSegmentUtil.encode(rangeEnd, endY, skyLight));
 			}
 		}
-		
-		segments.clear();
-		segments.addAll(newSegments);
 	}
 	
 	private static void tryAddVerticalFaceWithSkyLightToBuilder(
