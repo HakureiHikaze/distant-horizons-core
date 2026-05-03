@@ -1253,7 +1253,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	@Override
 	public void close()
 	{
-		LOGGER.info("Shutting down LodQuadTree...");
+		//LOGGER.info("Shutting down LodQuadTree...");
 		
 		DEBUG_RENDERER.unregister(this, Config.Client.Advanced.Debugging.DebugWireframe.showQuadTreeRenderStatus);
 		Config.Common.WorldGenerator.enableDistantGeneration.removeListener(this);
@@ -1288,7 +1288,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		});
 		
 		
-		LOGGER.info("Finished shutting down LodQuadTree");
+		//LOGGER.info("Finished shutting down LodQuadTree");
 	}
 	
 	//endregion base methods
