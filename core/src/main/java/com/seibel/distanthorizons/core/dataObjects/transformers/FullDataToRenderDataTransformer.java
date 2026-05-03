@@ -452,8 +452,17 @@ public class FullDataToRenderDataTransformer
 				// use the previous block's color
 				color = colorToApplyToNextBlock;
 				colorToApplyToNextBlock = -1;
-				skyLight = skylightToApplyToNextBlock;
-				blockLight = blocklightToApplyToNextBlock;
+				
+				// use the skylight override if present
+				if (skylightToApplyToNextBlock != -1)
+				{
+					skyLight = skylightToApplyToNextBlock;
+				}
+				
+				if (blocklightToApplyToNextBlock != -1)
+				{
+					blockLight = blocklightToApplyToNextBlock;
+				}
 			}
 			
 			
