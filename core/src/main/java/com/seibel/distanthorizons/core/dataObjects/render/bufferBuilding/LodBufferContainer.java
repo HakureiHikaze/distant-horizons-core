@@ -532,24 +532,27 @@ public class LodBufferContainer implements AutoCloseable
 		
 		RenderThreadTaskHandler.INSTANCE.queueRunningOnRenderThread("LodBufferContainer Close", () -> 
 		{
-			for (IVertexBufferWrapper buffer : this.vboOpaqueWrappers)
-			{
-				if (buffer != null)
-				{
-					buffer.close();
-				}
-			}
-			
-			for (IVertexBufferWrapper buffer : this.vboTransparentWrappers)
-			{
-				if (buffer != null)
-				{
-					buffer.close();
-				}
-			}
+			tryCloseBufferWrapperArray(this.vboOpaqueWrappers);
+			tryCloseBufferWrapperArray(this.vboTransparentWrappers);
 			
 			this.uniformContainer.close();
 		});
+	}
+	
+	private static void tryCloseBufferWrapperArray(@Nullable IVertexBufferWrapper[] bufferWrappers)
+	{
+		if (bufferWrappers != null)
+		{
+			for (int i = 0; i < bufferWrappers.length; i++)
+			{
+				IVertexBufferWrapper buffer = bufferWrappers[i];
+				bufferWrappers[i] = null;
+				if (buffer != null)
+				{
+					buffer.close();
+				}
+			}
+		}
 	}
 	
 	//endregion
