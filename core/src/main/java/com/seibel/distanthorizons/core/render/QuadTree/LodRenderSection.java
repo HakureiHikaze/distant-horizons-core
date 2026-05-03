@@ -36,6 +36,7 @@ import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.render.renderer.AbstractDebugWireframeRenderer;
 import com.seibel.distanthorizons.core.render.renderer.IDebugRenderable;
 import com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding.LodBufferContainer;
+import com.seibel.distanthorizons.core.util.ExceptionUtil;
 import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.threading.PriorityTaskPicker;
 import com.seibel.distanthorizons.core.util.threading.ThreadPoolUtil;
@@ -62,7 +63,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 	
 	public final long pos;
 	
-	private final IDhClientLevel level;
+	private final IDhClientLevel clientLevel;
 	private final IClientLevelWrapper levelWrapper;
 	@WillNotClose
 	private final FullDataSourceProviderV2 fullDataSourceProvider;
@@ -97,13 +98,6 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 	 */
 	private Runnable getAndBuildRenderDataRunnable = null;
 	
-	/** 
-	 * Represents just uploading the {@link LodQuadBuilder} to the GPU. <br>
-	 * Separate from {@link LodRenderSection#getAndBuildRenderDataFutureRef} because they run on
-	 * different threads (buffer uploading is on the MC render thread) and need to be canceled separately.
-	 */
-	private final AtomicReference<CompletableFuture<LodBufferContainer>> bufferUploadFutureRef = new AtomicReference<>(null);
-	
 	
 	
 	//=============//
@@ -114,12 +108,12 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 	public LodRenderSection(
 			long pos, 
 			LodQuadTree quadTree, 
-			IDhClientLevel level, FullDataSourceProviderV2 fullDataSourceProvider)
+			IDhClientLevel clientLevel, FullDataSourceProviderV2 fullDataSourceProvider)
 	{
 		this.pos = pos;
 		this.quadTree = quadTree;
-		this.level = level;
-		this.levelWrapper = level.getClientLevelWrapper();
+		this.clientLevel = clientLevel;
+		this.levelWrapper = clientLevel.getClientLevelWrapper();
 		this.fullDataSourceProvider = fullDataSourceProvider;
 		
 		DEBUG_RENDERER.register(this, Config.Client.Advanced.Debugging.DebugWireframe.showRenderSectionStatus);
@@ -161,6 +155,8 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 		
 		try
 		{
+			// shouldn't happen since this method is synchronized, but just in case
+			// make sure we only ever start one upload task
 			if (!this.getAndBuildRenderDataFutureRef.compareAndSet(null, future))
 			{
 				CompletableFuture<Void> oldFuture = this.getAndBuildRenderDataFutureRef.get();
@@ -173,6 +169,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 			{
 				try
 				{
+					// build LOD data on a DH thread
 					LodQuadBuilder lodQuadBuilder = this.getAndBuildRenderData();
 					if (lodQuadBuilder == null)
 					{
@@ -180,7 +177,8 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 						return;
 					}
 					
-					this.uploadToGpuAsync(lodQuadBuilder)
+					// uploading will primarily happen on the render thread
+					this.uploadToGpuAsync(future, lodQuadBuilder)
 						.thenRun(() ->
 						{
 							// the future is passed in separately (IE not using the local var) to prevent any possible race condition null pointers
@@ -190,7 +188,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 				catch (Exception e)
 				{
 					LOGGER.error("Unexpected issue creating render data for pos: ["+DhSectionPos.toString(this.pos)+"], error: ["+e.getMessage()+"].", e);
-					future.complete(null);
+					future.completeExceptionally(e);
 				}
 			};
 			executor.execute(this.getAndBuildRenderDataRunnable);
@@ -205,6 +203,14 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 			return false;
 		}
 	}
+	
+	
+	//=======================//
+	// Get LOD ID data       //
+	// and build render data //
+	//=======================//
+	//region
+	
 	@Nullable
 	private synchronized LodQuadBuilder getAndBuildRenderData()
 	{
@@ -218,7 +224,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 			
 			
 			boolean enableTransparency = Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled;
-			LodQuadBuilder lodQuadBuilder = new LodQuadBuilder(enableTransparency, this.level.getClientLevelWrapper());
+			LodQuadBuilder lodQuadBuilder = new LodQuadBuilder(enableTransparency, this.clientLevel.getClientLevelWrapper());
 			
 			
 			// get the adjacent positions
@@ -241,7 +247,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 
 				// the render sources are only needed by this synchronous method,
 				// then they can be closed
-				ColumnRenderBufferBuilder.makeLodRenderData(lodQuadBuilder, thisRenderSource, this.level, adjacentRenderSections, adjIsSameDetailLevel);
+				ColumnRenderBufferBuilder.makeLodRenderData(lodQuadBuilder, thisRenderSource, this.clientLevel, adjacentRenderSections, adjIsSameDetailLevel);
 				return lodQuadBuilder;
 			}
 			catch (Exception e)
@@ -291,53 +297,63 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 		detailLevel += DhSectionPos.SECTION_MINIMUM_DETAIL_LEVEL;
 		return detailLevel == DhSectionPos.getDetailLevel(this.pos);
 	}
-	private synchronized CompletableFuture<LodBufferContainer> uploadToGpuAsync(LodQuadBuilder lodQuadBuilder)
+	
+	//endregion
+	
+	
+	private synchronized CompletableFuture<LodBufferContainer> uploadToGpuAsync(
+		CompletableFuture<Void> parentFuture, 
+		LodQuadBuilder lodQuadBuilder)
 	{
-		CompletableFuture<LodBufferContainer> oldFuture = this.bufferUploadFutureRef.getAndSet(null);
-		if (oldFuture != null)
+		CompletableFuture<LodBufferContainer> uploadFuture = LodBufferContainer.tryMakeAndUploadBuffersAsync(this.pos, this.clientLevel, lodQuadBuilder);
+		uploadFuture.whenComplete((bufferContainer, e) ->
 		{
-			// canceling the previous future
-			// prevents the CPU from working on something that won't be used
-			oldFuture.cancel(true);
-		}
-		
-		CompletableFuture<LodBufferContainer> future = ColumnRenderBufferBuilder.uploadBuffersAsync(this.level, this.pos, lodQuadBuilder);
-		future.handle((lodBufferContainer, throwable) -> 
-		{
-			if (!this.bufferUploadFutureRef.compareAndSet(future, null)
-				// if the old future is canceled then the future ref will be different and that's expected
-				&& !future.isCancelled()
-				// if the old future is already done, then we don't care about the ref being swapped
-				&& !future.isDone())
+			try
 			{
-				LOGGER.warn("Buffer upload future ref changed for pos: ["+DhSectionPos.toString(this.pos)+"].");
+				// handle errors and early shutdown
+				if (e != null)
+				{
+					if (!ExceptionUtil.isShutdownException(e))
+					{
+						LOGGER.error("Unexpected issue uploading buffers for pos: [" + DhSectionPos.toString(this.pos) + "], error: [" + e.getMessage() + "].", e);
+					}
+					
+					if (bufferContainer != null)
+					{
+						// shouldn't happen, but just in case
+						bufferContainer.close();
+					}
+					return;
+				}
+				
+				// close the old container
+				LodBufferContainer oldContainer = this.renderBufferContainer;
+				this.renderBufferContainer = bufferContainer.buffersUploaded ? bufferContainer : null;
+				if (oldContainer != null)
+				{
+					oldContainer.close();
+				}
+				
+				// upload complete
+				this.renderDataDirty = false;
+				
+				
+				if (parentFuture.isCancelled())
+				{
+					// if the parent future was canceled that likely means
+					// this LodRenderSection was closed before this point,
+					// meaning this buffer will become homeless, 
+					// so we need to clean it up here
+					bufferContainer.close();
+				}
 			}
-			
-			return null;
+			catch (Exception finishEx)
+			{
+				LOGGER.error("Unexpected buffer finish exception: ["+finishEx.getMessage()+"]", finishEx);
+			}
 		});
 		
-		future.thenAccept((LodBufferContainer buffer) ->
-		{
-			// needed to clean up the old data
-			LodBufferContainer previousContainer = this.renderBufferContainer;
-			
-			// upload complete
-			this.renderBufferContainer = buffer.buffersUploaded ? buffer : null;
-			this.renderDataDirty = false;
-			
-			if (previousContainer != null)
-			{
-				previousContainer.close();
-			}
-		});
-		
-		
-		if (!this.bufferUploadFutureRef.compareAndSet(null, future))
-		{
-			LodUtil.assertNotReach("Buffer upload future ref couldn't be set due to concurrency error, pos: ["+DhSectionPos.toString(this.pos)+"].");
-		}
-		
-		return future;
+		return uploadFuture;
 	}
 	
 	//endregion render data uploading
@@ -391,8 +407,8 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 			return;
 		}
 		
-		int levelMinY = this.level.getLevelWrapper().getMinHeight();
-		int levelMaxY = this.level.getLevelWrapper().getMaxHeight();
+		int levelMinY = this.clientLevel.getLevelWrapper().getMinHeight();
+		int levelMaxY = this.clientLevel.getLevelWrapper().getMaxHeight();
 		
 		// show the wireframe a bit lower than world max height,
 		// since most worlds don't render all the way up to the max height
@@ -429,13 +445,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 		}
 		
 		
-		this.setRenderingEnabled(false);
-		if (this.renderBufferContainer != null)
-		{
-			this.renderBufferContainer.close();
-		}
-		
-		// removes any in-progress futures since they aren't needed any more
+		// render loading is no longer needed
 		CompletableFuture<Void> buildFuture = this.getAndBuildRenderDataFutureRef.get();
 		if (buildFuture != null)
 		{
@@ -451,12 +461,17 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 					renderLoaderExecutor.remove(runnable);
 				}
 			}
+			
+			// cancel the future after removing the runnable
+			// to make sure the runnable is properly removed
+			buildFuture.cancel(true);
 		}
 		
-		CompletableFuture<LodBufferContainer> uploadFuture = this.bufferUploadFutureRef.get();
-		if (uploadFuture != null)
+		
+		this.setRenderingEnabled(false);
+		if (this.renderBufferContainer != null)
 		{
-			uploadFuture.cancel(true);
+			this.renderBufferContainer.close();
 		}
 		
 	}

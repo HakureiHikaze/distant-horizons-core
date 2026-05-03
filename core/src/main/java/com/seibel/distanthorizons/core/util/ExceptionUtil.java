@@ -25,6 +25,7 @@ public class ExceptionUtil
 		return throwable instanceof InterruptedException
 				|| throwable instanceof UncheckedInterruptedException
 				|| throwable instanceof RejectedExecutionException
+				|| throwable instanceof CancellationException
 				|| throwable instanceof ClosedByInterruptException;
 	}
 	
@@ -37,8 +38,8 @@ public class ExceptionUtil
 				unwrapped instanceof CancellationException;
 	}
 	public static Throwable ensureUnwrap(Throwable t)
-	{
-		return t instanceof CompletionException ? ensureUnwrap(t.getCause()) : t;
-	}
+	{ return t instanceof CompletionException ? ensureUnwrap(t.getCause()) : t; }
+	
+	
 	
 }

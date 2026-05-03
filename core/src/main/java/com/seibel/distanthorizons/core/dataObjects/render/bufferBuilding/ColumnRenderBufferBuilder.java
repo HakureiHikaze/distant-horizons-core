@@ -55,26 +55,6 @@ public class ColumnRenderBufferBuilder
 	// vbo building //
 	//==============//
 	
-	/** @link adjData should be null for adjacent sections that cross detail level boundaries */
-	public static CompletableFuture<LodBufferContainer> uploadBuffersAsync(
-			IDhClientLevel clientLevel,
-			long pos,
-			LodQuadBuilder quadBuilder
-		)
-	{
-		DhBlockPos minBlockPos = new DhBlockPos(DhSectionPos.getMinCornerBlockX(pos), clientLevel.getLevelWrapper().getMinHeight(), DhSectionPos.getMinCornerBlockZ(pos));
-		LodBufferContainer bufferContainer = new LodBufferContainer(pos, minBlockPos);
-		CompletableFuture<LodBufferContainer> uploadFuture = bufferContainer.tryMakeAndUploadBuffersAsync(quadBuilder);
-		uploadFuture.whenComplete((uploadedBuffer, exception) -> 
-		{
-			// clean up if not uploaded
-			if (uploadedBuffer != null && !uploadedBuffer.buffersUploaded)
-			{
-				uploadedBuffer.close();
-			}
-		});
-		return uploadFuture;
-	}
 	public static void makeLodRenderData(
 			LodQuadBuilder quadBuilder, ColumnRenderSource renderSource, IDhClientLevel clientLevel,
 			ColumnRenderSource[] adjRegions, boolean[] isSameDetailLevel)
