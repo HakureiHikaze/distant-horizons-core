@@ -176,6 +176,7 @@ public class ClientLevelModule implements Closeable, IDataSourceUpdateListenerFu
 		}
 		
 		this.fullDataSourceProvider.removeDataSourceUpdateListener(this);
+		this.genericRenderer.close();
 	}
 	
 	
