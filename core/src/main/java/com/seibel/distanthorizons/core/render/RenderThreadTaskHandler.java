@@ -52,6 +52,13 @@ public class RenderThreadTaskHandler
 	private long nanoSinceTasksRun = System.nanoTime();
 	private final boolean running; 
 	
+	private Thread renderThread;
+	/** 
+	 * the currently running {@link QueuedRunnable}
+	 * will be null if nothing is running.
+	 */
+	private volatile @Nullable QueuedRunnable currentQueuedRunnable;
+	
 	
 	
 	//=============//
@@ -140,12 +147,21 @@ public class RenderThreadTaskHandler
 		long loopStartTimeNano = System.nanoTime();
 		this.nanoSinceTasksRun = loopStartTimeNano;
 		
+		
+		if (this.renderThread == null)
+		{
+			this.renderThread = Thread.currentThread();
+		}
+		
+		
 		QueuedRunnable runnable = RENDER_THREAD_RUNNABLE_QUEUE.poll();
 		while(runnable != null)
 		{
 			long taskStartNano = System.nanoTime();
 			
+			this.currentQueuedRunnable = runnable;
 			runnable.run();
+			this.currentQueuedRunnable = null;
 			
 			// only try running for a limited amount of time to prevent lag spikes
 			long taskNano = System.nanoTime() - taskStartNano;
@@ -281,6 +297,27 @@ public class RenderThreadTaskHandler
 		});
 	}
 	
+	
+	/** Returns true if the currently running thread is being run by this handler */
+	public boolean isCurrentThread() 
+	{
+		if (this.renderThread != null)
+		{
+			return Thread.currentThread() == this.renderThread;
+		}
+		
+		// shouldn't normally be needed, but can be used if this
+		// handler hasn't been run yet
+		return Thread.currentThread().getName().equals("Render thread");
+	}
+	
+	/** 
+	 * Only recommended to be used by the task that's currently being run.
+	 * Use {@link RenderThreadTaskHandler#isCurrentThread()} to check. <br>
+	 * Can be used to get stack traces for render thread tasks while they're being run. 
+	 */
+	public @Nullable QueuedRunnable getCurrentlyRunningTask() { return this.currentQueuedRunnable; }
+	
 	//endregion
 	
 	
@@ -290,7 +327,7 @@ public class RenderThreadTaskHandler
 	//================//
 	//region
 	
-	private static class QueuedRunnable implements Runnable
+	public static class QueuedRunnable implements Runnable
 	{
 		/** used to easily track what's being done on the render thread */
 		public final String name;
