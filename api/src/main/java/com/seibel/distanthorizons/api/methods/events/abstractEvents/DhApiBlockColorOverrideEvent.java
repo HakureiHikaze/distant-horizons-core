@@ -111,7 +111,7 @@ public abstract class DhApiBlockColorOverrideEvent implements IDhApiEvent<DhApiB
 		public int getRed() { return ColorUtil.getRed(this.colorAsInt); }
 		public int getGreen() { return ColorUtil.getGreen(this.colorAsInt); }
 		public int getBlue() { return ColorUtil.getBlue(this.colorAsInt); }
-		public void setColor(int red, int green, int blue) throws IllegalArgumentException { setColor(255, red, green, blue); }
+		public void setColor(int red, int green, int blue) throws IllegalArgumentException { this.setColor(this.getAlpha(), red, green, blue); }
 		/** 
 		 * Note: when if you set a partially transparent alpha channel the underlying {@link IDhApiBlockStateWrapper#getOpacity()}
 		 * method should also return a non-opaque value.
