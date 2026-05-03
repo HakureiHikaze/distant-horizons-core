@@ -31,7 +31,6 @@ import com.seibel.distanthorizons.core.wrapperInterfaces.IWrapperFactory;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.AbstractDhRenderApiDefinition;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.objects.ILodContainerUniformBufferWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.objects.IVertexBufferWrapper;
-import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryUtil;
 
@@ -134,8 +133,6 @@ public class LodBufferContainer implements AutoCloseable
 		//=============//
 		//region	
 		
-		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-		
 		CompletableFuture<Void> createFuture = new CompletableFuture<Void>();
 		RenderThreadTaskHandler.INSTANCE.queueRunningOnRenderThread("LodBufferContainer Setup", () ->
 		{
@@ -147,10 +144,9 @@ public class LodBufferContainer implements AutoCloseable
 				{
 					throw new InterruptedException();
 				}
-
-
-				createBufferWrappers(bufferContainer.vboOpaqueWrappers, opaqueBuffers, stackTraceElements);
-				createBufferWrappers(bufferContainer.vboTransparentWrappers, transparentBuffers, stackTraceElements);
+				
+				createBufferWrappers(bufferContainer.vboOpaqueWrappers, opaqueBuffers);
+				createBufferWrappers(bufferContainer.vboTransparentWrappers, transparentBuffers);
 				
 				createFuture.complete(null);
 			}
@@ -290,9 +286,7 @@ public class LodBufferContainer implements AutoCloseable
 		return newVbos;
 	}
 	
-	private static void createBufferWrappers(
-		IVertexBufferWrapper[] vboWrappers, ArrayList<ByteBuffer> vertexBuffers,
-		@Nullable StackTraceElement[] callerStackTrace)
+	private static void createBufferWrappers(IVertexBufferWrapper[] vboWrappers, ArrayList<ByteBuffer> vertexBuffers)
 	{
 		for (int i = 0; i < vertexBuffers.size(); i++)
 		{
@@ -303,7 +297,7 @@ public class LodBufferContainer implements AutoCloseable
 			
 			if (vboWrappers[i] == null)
 			{
-				vboWrappers[i] = WRAPPER_FACTORY.createVboWrapper("distantHorizons:McLodRenderer", callerStackTrace);
+				vboWrappers[i] = WRAPPER_FACTORY.createVboWrapper("distantHorizons:McLodRenderer");
 			}
 		}
 	}
@@ -359,7 +353,7 @@ public class LodBufferContainer implements AutoCloseable
 						throw new InterruptedException();
 					}
 					
-					finalVboWrapper.uploadVertexBuffer(finalVertexBuffer, finalVertexCount, stackTraceElements);
+					finalVboWrapper.uploadVertexBuffer(finalVertexBuffer, finalVertexCount);
 					vertexUploadFuture.complete(null);
 				}
 				catch (Exception e)
