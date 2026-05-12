@@ -1,7 +1,6 @@
 #version 150 core
 
 in vec2 vPosition;
-in vec4 vColor;
 
 out vec4 fColor;
 out vec2 TexCoord;
