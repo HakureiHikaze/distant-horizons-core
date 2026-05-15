@@ -55,6 +55,16 @@ public class ConfigEntry<T> extends AbstractConfigBase<T>
 	@Nullable
 	private T apiValue;
 	
+	/** 
+	 * Will be null if un-set. <br> <br>
+	 * 
+	 * Some options aren't supported on all Minecraft versions,
+	 * in those cases this value will be set to override the 
+	 * config file option.
+	 */
+	@Nullable
+	private T mcVersionOverrideValue;
+	
 	
 	
 	//=============//
@@ -127,7 +137,14 @@ public class ConfigEntry<T> extends AbstractConfigBase<T>
 		return this.allowApiOverride 
 				&& this.apiValue != null; 
 	}
-		
+	
+	/** setting to null will allow the config to be used normally */
+	public void setMcVersionOverrideValue(@Nullable T value)
+	{ this.mcVersionOverrideValue = value; }
+	
+	public boolean mcVersionOverridePresent()
+	{ return this.mcVersionOverrideValue != null; }
+	
 	/** 
 	 * Should only be used when loading the config from file. <Br>
 	 * Sets the value without informing the rest of the code (ie, it doesn't call listeners, or saving the value to file).
@@ -183,6 +200,12 @@ public class ConfigEntry<T> extends AbstractConfigBase<T>
 	@Override
 	public T get()
 	{
+		// always use the MC version specific option if defined
+		if (this.mcVersionOverrideValue != null)
+		{
+			return this.mcVersionOverrideValue;
+		}
+		
 		if (this.allowApiOverride 
 			&& this.apiValue != null)
 		{
