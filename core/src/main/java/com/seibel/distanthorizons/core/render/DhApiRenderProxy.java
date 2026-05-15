@@ -77,8 +77,6 @@ public class DhApiRenderProxy implements IDhApiRenderProxy
 			}
 		}
 		
-		// TODO clear tint handler too
-		
 		return DhApiResult.createSuccess();
 	}
 	
