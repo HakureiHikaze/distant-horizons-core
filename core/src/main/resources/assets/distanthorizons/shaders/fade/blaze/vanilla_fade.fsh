@@ -28,9 +28,32 @@ layout (std140) uniform fragUniformBlock
 vec3 calcViewPosition(float fragmentDepth, mat4 invMvmProj) 
 {
     // normalized device coordinates
-    vec4 ndc = vec4(TexCoord.xy, fragmentDepth, 1.0);
+    vec4 ndc = vec4(
+        TexCoord.x, // UV [0,1]
+        TexCoord.y,
+        fragmentDepth, // depth [0,1]
+        1.0
+    );
+    // AKA: remap the [0,1] UV coordinates and depth value
+    // into the [-1,1] positions used by
+    // the NDC cube rendering stage
     ndc.xyz = ndc.xyz * 2.0 - 1.0;
+    
+    vec4 eyeCoord = invMvmProj * ndc;
+    return eyeCoord.xyz / eyeCoord.w;
+}
 
+// TODO vulkan
+vec3 calcReversedZViewPosition(float fragmentDepth, mat4 invMvmProj)
+{
+    // Vulkan NDC: xy in [-1,+1], z already in [0,1] — don't remap z
+    vec4 ndc = vec4(
+        TexCoord.x * 2.0 - 1.0, // UV [0,1] -> NDC [-1,+1]
+        TexCoord.y * 2.0 - 1.0,
+        fragmentDepth, // no remapping needed, this depth is already in the [0,1] range
+        1.0 // w=1 placeholder for matrix multiplication
+    );
+    
     vec4 eyeCoord = invMvmProj * ndc;
     return eyeCoord.xyz / eyeCoord.w;
 }
@@ -71,12 +94,13 @@ void main()
     {
         fragColor = vec4(combinedMcDhColor.rgb, 0.0);
     }
-    // a fragment depth of "1" means the fragment wasn't drawn to,
-    // we only want to fade vanilla rendered objects, not to the sky or LODs
-    else if (mcFragmentDepth < 1.0) 
+//    // a fragment depth of "1" means the fragment wasn't drawn to,
+//    // we only want to fade vanilla rendered objects, not to the sky or LODs
+//    else if (mcFragmentDepth < 1.0)
+    else if (mcFragmentDepth > 0)
     {
         // fade based on distance from the camera
-        vec3 mcVertexWorldPos = calcViewPosition(mcFragmentDepth, uMcInvMvmProj);
+        vec3 mcVertexWorldPos = calcReversedZViewPosition(mcFragmentDepth, uMcInvMvmProj);
         float mcFragmentDistance = length(mcVertexWorldPos.xzy);
         
         
