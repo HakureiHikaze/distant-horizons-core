@@ -19,6 +19,7 @@
 
 package com.seibel.distanthorizons.core.level;
 
+import com.seibel.distanthorizons.core.config.eventHandlers.IgnoredDimensionCsvHandler;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.enums.MinecraftTextFormat;
 import com.seibel.distanthorizons.core.file.structure.ISaveStructure;
@@ -121,12 +122,13 @@ public class DhClientServerLevel extends AbstractDhServerLevel implements IDhCli
 		String o = MinecraftTextFormat.ORANGE;
 		String y = MinecraftTextFormat.YELLOW;
 		String g = MinecraftTextFormat.GREEN;
+		String r = MinecraftTextFormat.RED;
 		String cf = MinecraftTextFormat.CLEAR_FORMATTING;
 		
 		
 		String dimName = this.serverLevelWrapper.getDhIdentifier();
-		boolean rendering = this.clientside.isRendering();
-		String renderingString = rendering ? (g+"yes"+cf) : (o+"no"+cf);
+		boolean rendering = this.clientside.isRendering() && !IgnoredDimensionCsvHandler.INSTANCE.dimensionNameShouldBeIgnored(dimName);
+		String renderingString = rendering ? (g+"yes"+cf) : (r+"no"+cf);
 		messageList.add("["+y+dimName+cf+"] rendering: "+renderingString);
 		
 		super.addDebugMenuStringsToList(messageList);
