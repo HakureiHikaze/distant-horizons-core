@@ -21,7 +21,9 @@ layout (std140) uniform fragUniformBlock
     float uFadeDistanceInBlocks;
 
     mat4 uInvProj;
-    mat4 uProj;   
+    mat4 uProj;
+
+    bool uIsVulkan;
 };
 
 uniform sampler2D uDhDepthTexture;
@@ -33,10 +35,7 @@ const float PI = 3.1415926538;
 const float TAU = PI * 2.0;
 
 
-vec3 unproject(vec4 pos) 
-{
-    return pos.xyz / pos.w;
-}
+vec3 unproject(vec4 pos) { return pos.xyz / pos.w; }
 
 float InterleavedGradientNoise(const in vec2 pixel) 
 {
@@ -44,11 +43,29 @@ float InterleavedGradientNoise(const in vec2 pixel)
     return fract(MAGIC.z * fract(x));
 }
 
-vec3 calcViewPosition(const in vec3 clipPos) 
+/** 
+ * this method is shared across several shaders,
+ * if updated, make sure to update the other versions as well.
+ */
+vec3 calcViewPosition(float fragmentDepth, mat4 invMvmProj)
 {
-    vec4 viewPos = uInvProj * vec4(clipPos * 2.0 - 1.0, 1.0);
-    return viewPos.xyz / viewPos.w;
+    // normalized device coordinates
+    vec4 ndc = vec4(TexCoord.xy, fragmentDepth, 1.0);
+    if (uIsVulkan)
+    {
+        // Z already in [0,1], don't remap
+        ndc.xy = ndc.xy * 2.0 - 1.0;
+    }
+    else
+    {
+        // UV [0,1] -> NDC [-1,+1]
+        ndc.xyz = ndc.xyz * 2.0 - 1.0;
+    }
+
+    vec4 eyeCoord = invMvmProj * ndc;
+    return eyeCoord.xyz / eyeCoord.w;
 }
+
 
 float GetSpiralOcclusion(const in vec2 uv, const in vec3 viewPos, const in vec3 viewNormal) 
 {
@@ -61,7 +78,8 @@ float GetSpiralOcclusion(const in vec2 uv, const in vec3 viewPos, const in vec3 
     float ao = 0.0;
     int sampleCount = 0;
     float radius = rStep;
-    for (int i = 0; i < clamp(uSampleCount, 1, SAMPLE_MAX); i++) {
+    for (int i = 0; i < clamp(uSampleCount, 1, SAMPLE_MAX); i++) 
+    {
         vec2 offset = vec2(
             sin(rotatePhase),
             cos(rotatePhase)
@@ -75,11 +93,27 @@ float GetSpiralOcclusion(const in vec2 uv, const in vec3 viewPos, const in vec3 
         sampleClipPos = saturate(sampleClipPos);
 
         float sampleClipDepth = textureLod(uDhDepthTexture, sampleClipPos.xy, 0.0).r;
-        if (sampleClipDepth >= 1.0 - EPSILON) continue;
+        if (sampleClipDepth >= 1.0 - EPSILON)
+        {
+            continue;   
+        }
 
-        sampleClipPos.z = sampleClipDepth;
-        sampleViewPos = unproject(uInvProj * vec4(sampleClipPos * 2.0 - 1.0, 1.0));
-
+        if (uIsVulkan)
+        {
+            vec4 ndc = vec4(
+                sampleClipPos.x * 2.0 - 1.0, // UV [0,1] -> NDC [-1,+1]
+                sampleClipPos.y * 2.0 - 1.0,
+                sampleClipDepth,
+                1.0 // w=1 placeholder for matrix multiplication
+            );
+            sampleViewPos = unproject(uInvProj * ndc);
+        }
+        else
+        {
+            sampleClipPos.z = sampleClipDepth;
+            sampleViewPos = unproject(uInvProj * vec4(sampleClipPos * 2.0 - 1.0, 1.0));
+        }
+        
         vec3 diff = sampleViewPos - viewPos;
         float sampleDist = length(diff);
         vec3 sampleNormal = diff / sampleDist;
@@ -102,10 +136,20 @@ void main()
     float fragmentDepth = textureLod(uDhDepthTexture, TexCoord, 0).r;
     float occlusion = 0.0;
     
-    // Do not apply to sky
-    if (fragmentDepth < 1.0) 
+    bool isGround;
+    if (uIsVulkan)
     {
-        vec3 viewPos = calcViewPosition(vec3(TexCoord, fragmentDepth));
+        isGround = (fragmentDepth > 0.0f);
+    }
+    else
+    {
+        isGround = (fragmentDepth < 1.0f);
+    }
+    
+    // Do not apply to sky
+    if (isGround)
+    {
+        vec3 viewPos = calcViewPosition(fragmentDepth, uInvProj);
         
         // fading is done to prevent banding/noise
         // at super far distance

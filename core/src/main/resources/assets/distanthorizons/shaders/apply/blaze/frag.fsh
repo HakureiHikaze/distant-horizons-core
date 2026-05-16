@@ -4,6 +4,11 @@ in vec2 TexCoord;
 
 out vec4 fragColor;
 
+layout (std140) uniform baseFragUniformBlock
+{
+    bool uIsVulkan;
+};
+
 uniform sampler2D uSourceColorTexture;
 uniform sampler2D uSourceDepthTexture;
 
@@ -11,11 +16,21 @@ uniform sampler2D uSourceDepthTexture;
 void main()
 {
     fragColor = vec4(0.0);
-
-    // a fragment depth of "1" means the fragment wasn't drawn to,
-    // only update fragments that were drawn to
     float fragmentDepth = texture(uSourceDepthTexture, TexCoord).r;
-    if (fragmentDepth != 1)
+    
+    bool drawnTo;
+    if (uIsVulkan)
+    {
+        drawnTo = (fragmentDepth != 0.0f);
+    }
+    else
+    {
+        // a fragment depth of "1" means the fragment wasn't drawn to
+        drawnTo = (fragmentDepth != 1.0f);
+    }
+    
+    // only update fragments that were drawn to
+    if (drawnTo)
     {
         fragColor = texture(uSourceColorTexture, TexCoord);
     }

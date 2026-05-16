@@ -40,6 +40,8 @@ layout (std140) uniform fragUniformBlock
     
     // inverted model view matrix and projection matrix
     mat4 uInvMvmProj;
+
+    bool uIsVulkan;
 };
 
 uniform sampler2D uDhDepthTexture;
@@ -50,7 +52,7 @@ uniform sampler2D uDhDepthTexture;
 // method definitions //
 //====================//
 
-vec3 calcViewPosition(float fragmentDepth);
+vec3 calcViewPosition(float fragmentDepth, mat4 invMvmProj);
 
 float getFarFogThickness(float dist);
 float getHeightFogThickness(float dist);
@@ -84,7 +86,7 @@ void main()
         if (fogDebugMode == 0)
         {
             // render fog based on distance from the camera
-            vec3 vertexWorldPos = calcViewPosition(fragmentDepth);
+            vec3 vertexWorldPos = calcViewPosition(fragmentDepth, uInvMvmProj);
 
             float horizontalWorldDistance = length(vertexWorldPos.xz) * uFogScale;
             float worldDistance = length(vertexWorldPos.xyz) * uFogScale;
@@ -132,12 +134,26 @@ void main()
 // helper methods //
 //================//
 
-vec3 calcViewPosition(float fragmentDepth)
+/** 
+ * this method is shared across several shaders,
+ * if updated, make sure to update the other versions as well.
+ */
+vec3 calcViewPosition(float fragmentDepth, mat4 invMvmProj)
 {
+    // normalized device coordinates
     vec4 ndc = vec4(TexCoord.xy, fragmentDepth, 1.0);
-    ndc.xyz = ndc.xyz * 2.0 - 1.0;
+    if (uIsVulkan)
+    {
+        // Z already in [0,1], don't remap
+        ndc.xy = ndc.xy * 2.0 - 1.0;
+    }
+    else
+    {
+        // UV [0,1] -> NDC [-1,+1]
+        ndc.xyz = ndc.xyz * 2.0 - 1.0;
+    }
 
-    vec4 eyeCoord = uInvMvmProj * ndc;
+    vec4 eyeCoord = invMvmProj * ndc;
     return eyeCoord.xyz / eyeCoord.w;
 }
 

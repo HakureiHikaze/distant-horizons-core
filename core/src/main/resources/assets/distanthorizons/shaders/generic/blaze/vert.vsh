@@ -1,21 +1,5 @@
 #version 330 core
 
-//layout (location = 1) in vec4 aColor; // RGBA_FLOAT_COLOR 
-//layout (location = 2) in vec3 aScale; // VEC3_SCALE
-//layout (location = 3) in ivec3 aTranslateChunk; // IVEC3_SCALE
-//layout (location = 4) in vec3 aTranslateSubChunk; // VEC3_SCALE
-//layout (location = 5) in int aMaterial; // IRIS_MATERIAL
-
-//uniform sampler2D /*vec4*/ uColorMap; 
-//uniform sampler2D /*vec3*/ uScaleMap;
-//uniform sampler2D /*int*/ uTranslateChunkXMap;
-//uniform sampler2D /*int*/ uTranslateChunkYMap;
-//uniform sampler2D /*int*/ uTranslateChunkZMap;
-//uniform sampler2D /*vec3*/ uTranslateSubChunkMap;
-//uniform sampler2D /*int*/ uMaterialMap;
-//
-//in vec3 vPosition;
-
 in vec3 vPosition;
 in vec4 aColor; // RGBA_FLOAT_COLOR
 in int aMaterial; // IRIS_MATERIAL
@@ -51,17 +35,6 @@ void main()
     {
         aScale = vec3(2);
     }
-    
-//    vec4 aColor = texelFetch(uColorMap, ivec2(gl_InstanceID,0), 0);
-//    vec3 aScale = texelFetch(uScaleMap, ivec2(gl_InstanceID,0), 0).xyz;
-//    
-//    float chunkX = int(texelFetch(uTranslateChunkXMap, ivec2(gl_InstanceID,0), 0).x);
-//    float chunkY = int(texelFetch(uTranslateChunkYMap, ivec2(gl_InstanceID,0), 0).x);
-//    float chunkZ = int(texelFetch(uTranslateChunkZMap, ivec2(gl_InstanceID,0), 0).x);
-//    ivec3 aTranslateChunk = ivec3(chunkX, chunkY, chunkZ);
-//    
-//    vec3 aTranslateSubChunk = texelFetch(uTranslateSubChunkMap, ivec2(gl_InstanceID,0), 0).xyz;
-//    int aMaterial = int(texelFetch(uMaterialMap, ivec2(gl_InstanceID,0), 0).x);
     
     // aTranslate - moves the vertex to the boxGroup's relative position
     // uOffset - moves the vertex to the boxGroup's world position
