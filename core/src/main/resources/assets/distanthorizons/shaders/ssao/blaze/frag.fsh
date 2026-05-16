@@ -23,7 +23,7 @@ layout (std140) uniform fragUniformBlock
     mat4 uInvProj;
     mat4 uProj;
 
-    bool uIsVulkan;
+    bool uIsReverseZDepth;
 };
 
 uniform sampler2D uDhDepthTexture;
@@ -51,7 +51,7 @@ vec3 calcViewPosition(float fragmentDepth, mat4 invMvmProj)
 {
     // normalized device coordinates
     vec4 ndc = vec4(TexCoord.xy, fragmentDepth, 1.0);
-    if (uIsVulkan)
+    if (uIsReverseZDepth)
     {
         // Z already in [0,1], don't remap
         ndc.xy = ndc.xy * 2.0 - 1.0;
@@ -98,7 +98,7 @@ float GetSpiralOcclusion(const in vec2 uv, const in vec3 viewPos, const in vec3 
             continue;   
         }
 
-        if (uIsVulkan)
+        if (uIsReverseZDepth)
         {
             vec4 ndc = vec4(
                 sampleClipPos.x * 2.0 - 1.0, // UV [0,1] -> NDC [-1,+1]
@@ -137,7 +137,7 @@ void main()
     float occlusion = 0.0;
     
     bool isGround;
-    if (uIsVulkan)
+    if (uIsReverseZDepth)
     {
         isGround = (fragmentDepth > 0.0f);
     }

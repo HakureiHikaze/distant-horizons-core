@@ -22,7 +22,7 @@ layout (std140) uniform fragUniformBlock
     mat4 uDhInvMvmProj;
     mat4 uMcInvMvmProj;
 
-    bool uIsVulkan;
+    bool uIsReverseZDepth;
 };
 
 
@@ -35,7 +35,7 @@ vec3 calcViewPosition(float fragmentDepth, mat4 invMvmProj)
 {
     // normalized device coordinates
     vec4 ndc = vec4(TexCoord.xy, fragmentDepth, 1.0);
-    if (uIsVulkan)
+    if (uIsReverseZDepth)
     {
         // Z already in [0,1], don't remap
         ndc.xy = ndc.xy * 2.0 - 1.0;
@@ -84,7 +84,7 @@ void main()
 
     // we only want to fade vanilla rendered objects, not to the sky or LODs
     bool isGround;
-    if (uIsVulkan)
+    if (uIsReverseZDepth)
     {
         isGround = (mcFragmentDepth > 0);
     }

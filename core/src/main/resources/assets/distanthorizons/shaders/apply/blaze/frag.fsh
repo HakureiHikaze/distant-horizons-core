@@ -6,7 +6,7 @@ out vec4 fragColor;
 
 layout (std140) uniform baseFragUniformBlock
 {
-    bool uIsVulkan;
+    bool uIsReverseZDepth;
 };
 
 uniform sampler2D uSourceColorTexture;
@@ -19,7 +19,7 @@ void main()
     float fragmentDepth = texture(uSourceDepthTexture, TexCoord).r;
     
     bool drawnTo;
-    if (uIsVulkan)
+    if (uIsReverseZDepth)
     {
         drawnTo = (fragmentDepth != 0.0f);
     }

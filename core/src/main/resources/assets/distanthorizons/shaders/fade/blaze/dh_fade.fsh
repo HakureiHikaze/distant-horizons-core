@@ -12,7 +12,7 @@ layout (std140) uniform fragUniformBlock
     // inverted model view matrix and projection matrix
     mat4 uDhInvMvmProj;
     
-    bool uIsVulkan;
+    bool uIsReverseZDepth;
 };
 
 uniform sampler2D uMcColorTexture;
@@ -28,7 +28,7 @@ vec3 calcViewPosition(float fragmentDepth, mat4 invMvmProj)
 {
     // normalized device coordinates
     vec4 ndc = vec4(TexCoord.xy, fragmentDepth, 1.0);
-    if (uIsVulkan)
+    if (uIsReverseZDepth)
     {
         // Z already in [0,1], don't remap
         ndc.xy = ndc.xy * 2.0 - 1.0;
