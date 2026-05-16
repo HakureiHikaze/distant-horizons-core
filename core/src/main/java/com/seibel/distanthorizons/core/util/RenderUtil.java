@@ -99,11 +99,11 @@ public class RenderUtil
 		// Set new far and near clip plane values.
 		if (RENDER_API_DEF.getRenderDepth() == EDhRenderDepth.FORWARD_Z)
 		{
-			lodProj.setClipPlanes(nearClipDist, farClipDist, true);
+			lodProj.setClipPlanes(nearClipDist, farClipDist, false);
 		}
 		else
 		{
-			lodProj.setClipPlanes(farClipDist, nearClipDist, false);
+			lodProj.setClipPlanes(farClipDist, nearClipDist, true);
 		}
 		
 		return lodProj;
