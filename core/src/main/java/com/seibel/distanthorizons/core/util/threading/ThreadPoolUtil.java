@@ -60,7 +60,7 @@ public class ThreadPoolUtil
 	public static PriorityTaskPicker.Executor getWorldGenExecutor() { return worldGenThreadPool; }
 	
 	public static final String CLEANUP_THREAD_NAME = "Cleanup";
-	private static final ThreadPoolExecutor cleanupThreadPool = ThreadUtil.makeSingleThreadPool(CLEANUP_THREAD_NAME);
+	private static final ThreadPoolExecutor cleanupThreadPool = ThreadUtil.makeSingleDaemonThreadPool(CLEANUP_THREAD_NAME);
 	/** not null since cleanup always needs to be run even when DH has been shut down */
 	@NotNull
 	public static ThreadPoolExecutor getCleanupExecutor() { return cleanupThreadPool; }
