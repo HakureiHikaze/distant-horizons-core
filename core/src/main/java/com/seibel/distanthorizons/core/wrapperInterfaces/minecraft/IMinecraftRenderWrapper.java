@@ -23,6 +23,7 @@ import java.awt.Color;
 
 import com.seibel.distanthorizons.core.api.internal.rendering.DhRenderState;
 import com.seibel.distanthorizons.core.enums.EDhDirection;
+import com.seibel.distanthorizons.core.render.EDhRenderApi;
 import com.seibel.distanthorizons.core.wrapperInterfaces.misc.ILightMapWrapper;
 import com.seibel.distanthorizons.coreapi.interfaces.dependencyInjection.IBindable;
 import com.seibel.distanthorizons.core.util.math.Vec3d;
@@ -75,14 +76,16 @@ public interface IMinecraftRenderWrapper extends IBindable
 	
 	boolean mcRendersToFrameBuffer();
 	boolean runningLegacyOpenGL();
+	/** Returns the API Minecraft is currently using for rendering */
+	EDhRenderApi getMcRenderingApi();
 	
 	/** @return -1 if no valid framebuffer is available yet */
 	int getTargetFramebuffer(); // Note: Iris is now hooking onto this for DH + Iris compat, try not to change (unless we wanna deal with some annoyances)
 								//          Iris commit: https://github.com/IrisShaders/Iris/commit/a76a240527e93780bbcba57c09bef377419d47a7#diff-7b9ded0c79bbcdb130010373387756a28ee8d3640d522c0a5b7acd0abbfc20aeR16
 	/** @return -1 if there was an issue or no texture exists */
-	int getDepthTextureId();
+	int getGlDepthTextureId();
 	/** @return -1 if there was an issue or no texture exists */
-	int getColorTextureId();
+	int getGlColorTextureId();
 	int getTargetFramebufferViewportWidth();
 	int getTargetFramebufferViewportHeight();
 	
