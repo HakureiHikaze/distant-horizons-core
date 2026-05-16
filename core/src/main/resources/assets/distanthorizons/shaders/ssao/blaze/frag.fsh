@@ -157,14 +157,7 @@ void main()
         float fadeDistance = uFadeDistanceInBlocks;
         if (distanceFromCamera < fadeDistance)
         {
-// TODO vulkan
-//            #ifdef GL_ARB_derivative_control
-//            // Get higher precision derivatives when available
-//            vec3 viewNormal = cross(dFdxFine(viewPos.xyz), dFdyFine(viewPos.xyz));
-//            #else
             vec3 viewNormal = cross(dFdx(viewPos.xyz), dFdy(viewPos.xyz));
-//            #endif
-
             viewNormal = normalize(viewNormal);
             occlusion = GetSpiralOcclusion(TexCoord, viewPos, viewNormal);
             
