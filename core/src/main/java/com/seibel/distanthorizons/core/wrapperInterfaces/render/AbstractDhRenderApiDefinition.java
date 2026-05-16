@@ -2,6 +2,7 @@ package com.seibel.distanthorizons.core.wrapperInterfaces.render;
 
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.jar.EPlatform;
+import com.seibel.distanthorizons.core.render.EDhRenderDepth;
 import com.seibel.distanthorizons.core.render.renderer.AbstractDebugWireframeRenderer;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.objects.IDhGenericObjectVertexBufferContainer;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.objects.ILodContainerUniformBufferWrapper;
@@ -28,6 +29,8 @@ public abstract class AbstractDhRenderApiDefinition implements IBindable
 	 * is slower due to having to construct new IBOs.
 	 */
 	public boolean useSingleIbo() { return this.useSingleIbo; }
+	
+	public abstract EDhRenderDepth getRenderDepth();
 	
 	//endregion
 	

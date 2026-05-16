@@ -27,9 +27,11 @@ import com.seibel.distanthorizons.core.dependencyInjection.ModAccessorInjector;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
+import com.seibel.distanthorizons.core.render.EDhRenderDepth;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftClientWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IIrisAccessor;
+import com.seibel.distanthorizons.core.wrapperInterfaces.render.AbstractDhRenderApiDefinition;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
 import com.seibel.distanthorizons.coreapi.util.MathUtil;
 import com.seibel.distanthorizons.core.util.math.Mat4f;
@@ -45,6 +47,7 @@ public class RenderUtil
 	private static final IMinecraftClientWrapper MC = SingletonInjector.INSTANCE.get(IMinecraftClientWrapper.class);
 	private static final IMinecraftRenderWrapper MC_RENDER = SingletonInjector.INSTANCE.get(IMinecraftRenderWrapper.class);
 	private static final IIrisAccessor IRIS_ACCESSOR = ModAccessorInjector.INSTANCE.get(IIrisAccessor.class);
+	private static final AbstractDhRenderApiDefinition RENDER_API_DEF = SingletonInjector.INSTANCE.get(AbstractDhRenderApiDefinition.class);
 	
 	/** 
 	 * all speeds are measured in blocks per second 
@@ -91,8 +94,18 @@ public class RenderUtil
 		
 		// Create a copy of the current matrix, so it won't be modified.
 		Mat4f lodProj = new Mat4f(mcProjMat);
+		
+		
 		// Set new far and near clip plane values.
-		lodProj.setClipPlanes(nearClipDist, farClipDist);
+		if (RENDER_API_DEF.getRenderDepth() == EDhRenderDepth.FORWARD_Z)
+		{
+			lodProj.setClipPlanes(nearClipDist, farClipDist, true);
+		}
+		else
+		{
+			lodProj.setClipPlanes(farClipDist, nearClipDist, false);
+		}
+		
 		return lodProj;
 	}
 	

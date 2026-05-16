@@ -20,6 +20,8 @@
 package com.seibel.distanthorizons.core.util.math;
 
 import com.seibel.distanthorizons.api.objects.math.DhApiMat4f;
+import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
+import com.seibel.distanthorizons.core.wrapperInterfaces.render.AbstractDhRenderApiDefinition;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
@@ -234,14 +236,11 @@ public class Mat4f extends DhApiMat4f
 	 * @param nearClip New near clipping plane value.
 	 * @param farClip New far clipping plane value.
 	 */
-	public void setClipPlanes(float nearClip, float farClip)
+	public void setClipPlanes(float nearClip, float farClip, boolean zZeroToOne)
 	{
-		//convert to matrix values, formula copied from a textbook / openGL specification.
-		float matNearClip = -((farClip + nearClip) / (farClip - nearClip));
-		float matFarClip = -((2 * farClip * nearClip) / (farClip - nearClip));
-		//set new values for the clip planes.
-		this.m22 = matNearClip;
-		this.m23 = matFarClip;
+		//convert to matrix values, formula copied JOML's implementation to match Minecraft
+		this.m22 = (zZeroToOne ? farClip : farClip + nearClip) / (nearClip - farClip);
+		this.m23 = (zZeroToOne ? farClip : farClip + farClip) * nearClip / (nearClip - farClip);
 	}
 	
 	public Mat4f copy() { return new Mat4f(this); }
