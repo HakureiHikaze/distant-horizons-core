@@ -19,16 +19,12 @@
 
 package com.seibel.distanthorizons.api.methods.events.abstractEvents;
 
-import com.seibel.distanthorizons.api.enums.rendering.EDhApiBlockMaterial;
 import com.seibel.distanthorizons.api.interfaces.block.IDhApiBlockStateWrapper;
 import com.seibel.distanthorizons.api.interfaces.world.IDhApiLevelWrapper;
 import com.seibel.distanthorizons.api.methods.events.interfaces.IDhApiEvent;
 import com.seibel.distanthorizons.api.methods.events.interfaces.IDhApiEventParam;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiEventParam;
 import com.seibel.distanthorizons.coreapi.util.ColorUtil;
-
-import java.awt.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Performance note: this event will be fired thousands of times on concurrent threads, 
@@ -51,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class DhApiBlockColorOverrideEvent implements IDhApiEvent<DhApiBlockColorOverrideEvent.EventParam>
 {
-	public abstract void blockStateWrapperCreated(DhApiEventParam<EventParam> event);
+	public abstract void onBlockColorOverridden(DhApiEventParam<EventParam> event);
 	
 	
 	//=========================//
@@ -59,7 +55,7 @@ public abstract class DhApiBlockColorOverrideEvent implements IDhApiEvent<DhApiB
 	//=========================//
 	
 	@Override
-	public final void fireEvent(DhApiEventParam<EventParam> event) { this.blockStateWrapperCreated(event); }
+	public final void fireEvent(DhApiEventParam<EventParam> event) { this.onBlockColorOverridden(event); }
 	
 	
 	//==================//
