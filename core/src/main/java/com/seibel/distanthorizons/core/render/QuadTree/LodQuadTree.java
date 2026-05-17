@@ -73,7 +73,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	private static final AbstractDebugWireframeRenderer DEBUG_RENDERER = SingletonInjector.INSTANCE.get(AbstractDebugWireframeRenderer.class);
 	
 	/** there should only ever be one {@link LodQuadTree} so having the thread static should be fine */
-	private static final ThreadPoolExecutor FULL_DATA_RETRIEVAL_QUEUE_THREAD = ThreadUtil.makeSingleThreadPool("LodQuadTree Data Retrieval Queue");
+	private static final ThreadPoolExecutor FULL_DATA_RETRIEVAL_QUEUE_THREAD = ThreadUtil.makeSingleDaemonThreadPool("LodQuadTree Data Retrieval Queue");
 	
 	
 	public final int blockRenderDistanceDiameter;
