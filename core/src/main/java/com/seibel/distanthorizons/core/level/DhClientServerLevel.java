@@ -127,7 +127,9 @@ public class DhClientServerLevel extends AbstractDhServerLevel implements IDhCli
 		
 		
 		String dimName = this.serverLevelWrapper.getDhIdentifier();
-		boolean rendering = this.clientside.isRendering() && !IgnoredDimensionCsvHandler.INSTANCE.dimensionNameShouldBeIgnored(dimName);
+		boolean rendering = 
+			this.clientside.isRendering() 
+			&& !IgnoredDimensionCsvHandler.INSTANCE.dimensionNameShouldBeIgnored(dimName);
 		String renderingString = rendering ? (g+"yes"+cf) : (r+"no"+cf);
 		messageList.add("["+y+dimName+cf+"] rendering: "+renderingString);
 		
