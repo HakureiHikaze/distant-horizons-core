@@ -1,8 +1,9 @@
 #version 150
 
+// order matters, this must match the vertex shader's outputs
+in vec3 vPos;
 in vec4 vertexColor;
 in vec3 vertexWorldPos;
-in vec3 vPos;
 in vec4 gl_FragCoord;
 
 out vec4 fragColor;

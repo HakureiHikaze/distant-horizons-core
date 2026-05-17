@@ -1,12 +1,12 @@
 #version 150 core
 
+in vec3 vPosition;
+
 layout (std140) uniform uniformBlock
 {
     mat4 uTransform;
     vec4 uColor;
 };
-
-in vec3 vPosition;
 
 void main()
 {

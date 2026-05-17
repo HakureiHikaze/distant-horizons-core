@@ -6,10 +6,10 @@ in vec4 vColor;
 in int irisMaterial;
 in int irisNormal;
 
+// order matters, this must match the fragment shader's inputs
 out vec3 vPos;
 out vec4 vertexColor;
 out vec3 vertexWorldPos;
-out float vertexYPos;
 
 layout (std140) uniform vertUniqueUniformBlock
 {
@@ -39,7 +39,7 @@ void main()
     
     vertexWorldPos = vPosition.xyz + (uModelOffset - uCameraPos);
     
-    vertexYPos = vPosition.y + uWorldYOffset;
+    float vertexYPos = vPosition.y + uWorldYOffset;
     
     uint mirco = (meta & 0xFF00u) >> 8u; // mirco offset which is a xyz 2bit value
     // 0b00 = no offset
