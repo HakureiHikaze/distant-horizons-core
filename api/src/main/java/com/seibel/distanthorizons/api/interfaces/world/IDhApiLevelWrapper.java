@@ -21,8 +21,14 @@ package com.seibel.distanthorizons.api.interfaces.world;
 
 import com.seibel.distanthorizons.api.interfaces.IDhApiUnsafeWrapper;
 import com.seibel.distanthorizons.api.enums.worldGeneration.EDhApiLevelType;
+import com.seibel.distanthorizons.api.interfaces.block.IDhApiBiomeWrapper;
+import com.seibel.distanthorizons.api.interfaces.block.IDhApiBlockStateWrapper;
 import com.seibel.distanthorizons.api.interfaces.render.IDhApiCustomRenderRegister;
+import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBlockColorOverrideEvent;
+import com.seibel.distanthorizons.api.objects.DhApiResult;
+import com.seibel.distanthorizons.api.objects.data.IDhApiFullDataSource;
 
+import java.awt.*;
 import java.io.File;
 
 /**
@@ -89,6 +95,26 @@ public interface IDhApiLevelWrapper extends IDhApiUnsafeWrapper
 	 * @since API 4.0.0
 	 */
 	File getDhSaveFolder();
+	
+	/**
+	 * Returns the color DH would use for the given block/biome
+	 * pair at the given world position before any API color overrides
+	 * are considered. <br>
+	 * API color overrides are ignored to prevent infinite
+	 * loops if this event is triggered inside said API override.
+	 * <br><br>
+	 * 
+	 * Returns {@link DhApiResult#success} = false if {@link IDhApiLevelWrapper#getLevelType()} returns a {@link EDhApiLevelType#SERVER_LEVEL}
+	 * (server levels have no concept of textures or colors).
+	 * 
+	 * @see DhApiBlockColorOverrideEvent
+	 * @since API 7.0.0
+	 */
+	DhApiResult<Color> getBlockColorPreApi(
+		IDhApiBlockStateWrapper blockStateWrapper,
+		IDhApiBiomeWrapper biomeWrapper,
+		int blockWorldPosX, int blockWorldPosY, int blockWorldPosZ,
+		IDhApiFullDataSource dataSource);
 	
 	
 	

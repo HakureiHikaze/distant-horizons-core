@@ -46,7 +46,7 @@ public class DhApiResult<T>
 	
 	
 	
-	// these constructors are private because the create... methods below are easier to understand
+	// these constructors are private because the create methods below are easier to understand
 	private DhApiResult(boolean success, String message) { this(success, message, null); }
 	private DhApiResult(boolean success, String message, T payload)
 	{

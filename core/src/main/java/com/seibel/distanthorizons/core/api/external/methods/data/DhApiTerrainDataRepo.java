@@ -19,12 +19,15 @@
 
 package com.seibel.distanthorizons.core.api.external.methods.data;
 
+import com.seibel.distanthorizons.api.interfaces.block.IDhApiBiomeWrapper;
+import com.seibel.distanthorizons.api.interfaces.block.IDhApiBlockStateWrapper;
 import com.seibel.distanthorizons.api.interfaces.data.IDhApiTerrainDataCache;
 import com.seibel.distanthorizons.api.interfaces.world.IDhApiLevelWrapper;
 import com.seibel.distanthorizons.api.objects.DhApiResult;
 import com.seibel.distanthorizons.api.objects.data.DhApiRaycastResult;
 import com.seibel.distanthorizons.api.objects.data.DhApiTerrainDataPoint;
 import com.seibel.distanthorizons.api.interfaces.data.IDhApiTerrainDataRepo;
+import com.seibel.distanthorizons.api.objects.data.IDhApiFullDataSource;
 import com.seibel.distanthorizons.api.objects.math.DhApiVec3i;
 import com.seibel.distanthorizons.core.api.internal.SharedApi;
 import com.seibel.distanthorizons.core.dataObjects.fullData.FullDataPointIdMap;
@@ -34,6 +37,8 @@ import com.seibel.distanthorizons.core.level.IDhLevel;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.pos.DhChunkPos;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
+import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos;
+import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPosMutable;
 import com.seibel.distanthorizons.core.render.renderer.AbstractDebugWireframeRenderer;
 import com.seibel.distanthorizons.core.util.DhApiTerrainDataPointUtil;
 import com.seibel.distanthorizons.core.util.FullDataPointUtil;
@@ -42,12 +47,16 @@ import com.seibel.distanthorizons.core.util.RayCastUtil;
 import com.seibel.distanthorizons.core.util.math.Vec3f;
 import com.seibel.distanthorizons.core.world.AbstractDhWorld;
 import com.seibel.distanthorizons.core.wrapperInterfaces.IWrapperFactory;
+import com.seibel.distanthorizons.core.wrapperInterfaces.block.IBlockStateWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.chunk.IChunkWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
+import com.seibel.distanthorizons.core.wrapperInterfaces.world.IBiomeWrapper;
+import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.ILevelWrapper;
 import com.seibel.distanthorizons.coreapi.util.BitShiftUtil;
 import com.seibel.distanthorizons.core.util.math.Vec3d;
 import com.seibel.distanthorizons.core.util.math.Vec3i;
+import com.seibel.distanthorizons.coreapi.util.ColorUtil;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import org.jetbrains.annotations.Nullable;
@@ -78,17 +87,21 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 	//=============//
 	// constructor //
 	//=============//
+	//region
 	
 	private DhApiTerrainDataRepo()
 	{
 		
 	}
 	
+	//endregion
+	
 	
 	
 	//================//
 	// Getter Methods //
 	//================//
+	//region
 	
 	@Override
 	public DhApiResult<DhApiTerrainDataPoint> getSingleDataPointAtBlockPos(IDhApiLevelWrapper levelWrapper, int blockPosX, int blockPosY, int blockPosZ, IDhApiTerrainDataCache dataCache)
@@ -109,9 +122,12 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 	public DhApiResult<DhApiTerrainDataPoint[][][]> getAllTerrainDataAtDetailLevelAndPos(IDhApiLevelWrapper levelWrapper, byte detailLevel, int posX, int posZ, IDhApiTerrainDataCache dataCache)
 	{ return getTerrainDataOverAreaForPositionDetailLevel(levelWrapper, DhSectionPos.encode(detailLevel, posX, posZ), dataCache); }
 	
+	//endregion
+	
 	
 	
 	// private getters //
+	//region
 	
 	/** Returns a single API terrain datapoint that contains the given Y block position */
 	private static DhApiResult<DhApiTerrainDataPoint> getTerrainDataAtBlockYPos(IDhApiLevelWrapper levelWrapper, long requestedColumnPos, Integer blockYPos, IDhApiTerrainDataCache dataCache)
@@ -340,11 +356,14 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 		}
 	}
 	
+	//endregion
+	
 	
 	
 	//====================//
 	// raycasting methods //
 	//====================//
+	//region
 	
 	@Override
 	public DhApiResult<DhApiRaycastResult> raycast(
@@ -490,11 +509,14 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 		return returnList;
 	}
 	
+	//endregion
+	
 	
 	
 	//================//
 	// setter methods //
 	//================//
+	//region
 	
 	@Override
 	public DhApiResult<Void> overwriteChunkDataAsync(IDhApiLevelWrapper levelWrapper, Object[] chunkObjectArray) throws ClassCastException
@@ -524,20 +546,26 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 		return DhApiResult.createSuccess();
 	}
 	
+	//endregion
+	
 	
 	
 	//=============//
 	// API helpers //
 	//=============//
+	//region
 	
 	@Override
 	public IDhApiTerrainDataCache createSoftCache() { return new DhApiTerrainDataCache(); }
+	
+	//endregion
 	
 	
 	
 	//===============//
 	// debug methods //
 	//===============//
+	//region
 	
 	/**
 	 * This method is here for debugging the repo and isn't intended for normal use.
@@ -617,6 +645,9 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 			thread.start();
 		}
 	}
+	
+	//endregion
+	
 	
 	
 }
