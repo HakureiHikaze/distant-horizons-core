@@ -321,18 +321,34 @@ public class ColumnBox
 			if (!adjTransparent)
 			{
 				// Adjacent is opaque
-				boolean adjacentCoversThis =
-					!adjacentIsSameDetailLevel
-						&& RenderDataPointUtil.getYMax(adjPoint) >= caveCullingMaxY
-						&&
-						(
-							(x == 0 && direction == EDhDirection.WEST)
-							|| (z == 0 && direction == EDhDirection.NORTH)
-							|| (x == 256 && direction == EDhDirection.EAST)
-							|| (z == 256 && direction == EDhDirection.SOUTH)
-						);
 				
-				lightToApply = adjacentCoversThis ? adjSkyLight : SKYLIGHT_COVERED;
+				// The following logic is done to provide a little bit of overdraw to
+				// prevent holes when low detail LODs are replaced by higher-detail ones
+				// when moving.
+				// If not done higher quality LODs can cause holes due to not 
+				// covering the whole face like the lower detail LODs they replaced,
+				// while still culling most LODs that are covered by other blocks.
+				
+				boolean onBorder = 
+					(direction == EDhDirection.WEST && x == 0)
+					|| (direction == EDhDirection.NORTH && z == 0)
+					|| (direction == EDhDirection.EAST && x == ((horizontalBlockWidth) * (ColumnRenderSource.WIDTH)))
+					|| (direction == EDhDirection.SOUTH && z == ((horizontalBlockWidth) * (ColumnRenderSource.WIDTH)));
+				
+				boolean isLit =
+					RenderDataPointUtil.getLightSky(adjPoint) != LodUtil.MIN_MC_LIGHT
+					|| RenderDataPointUtil.getLightBlock(adjPoint) != LodUtil.MIN_MC_LIGHT;
+				
+				// render the face if...
+				boolean useAdjLighting =
+					// we're on the border... (holes can only happen on LOD borders since faces inside an LOD will always be the same detail level)
+					onBorder
+					// ...this face has some sort of lighting... (0 light generally means the face is covered by other blocks)
+					&& isLit
+					// ...and is above the culling height
+					&& RenderDataPointUtil.getYMax(adjPoint) >= caveCullingMaxY;
+				
+				lightToApply = useAdjLighting ? adjSkyLight : SKYLIGHT_COVERED;
 			}
 			else
 			{
