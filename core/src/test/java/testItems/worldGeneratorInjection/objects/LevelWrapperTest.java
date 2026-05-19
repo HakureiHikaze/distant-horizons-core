@@ -20,10 +20,15 @@
 package testItems.worldGeneratorInjection.objects;
 
 import com.seibel.distanthorizons.api.enums.worldGeneration.EDhApiLevelType;
+import com.seibel.distanthorizons.api.interfaces.block.IDhApiBiomeWrapper;
+import com.seibel.distanthorizons.api.interfaces.block.IDhApiBlockStateWrapper;
 import com.seibel.distanthorizons.api.interfaces.render.IDhApiCustomRenderRegister;
 import com.seibel.distanthorizons.api.interfaces.world.IDhApiDimensionTypeWrapper;
 import com.seibel.distanthorizons.api.interfaces.world.IDhApiLevelWrapper;
+import com.seibel.distanthorizons.api.objects.DhApiResult;
+import com.seibel.distanthorizons.api.objects.data.IDhApiFullDataSource;
 
+import java.awt.*;
 import java.io.File;
 
 /**
@@ -65,6 +70,10 @@ public class LevelWrapperTest implements IDhApiLevelWrapper
 	@Override
 	public File getDhSaveFolder()
 	{ return null; }
+	
+	@Override 
+	public DhApiResult<Color> getBlockColorPreApi(IDhApiBlockStateWrapper blockStateWrapper, IDhApiBiomeWrapper biomeWrapper, int blockWorldPosX, int blockWorldPosY, int blockWorldPosZ, IDhApiFullDataSource dataSource)
+	{ return DhApiResult.createFail("Not Implemented"); }
 	
 	
 	
