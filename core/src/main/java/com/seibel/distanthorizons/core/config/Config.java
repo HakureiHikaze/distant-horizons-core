@@ -1114,6 +1114,8 @@ public class Config
 						.set(0)
 						.build();
 					
+					public static ConfigUISpacer positionFinderBlockPosSpacer = new ConfigUISpacer.Builder().build();
+					
 					public static ConfigEntry<Integer> positionFinderMinBlockY = new ConfigEntry.Builder<Integer>()
 						.set(-64)
 						.build();

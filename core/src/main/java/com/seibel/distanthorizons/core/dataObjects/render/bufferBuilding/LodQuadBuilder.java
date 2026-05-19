@@ -143,7 +143,7 @@ public class LodQuadBuilder
 	//===========//
 	// add quads //
 	//===========//
-	///region
+	//region
 	
 	public void addQuadAdj(
 			EDhDirection dir, 
@@ -182,35 +182,35 @@ public class LodQuadBuilder
 	}
 	
 	// XZ
-	public void addQuadUp(short minX, short maxY, short minZ, short width, int color, byte irisBlockMaterialId, byte skylight, byte blocklight)
+	public void addQuadUp(short minX, short maxY, short minZ, short blockWidth, int color, byte irisBlockMaterialId, byte skylight, byte blocklight)
 	{
 		boolean isTransparent = (this.doTransparency && ColorUtil.getAlpha(color) < 255);
 		ArrayList<BufferQuad> quadList = isTransparent 
 				? this.transparentQuads[EDhDirection.UP.ordinal()] 
 				: this.opaqueQuads[EDhDirection.UP.ordinal()];
 		
-		BufferQuad quad = new BufferQuad(minX, maxY, minZ, width, width, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.UP);
+		BufferQuad quad = new BufferQuad(minX, maxY, minZ, blockWidth, blockWidth, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.UP);
 		quadList.add(quad);
 	}
 	
-	public void addQuadDown(short x, short y, short z, short width, int color, byte irisBlockMaterialId, byte skylight, byte blocklight)
+	public void addQuadDown(short x, short y, short z, short blockWidth, int color, byte irisBlockMaterialId, byte skylight, byte blocklight)
 	{
 		ArrayList<BufferQuad> quadArray = (this.doTransparency && ColorUtil.getAlpha(color) < 255)
 				? this.transparentQuads[EDhDirection.DOWN.ordinal()]
 				: this.opaqueQuads[EDhDirection.DOWN.ordinal()];
 		
-		BufferQuad quad = new BufferQuad(x, y, z, width, width, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.DOWN);
+		BufferQuad quad = new BufferQuad(x, y, z, blockWidth, blockWidth, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.DOWN);
 		quadArray.add(quad);
 	}
 	
-	///endregion
+	//endregion
 	
 	
 	
 	//=================//
 	// data finalizing //
 	//=================//
-	///region
+	//region
 	
 	/** Uses Greedy meshing to merge this builder's Quads. */
 	public void mergeQuads()
@@ -279,14 +279,14 @@ public class LodQuadBuilder
 		return mergeCount;
 	}
 	
-	///endregion
+	//endregion
 	
 	
 	
 	//==============//
 	// buffer setup //
 	//==============//
-	///region
+	//region
 	
 	public ArrayList<ByteBuffer> makeOpaqueVertexBuffers() { return this.makeVertexBuffers(this.opaqueQuads); }
 	public ArrayList<ByteBuffer> makeTransparentVertexBuffers() { return this.makeVertexBuffers(this.transparentQuads); }
@@ -451,14 +451,14 @@ public class LodQuadBuilder
 		bb.putShort((short) 0); // padding to make sure the vertex format as a whole is a multiple of 4
 	}
 	
-	///endregion
+	//endregion
 	
 	
 	
 	//=========//
 	// getters //
 	//=========//
-	///region
+	//region
 	
 	public int getCurrentOpaqueQuadsCount()
 	{
@@ -513,7 +513,7 @@ public class LodQuadBuilder
 		return fullSizedBuffer;
 	}
 	
-	///endregion
+	//endregion
 	
 	
 	
