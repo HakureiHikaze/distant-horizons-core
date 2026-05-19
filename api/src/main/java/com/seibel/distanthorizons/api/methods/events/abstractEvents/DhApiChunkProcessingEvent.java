@@ -51,6 +51,7 @@ import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhAp
  *
  * @author James Seibel
  * @version 2025-09-29
+ * @see DhApiChunkModifiedEvent
  * @since API 4.1.0
  */
 public abstract class DhApiChunkProcessingEvent implements IDhApiEvent<DhApiChunkProcessingEvent.EventParam>
