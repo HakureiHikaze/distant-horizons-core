@@ -19,6 +19,7 @@
 
 package com.seibel.distanthorizons.core.render.QuadTree;
 
+import com.seibel.distanthorizons.api.enums.rendering.EDhApiTransparency;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dataObjects.fullData.sources.FullDataSourceV2;
 import com.seibel.distanthorizons.core.dataObjects.render.ColumnRenderSource;
@@ -223,7 +224,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 			}
 			
 			
-			boolean enableTransparency = Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled;
+			boolean enableTransparency = Config.Client.Advanced.Graphics.Quality.transparency.get() == EDhApiTransparency.COMPLETE;
 			LodQuadBuilder lodQuadBuilder = new LodQuadBuilder(enableTransparency, this.clientLevel.getClientLevelWrapper());
 			
 			

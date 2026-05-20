@@ -19,6 +19,7 @@
 
 package com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding;
 
+import com.seibel.distanthorizons.api.enums.rendering.EDhApiTransparency;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dataObjects.render.ColumnRenderSource;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
@@ -67,8 +68,7 @@ public class ColumnBox
 		byte skyLightTop = skyLight;
 		byte skyLightBot = RenderDataPointUtil.doesDataPointExist(bottomData) ? RenderDataPointUtil.getLightSky(bottomData) : 0;
 		
-		boolean transparencyEnabled = Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled;
-		boolean fakeOceanFloor = Config.Client.Advanced.Graphics.Quality.transparency.get().fakeTransparencyEnabled;
+		boolean transparencyEnabled = Config.Client.Advanced.Graphics.Quality.transparency.get() == EDhApiTransparency.COMPLETE;
 		
 		boolean isTransparent = ColorUtil.getAlpha(color) < 255 && transparencyEnabled;
 		boolean overVoid = !RenderDataPointUtil.doesDataPointExist(bottomData);
@@ -90,24 +90,6 @@ public class ColumnBox
 		if (!RenderDataPointUtil.doesDataPointExist(bottomData))
 		{
 			color = ColorUtil.setAlpha(color, 255);
-		}
-		
-		
-		// fake ocean transparency
-		if (transparencyEnabled && fakeOceanFloor)
-		{
-			if (!isTransparent && isTopTransparent && RenderDataPointUtil.doesDataPointExist(topData))
-			{
-				skyLightTop = (byte) MathUtil.clamp(0, 15 - (RenderDataPointUtil.getYMax(topData) - minY), 15);
-				yHeight = (short) (RenderDataPointUtil.getYMax(topData) - minY - 1);
-			}
-			else if (isTransparent && !isBottomTransparent && RenderDataPointUtil.doesDataPointExist(bottomData))
-			{
-				minY = (short) (minY + yHeight - 1);
-				yHeight = 1;
-			}
-			
-			maxY = (short) (minY + yHeight);
 		}
 		
 		
@@ -279,7 +261,7 @@ public class ColumnBox
 		// determine face visibility/light //
 		//=================================//
 		
-		boolean transparencyEnabled = Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled;
+		boolean transparencyEnabled = Config.Client.Advanced.Graphics.Quality.transparency.get() == EDhApiTransparency.COMPLETE;
 		boolean inputTransparent = ColorUtil.getAlpha(color) < 255 && transparencyEnabled;
 		short yMax = (short) (yMin + ySize);
 		

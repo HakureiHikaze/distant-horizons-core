@@ -37,9 +37,9 @@
 
   "distanthorizons.updater.title":
     "Distant Horizons auto updater",
-  "distanthorizons.updater.text1":
+  "distanthorizons.updater.updateAvailable":
     "§lNew update available!",
-  "distanthorizons.updater.text2":
+  "distanthorizons.updater.updateConfirmation":
     "§fDo you want to update from %s§f to %s§f?",
   "distanthorizons.updater.later":
     "Not now",
@@ -67,7 +67,7 @@
   "distanthorizons.config.client.quickEnableRendering":
     "Enable Rendering",
   "distanthorizons.config.client.quickEnableRendering.@tooltip":
-    "Determines if Distant Horizons Renders LODs.",
+    "If true, Distant Horizons will render LODs beyond the vanilla render distance.",
   
   "distanthorizons.config.client.quickShowWorldGenProgress":
     "Show LOD Gen/Import Progress",
@@ -81,7 +81,7 @@
   "distanthorizons.config.client.threadPresetSetting":
     "CPU Load",
   "distanthorizons.config.client.threadPresetSetting.@tooltip":
-    "Modifies how many threads Distant Horizons' will use. \n\nIncreasing this setting will improve the Distant Generator speed and LOD loading speed, \nbut will also increase CPU/memory usage and may introduce stuttering. \n\nNote: This is a CPU relative setting. \nIt should put an equal amount of strain on a 2 core CPU as a 64 core CPU.",
+    "Modifies how many threads Distant Horizons' will use. \n\nIncreasing this setting will increase the Distant Generator's speed and LOD loading speed, \nbut will also increase CPU/memory usage and may introduce stuttering. \n\nNote: This is a CPU relative setting. \nIt should put an equal amount of strain on a 2 core CPU as a 64 core CPU.",
     
   "distanthorizons.config.client.optionsButton":
     "Show The Options Button",
@@ -114,15 +114,15 @@
   "distanthorizons.config.client.advanced.graphics.quality.lodChunkRenderDistanceRadius":
     "LOD Chunk Render Distance Radius",
   "distanthorizons.config.client.advanced.graphics.quality.lodChunkRenderDistanceRadius.@tooltip":
-    "Distant Horizons' render distance, measured in chunks. \n\nNote: this is a best effort number. \nThe render distance may be above or below this number \ndepending on your other graphic settings.",
+    "Distant Horizons' render distance, measured in chunks. \n\nNote: this is a best effort number. \nThe actual render distance may be above or below this number \ndepending on your other graphic settings.",
   "distanthorizons.config.client.advanced.graphics.quality.horizontalQuality":
     "LOD Dropoff Distance",
   "distanthorizons.config.client.advanced.graphics.quality.horizontalQuality.@tooltip":
-    "How far apart drops in quality are.\n\nHigher settings will increase the distance between drops\nbut will increase memory and GPU usage.",
+    "This indicates how far apart drops in LOD quality are.\n\nHigher settings will increase the distance between drops\nbut will increase memory and GPU usage.",
   "distanthorizons.config.client.advanced.graphics.quality.maxHorizontalResolution":
     "Max Horizontal Resolution",
   "distanthorizons.config.client.advanced.graphics.quality.maxHorizontalResolution.@tooltip":
-    "The maximum detail LODs are rendered at.\n\n§6Fastest:§r Chunk\n§6Fanciest:§r Block",
+    "The maximum detail LODs can render at.\n\n§6Fastest:§r Chunk\n§6Fanciest:§r Block",
   "distanthorizons.config.client.advanced.graphics.quality.verticalQuality":
     "Vertical Quality",
   "distanthorizons.config.client.advanced.graphics.quality.verticalQuality.@tooltip":
@@ -133,14 +133,6 @@
     "How quickly LODs drop off in quality.\n\nLarger numbers will improve how distant terrain looks\nbut will increase memory and GPU usage.",
   "distanthorizons.config.client.advanced.graphics.quality.transparency":
     "Transparency",
-  "distanthorizons.config.client.advanced.graphics.quality.blocksToIgnore":
-    "Blocks To Ignore",
-  "distanthorizons.config.client.advanced.graphics.quality.blocksToIgnore.@tooltip":
-    "Defines the types of blocks to ignore when generating LODs.",
-  "distanthorizons.config.client.advanced.graphics.quality.tintWithAvoidedBlocks":
-    "Tint With Avoided Blocks",
-  "distanthorizons.config.client.advanced.graphics.quality.tintWithAvoidedBlocks.@tooltip":
-    "§4Note: makes snow, carpet, and trapdoors look really bad§r\nShould the blocks underneath avoided blocks gain the color of the avoided block?\n§6True:§r a red flower on grass will tint the grass below it red\n§6False:§r skipped blocks will not change color of surface below them",
   "distanthorizons.config.client.advanced.graphics.quality.lodShading":
     "LOD Shading",
   "distanthorizons.config.client.advanced.graphics.quality.lodShading.@tooltip":
@@ -160,7 +152,7 @@
   "distanthorizons.config.client.advanced.graphics.quality.dhFadeFarClipPlane":
     "Fade Before Far Clip Plane",
   "distanthorizons.config.client.advanced.graphics.quality.dhFadeFarClipPlane.@tooltip":
-    "Should DH fade out before reaching the far plane? \nThis is helpful to prevent DH clouds from cutting off in the distance.",
+    "Should DH fade out before reaching the far clip plane? \nThis is helpful to prevent DH clouds from cutting off in the distance.",
   "distanthorizons.config.client.advanced.graphics.quality.brightnessMultiplier":
     "Brightness Multiplier",
   "distanthorizons.config.client.advanced.graphics.quality.brightnessMultiplier.@tooltip":
@@ -172,7 +164,7 @@
   "distanthorizons.config.client.advanced.graphics.quality.lodBiomeBlending":
     "Biome Blending",
   "distanthorizons.config.client.advanced.graphics.quality.lodBiomeBlending.@tooltip":
-    "This is the same as vanilla Biome Blending settings for LOD area. \n\nNote that anything other than '0' will greatly effect Lod building time\nand increase triangle count. The cost on chunk generation speed is also \nquite large if set to too high.\n\n'0' equals to Vanilla Biome Blending of '1x1', \n'1' equals to Vanilla Biome Blending of '3x3', \n'2' equals to Vanilla Biome Blending of '5x5'... \n",
+    "This is the same as vanilla Biome Blending settings for LOD area. \n\nNote: anything above '0' will slow down LOD loading time.\n\n'0' equals to Vanilla Biome Blending of '1x1', \n'1' equals to Vanilla Biome Blending of '3x3', \n'2' equals to Vanilla Biome Blending of '5x5'... \n",
 
 
 
@@ -188,13 +180,13 @@
   "distanthorizons.config.client.advanced.graphics.genericRendering.enableGenericRendering":
     "Enable Generic Rendering",
   "distanthorizons.config.client.advanced.graphics.genericRendering.enableGenericRendering.@tooltip":
-    "If true non terrain objects will be rendered in DH's terrain. \nThis includes beacon beams and clouds.",
+    "If true non terrain objects will be rendered by DH. \ni.e. beacon beams and clouds.",
   "distanthorizons.config.client.advanced.graphics.genericRendering.enableBeaconRendering":
     "Enable Beacon Rendering",
   "distanthorizons.config.client.advanced.graphics.genericRendering.beaconRenderHeight":
     "Beacon render height",
   "distanthorizons.config.client.advanced.graphics.genericRendering.beaconRenderHeight.@tooltip":
-    "Sets the maximum height at which beacons will render. \nThis will only affect new beacons coming into LOD render distance. \nBeacons currently visible in LOD chunks will not be affected.",
+    "Sets the maximum height beacons will render up to. Requires a world re-load to take affect.",
   "distanthorizons.config.client.advanced.graphics.genericRendering.expandDistantBeacons":
     "Expand Distant Beacons",
   "distanthorizons.config.client.advanced.graphics.genericRendering.expandDistantBeacons.@tooltip":
@@ -206,18 +198,10 @@
   "distanthorizons.config.client.advanced.graphics.genericRendering.enableCloudRendering.@tooltip":
     "If true LOD clouds will be rendered.",
   "distanthorizons.config.client.advanced.graphics.genericRendering.dimensionEnabledCloudRenderingCsv":
-    "Enable Cloud Rendering",
+    "Cloud Enabled Dimension CSV List",
   "distanthorizons.config.client.advanced.graphics.genericRendering.dimensionEnabledCloudRenderingCsv.@tooltip":
-    "A comma separated separated list of dimension resource locations where DH clouds will render. \n\nExample: \"minecraft:overworld,minecraft:the_end\" \n\nChanges will only be seen when the world is re-loaded.",
-  "distanthorizons.config.client.advanced.graphics.genericRendering.enableUnexploredFogRendering":
-    "Enable Unexplored Fog Rendering",
-  "distanthorizons.config.client.advanced.graphics.genericRendering.enableUnexploredFogRendering.@tooltip":
-    "If true unexplored/ungenerated LODs will be rendered as large dark gray boxes.",
-  "distanthorizons.config.client.advanced.graphics.genericRendering.enableInstancedRendering":
-    "Enable Instanced Rendering",
-  "distanthorizons.config.client.advanced.graphics.genericRendering.enableInstancedRendering.@tooltip":
-    "Can be disabled to use much slower but more compatible direct rendering. \nDisabling this can be used to fix some crashes on Mac.",
-
+    "A comma separated separated list of dimension resource locations where DH clouds will render. \n\nExample: \"minecraft:overworld,minecraft:the_end\" \n\nChanges require a world re-load.",
+  
 
 
   "distanthorizons.config.client.advanced.graphics.fog":
@@ -376,6 +360,14 @@
     "Water Surface Replacement",
   "distanthorizons.config.client.advanced.graphics.culling.waterSurfaceBlockReplacementCsv.@tooltip":
     "A comma separated list of block resource locations that will be removed \nwhen on top of water.",
+  "distanthorizons.config.client.advanced.graphics.culling.blocksToIgnore":
+    "Blocks To Ignore",
+  "distanthorizons.config.client.advanced.graphics.culling.blocksToIgnore.@tooltip":
+    "Defines what blocks should be rendered as LODs. \n\n§NONE:§r Include all blocks in the LODs\n§NON_COLLIDING:§r Only render solid blocks in the LODs (tall grass, torches, etc. will be ignored)",
+  "distanthorizons.config.client.advanced.graphics.culling.tintWithAvoidedBlocks":
+    "Tint With Avoided Blocks",
+  "distanthorizons.config.client.advanced.graphics.culling.tintWithAvoidedBlocks.@tooltip":
+    "§4Note: makes snow, carpet, and trapdoors look really bad§r\nShould the blocks underneath avoided blocks gain the color of the avoided block?\n§6True:§r a red flower on grass will tint the grass below it red\n§6False:§r skipped blocks will not change color of surface below them",
     
   "distanthorizons.config.client.advanced.graphics.overrideVanillaGraphicsSettings":
     "Override Vanilla Settings",
@@ -505,14 +497,6 @@
     "OpenGL Error Handling Mode",
   "distanthorizons.config.client.advanced.debugging.openGl.glErrorHandlingMode.@tooltip":
     "Defines how OpenGL errors are handled. \n Requires rebooting Minecraft to apply. \nMay incorrectly catch OpenGL errors thrown by other mods.",
-  "distanthorizons.config.client.advanced.debugging.openGl.validateBufferIdsBeforeRendering":
-    "Validate Buffer IDs Before Rendering",
-  "distanthorizons.config.client.advanced.debugging.openGl.validateBufferIdsBeforeRendering.@tooltip":
-    "Massively reduces FPS. \nShould only be used if mysterious EXCEPTION_ACCESS_VIOLATION crashes are happening in DH's rendering code and you're attempting to troubleshoot it.",
-  "distanthorizons.config.client.advanced.debugging.openGl.glUploadMode":
-    "Uploade Mode",
-  "distanthorizons.config.client.advanced.debugging.openGl.glUploadMode.@tooltip":
-    "Only for debugging",
   
 
   
@@ -658,14 +642,6 @@
     "Disable Unchanged Chunk Check",
   "distanthorizons.config.common.lodBuilding.disableUnchangedChunkCheck.@tooltip":
     "Disabling this check may fix issues where LODs aren't updated after\nblocks have been changed.\n",
-  "distanthorizons.config.common.lodBuilding.pullLightingForPregeneratedChunks":
-    "Pull Lighting For Pre-generated Chunks",
-  "distanthorizons.config.common.lodBuilding.pullLightingForPregeneratedChunks.@tooltip":
-    "If true LOD generation for pre-existing chunks will attempt to pull the lighting data \nsaved in Minecraft's Region files. \nIf false DH will pull in chunks without lighting and re-light them. \n\nSetting this to true will result in faster LOD generation \nfor already generated worlds, but is broken by most lighting mods. \n\nSet this to false if LODs are black.",
-  "distanthorizons.config.common.lodBuilding.assumePreExistingChunksAreFinished":
-    "Assume Pre-Existing Chunks Are Finished",
-  "distanthorizons.config.common.lodBuilding.assumePreExistingChunksAreFinished.@tooltip":
-    "Setting this to true may solve some issues when using DH with a pre-generated world.",
   "distanthorizons.config.common.lodBuilding.dataCompression":
     "Data Compression",
   "distanthorizons.config.common.lodBuilding.dataCompression.@tooltip":
@@ -674,12 +650,6 @@
     "Lossy World Compression",
   "distanthorizons.config.common.lodBuilding.worldCompression.@tooltip":
     "How should block data be compressed when creating LOD data? \nThis setting will only affect new or updated LOD data, \nany data already generated when this setting is changed will be \nunaffected until it is modified or re-loaded. \n\nMost Accurate: Merge Same Blocks \nHighest Compression: Visually Equal",
-  "distanthorizons.config.common.lodBuilding.recalculateChunkHeightmaps":
-    "Recalculate Chunk Heightmaps",
-  "distanthorizons.config.common.lodBuilding.recalculateChunkHeightmaps.@tooltip":
-    "True: Recalculate chunk height maps before chunks can be used by DH. This can fix problems with worlds created by external tools. \nFalse: Assume any height maps handled by Minecraft are correct. \n\nFastest: False\nMost Compatible: True",
-  "distanthorizons.config.common.lodBuilding.showMigrationChatWarning":
-    "Log Migration In Chat",
 
   
   "distanthorizons.config.common.lodBuilding.experimental":
@@ -721,8 +691,6 @@
     
   "distanthorizons.config.common.logging.logWorldGenEventToFile":
     "World Gen Events - File",
-  "distanthorizons.config.common.logging.logWorldGenPerformanceToFile":
-    "World Gen Performance - File",
   "distanthorizons.config.common.logging.logWorldGenChunkLoadEventToFile":
     "World Gen Load Events - File",
   "distanthorizons.config.common.logging.logRendererEventToFile":
@@ -754,10 +722,10 @@
     "Show Slow World Gen Warnings",
   "distanthorizons.config.common.logging.warning.showModCompatibilityWarningsOnStartup":
     "Show Mod Compatibility Warnings",
-  "distanthorizons.config.common.logging.warning.showGarbageCollectorWarning":
-    "Show Garbage Collector Warning",
   "distanthorizons.config.common.logging.warning.logGarbageCollectorWarning":
     "Log Garbage Collector Warning",
+  "distanthorizons.config.common.logging.warning.showGarbageCollectorWarning":
+    "Show Garbage Collector Warning",
 
 
 
@@ -922,18 +890,9 @@
     
   "distanthorizons.config.enum.EDhApiTransparency.DISABLED":
     "Disabled",
-  "distanthorizons.config.enum.EDhApiTransparency.FAKE":
-    "Fake",
   "distanthorizons.config.enum.EDhApiTransparency.COMPLETE":
     "Complete",
     
-  "distanthorizons.config.enum.EDhApiFogDrawMode.USE_OPTIFINE_SETTING":
-    "Use modded settings",
-  "distanthorizons.config.enum.EDhApiFogDrawMode.FOG_ENABLED":
-    "Enabled",
-  "distanthorizons.config.enum.EDhApiFogDrawMode.FOG_DISABLED":
-    "Disabled",
-  
   "distanthorizons.config.enum.EDhApiFogColorMode.USE_WORLD_FOG_COLOR":
     "Use world fog",
   "distanthorizons.config.enum.EDhApiFogColorMode.USE_SKY_COLOR":
@@ -979,13 +938,6 @@
     "Below Set Height",
   "distanthorizons.config.enum.EDhApiHeightFogDirection.ABOVE_AND_BELOW_SET_HEIGHT":
     "Above And Below Set Height",
-    
-  "distanthorizons.config.enum.EDhApiVanillaOverdraw.NEVER":
-    "Never",
-  "distanthorizons.config.enum.EDhApiVanillaOverdraw.DYNAMIC":
-    "Dynamic",
-  "distanthorizons.config.enum.EDhApiVanillaOverdraw.ALWAYS":
-    "Always",
     
   "distanthorizons.config.enum.EDhApiDistantGeneratorMode.NONE":
     "1. Existing Only",
@@ -1070,13 +1022,6 @@
   "distanthorizons.config.enum.EDhApiGLErrorHandlingMode.LOG_THROW":
     "Log-Throw",
     
-  "distanthorizons.config.enum.EDhApiGlProfileMode.CORE":
-    "Core",
-  "distanthorizons.config.enum.EDhApiGlProfileMode.COMPAT":
-    "Compat",
-  "distanthorizons.config.enum.EDhApiGlProfileMode.ANY":
-    "Any",
-    
   "distanthorizons.config.enum.EDhApiLoggerLevel.ALL":
     "1. All",
   "distanthorizons.config.enum.EDhApiLoggerLevel.DEBUG":
@@ -1090,19 +1035,6 @@
   "distanthorizons.config.enum.EDhApiLoggerLevel.DISABLED":
     "6. Disabled",
     
-    
-  "distanthorizons.config.enum.EDhApiGpuUploadMethod.AUTO":
-    "Auto",
-  "distanthorizons.config.enum.EDhApiGpuUploadMethod.NONE":
-    "None",
-  "distanthorizons.config.enum.EDhApiGpuUploadMethod.BUFFER_STORAGE":
-    "Buffer storage",
-  "distanthorizons.config.enum.EDhApiGpuUploadMethod.SUB_DATA":
-    "Sub data",
-  "distanthorizons.config.enum.EDhApiGpuUploadMethod.BUFFER_MAPPING":
-    "Buffer mapping",
-  "distanthorizons.config.enum.EDhApiGpuUploadMethod.DATA":
-    "Data",
     
   "distanthorizons.config.enum.EDhApiLodShading.AUTO":
     "Auto",

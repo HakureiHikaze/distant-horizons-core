@@ -19,6 +19,7 @@
 
 package com.seibel.distanthorizons.core.render.renderer;
 
+import com.seibel.distanthorizons.api.enums.rendering.EDhApiTransparency;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.*;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding.LodBufferContainer;
@@ -253,7 +254,7 @@ public class LodRenderer
 				
 				// combined pass transparent rendering
 				if (!deferTransparentRendering
-					&& Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled)
+					&& Config.Client.Advanced.Graphics.Quality.transparency.get() == EDhApiTransparency.COMPLETE)
 				{
 					profiler.popPush("LOD Transparent");
 					this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
@@ -326,7 +327,7 @@ public class LodRenderer
 				// deferred rendering //
 				//====================//
 				
-				if (Config.Client.Advanced.Graphics.Quality.transparency.get().transparencyEnabled)
+				if (Config.Client.Advanced.Graphics.Quality.transparency.get() == EDhApiTransparency.COMPLETE)
 				{
 					profiler.popPush("LOD Transparent");
 					this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);

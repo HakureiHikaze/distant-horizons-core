@@ -91,11 +91,11 @@ public class DhApiGraphicsConfig implements IDhApiGraphicsConfig
 	
 	@Override
 	public IDhApiConfigValue<EDhApiBlocksToAvoid> blocksToAvoid()
-	{ return new DhApiConfigValue<EDhApiBlocksToAvoid, EDhApiBlocksToAvoid>(Config.Client.Advanced.Graphics.Quality.blocksToIgnore); }
+	{ return new DhApiConfigValue<EDhApiBlocksToAvoid, EDhApiBlocksToAvoid>(Config.Client.Advanced.Graphics.Culling.blocksToIgnore); }
 	
 	@Override
 	public IDhApiConfigValue<Boolean> tintWithAvoidedBlocks()
-	{ return new DhApiConfigValue<Boolean, Boolean>(Config.Client.Advanced.Graphics.Quality.tintWithAvoidedBlocks); }
+	{ return new DhApiConfigValue<Boolean, Boolean>(Config.Client.Advanced.Graphics.Culling.tintWithAvoidedBlocks); }
 	
 	@Override
 	public IDhApiConfigValue<Integer> getBiomeBlending()
