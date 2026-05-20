@@ -812,15 +812,15 @@ public class Config
 						.addListener(IgnoredDimensionCsvHandler.INSTANCE)
 						.build();
 					
-					public static ConfigEntry<EDhApiRenderApi> renderingApi = new ConfigEntry.Builder<EDhApiRenderApi>()
-						.set(EDhApiRenderApi.AUTO)
+					public static ConfigEntry<EDhApiRenderingEngine> renderingEngine = new ConfigEntry.Builder<EDhApiRenderingEngine>()
+						.set(EDhApiRenderingEngine.AUTO)
 						.comment(""
 							+ "Requires a restart to change. \n"
 							+ " \n"
 							+ "Options: \n"
-							+ EDhApiRenderApi.AUTO + " - changes based on the most likely API for that MC version \n"
-							+ EDhApiRenderApi.OPEN_GL + " - Default \n"
-							+ EDhApiRenderApi.BLAZE_3D + " - Only supported on MC 1.21.11 \n"
+							+ EDhApiRenderingEngine.AUTO + " - changes based on the most likely API for that MC version \n"
+							+ EDhApiRenderingEngine.OPEN_GL + " - Default \n"
+							+ EDhApiRenderingEngine.BLAZE_3D + " - Only supported on MC 1.21.11 \n"
 							+ "")
 						.build();
 					
@@ -1438,8 +1438,9 @@ public class Config
 			
 			public static ConfigEntry<EDhApiDataCompressionMode> dataCompression = new ConfigEntry.Builder<EDhApiDataCompressionMode>()
 				.set(EDhApiDataCompressionMode.Z_STD_BLOCK)
-				// only visible via the API since there is no reason to use any compressor except ZStandard as of 2025-11-24
-				.setAppearance(EConfigEntryAppearance.ONLY_IN_API)
+				// only visible via the file since there is no reason to use any compressor except ZStandard as of 2025-11-24
+				// the only reason this hasn't been fully removed is due to some people having issues specifically with ZSTD
+				.setAppearance(EConfigEntryAppearance.ONLY_IN_FILE)
 				.build();
 			
 			public static ConfigEntry<EDhApiWorldCompressionMode> worldCompression = new ConfigEntry.Builder<EDhApiWorldCompressionMode>()

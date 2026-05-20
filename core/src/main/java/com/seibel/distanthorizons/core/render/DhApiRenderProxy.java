@@ -19,7 +19,8 @@
 
 package com.seibel.distanthorizons.core.render;
 
-import com.seibel.distanthorizons.api.enums.config.EDhApiRenderApi;
+import com.seibel.distanthorizons.api.enums.config.EDhApiRenderingApi;
+import com.seibel.distanthorizons.api.enums.config.EDhApiRenderingEngine;
 import com.seibel.distanthorizons.api.interfaces.render.IDhApiRenderProxy;
 import com.seibel.distanthorizons.api.objects.DhApiResult;
 import com.seibel.distanthorizons.core.api.internal.SharedApi;
@@ -97,7 +98,7 @@ public class DhApiRenderProxy implements IDhApiRenderProxy
 	}
 	
 	@Override 
-	public EDhApiRenderApi getRenderingApi() throws IllegalStateException
+	public EDhApiRenderingApi getRenderingApi() throws IllegalStateException
 	{
 		AbstractDhRenderApiDefinition apiDef = tryGetApiDef();
 		if (apiDef == null)

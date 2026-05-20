@@ -19,7 +19,8 @@
 
 package com.seibel.distanthorizons.api.interfaces.render;
 
-import com.seibel.distanthorizons.api.enums.config.EDhApiRenderApi;
+import com.seibel.distanthorizons.api.enums.config.EDhApiRenderingApi;
+import com.seibel.distanthorizons.api.enums.config.EDhApiRenderingEngine;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiAfterDhInitEvent;
 import com.seibel.distanthorizons.api.objects.DhApiResult;
 
@@ -47,9 +48,8 @@ public interface IDhApiRenderProxy
 	DhApiResult<Boolean> clearRenderDataCache();
 	
 	/**
-	 * Returns which specific {@link EDhApiRenderApi}
-	 * Distant Horizons will use for rendering. <br>
-	 * Will not return {@link EDhApiRenderApi#AUTO}.<br>
+	 * Returns which specific {@link EDhApiRenderingApi}
+	 * Distant Horizons will use for rendering. <br><br>
 	 * 
 	 * @throws IllegalStateException if no renderer has been bound yet, 
 	 *      wait till after {@link DhApiAfterDhInitEvent} has been fired
@@ -57,7 +57,7 @@ public interface IDhApiRenderProxy
 	 * @see DhApiAfterDhInitEvent
 	 * @since API 7.0.0
 	 */
-	EDhApiRenderApi getRenderingApi() throws IllegalStateException;
+	EDhApiRenderingApi getRenderingApi() throws IllegalStateException;
 	/**
 	 * Returns true if the current renderer
 	 * is calling the base rendering API's method calls. <br>
