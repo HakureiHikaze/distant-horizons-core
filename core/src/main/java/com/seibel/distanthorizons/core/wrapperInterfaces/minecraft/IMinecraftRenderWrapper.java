@@ -21,9 +21,9 @@ package com.seibel.distanthorizons.core.wrapperInterfaces.minecraft;
 
 import java.awt.Color;
 
+import com.seibel.distanthorizons.api.enums.config.EDhApiRenderApi;
 import com.seibel.distanthorizons.core.api.internal.rendering.DhRenderState;
 import com.seibel.distanthorizons.core.enums.EDhDirection;
-import com.seibel.distanthorizons.core.render.EDhRenderApi;
 import com.seibel.distanthorizons.core.wrapperInterfaces.misc.ILightMapWrapper;
 import com.seibel.distanthorizons.coreapi.interfaces.dependencyInjection.IBindable;
 import com.seibel.distanthorizons.core.util.math.Vec3d;
@@ -77,7 +77,7 @@ public interface IMinecraftRenderWrapper extends IBindable
 	boolean mcRendersToFrameBuffer();
 	boolean runningLegacyOpenGL();
 	/** Returns the API Minecraft is currently using for rendering */
-	EDhRenderApi getMcRenderingApi();
+	EDhApiRenderApi getMcRenderingApi();
 	
 	/** @return -1 if no valid framebuffer is available yet */
 	int getTargetFramebuffer(); // Note: Iris is now hooking onto this for DH + Iris compat, try not to change (unless we wanna deal with some annoyances)

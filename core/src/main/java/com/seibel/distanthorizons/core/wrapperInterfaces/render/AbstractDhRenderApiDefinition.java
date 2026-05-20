@@ -1,8 +1,8 @@
 package com.seibel.distanthorizons.core.wrapperInterfaces.render;
 
+import com.seibel.distanthorizons.api.enums.config.EDhApiRenderApi;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.jar.EPlatform;
-import com.seibel.distanthorizons.core.render.EDhRenderApi;
 import com.seibel.distanthorizons.core.render.EDhRenderDepth;
 import com.seibel.distanthorizons.core.render.renderer.AbstractDebugWireframeRenderer;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.objects.IDhGenericObjectVertexBufferContainer;
@@ -32,7 +32,17 @@ public abstract class AbstractDhRenderApiDefinition implements IBindable
 	public boolean useSingleIbo() { return this.useSingleIbo; }
 	
 	public abstract EDhRenderDepth getRenderDepth();
-	public abstract EDhRenderApi getRenderApi();
+	/** will not return {@link EDhApiRenderApi#AUTO} */
+	public abstract EDhApiRenderApi getRenderApi();
+	/** 
+	 * Returns true if the current renderer
+	 * is calling the base rendering API's method calls. <br>
+	 * ie GL.drawArrays() for OpenGL. <Br><br>
+	 *
+	 * If DH is using Blaze3D (Mojang's rendering API) 
+	 * this will return false.
+	 */
+	public abstract boolean isNativeRenderer();
 	
 	//endregion
 	

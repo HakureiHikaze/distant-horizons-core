@@ -19,6 +19,8 @@
 
 package com.seibel.distanthorizons.api.interfaces.render;
 
+import com.seibel.distanthorizons.api.enums.config.EDhApiRenderApi;
+import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiAfterDhInitEvent;
 import com.seibel.distanthorizons.api.objects.DhApiResult;
 
 
@@ -43,6 +45,34 @@ public interface IDhApiRenderProxy
 	 * This improves rendering speed and VRAM size, but prevents dynamically changing LOD colors. <Br>
 	 */
 	DhApiResult<Boolean> clearRenderDataCache();
+	
+	/**
+	 * Returns which specific {@link EDhApiRenderApi}
+	 * Distant Horizons will use for rendering. <br>
+	 * Will not return {@link EDhApiRenderApi#AUTO}.<br>
+	 * 
+	 * @throws IllegalStateException if no renderer has been bound yet, 
+	 *      wait till after {@link DhApiAfterDhInitEvent} has been fired
+	 * 
+	 * @see DhApiAfterDhInitEvent
+	 * @since API 7.0.0
+	 */
+	EDhApiRenderApi getRenderingApi() throws IllegalStateException;
+	/**
+	 * Returns true if the current renderer
+	 * is calling the base rendering API's method calls. <br>
+	 * ie GL.drawArrays() for OpenGL. <Br><br>
+	 *
+	 * If DH is using a rendering interpretation layer like Blaze3D (Mojang's rendering API) 
+	 * this will return false.
+	 *
+	 * @throws IllegalStateException if no renderer has been bound yet, 
+	 *      wait till after {@link DhApiAfterDhInitEvent} has been fired
+	 *
+	 * @see DhApiAfterDhInitEvent
+	 * @since API 7.0.0
+	 */
+	boolean isNativeRenderer() throws IllegalStateException;
 	
 	
 	

@@ -19,9 +19,21 @@
 
 package com.seibel.distanthorizons.api.interfaces.override.rendering;
 
+import com.seibel.distanthorizons.api.enums.config.EDhApiRenderApi;
 import com.seibel.distanthorizons.api.interfaces.override.IDhApiOverrideable;
+import com.seibel.distanthorizons.api.interfaces.render.IDhApiRenderProxy;
 
 /**
+ * <b>Note: </b><br>
+ * This is only used if Distant Horizons' 
+ * {@link IDhApiRenderProxy#getRenderingApi()} returns {@link EDhApiRenderApi#OPEN_GL}
+ * and {@link IDhApiRenderProxy#isNativeRenderer()} returns true.
+ * ie this is only used when DH is doing native OpenGL rendering,
+ * if DH is using Blaze3D this interface will be ignored.
+ * 
+ * @see IDhApiRenderProxy#getRenderingApi()
+ * @see IDhApiRenderProxy#isNativeRenderer()
+ * 
  * @author James Seibel
  * @version 2024-1-24
  * @since API 2.0.0
