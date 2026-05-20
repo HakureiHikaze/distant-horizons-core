@@ -1438,8 +1438,8 @@ public class Config
 			
 			public static ConfigEntry<EDhApiDataCompressionMode> dataCompression = new ConfigEntry.Builder<EDhApiDataCompressionMode>()
 				.set(EDhApiDataCompressionMode.Z_STD_BLOCK)
-				// only visible via the file since there is no reason to use any compressor except ZStandard as of 2025-11-24
-				// the only reason this hasn't been fully removed is due to some people having issues specifically with ZSTD
+				// only visible via the API since there is no reason to use any compressor except ZStandard as of 2025-11-24
+				// Note: this may need to be re-visited since some people (android) have issues with ZStd
 				.setAppearance(EConfigEntryAppearance.ONLY_IN_FILE)
 				.build();
 			
