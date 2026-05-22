@@ -21,6 +21,7 @@ package com.seibel.distanthorizons.core.render.renderer;
 
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiTransparency;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.*;
+import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiFogRenderParam;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding.LodBufferContainer;
 import com.seibel.distanthorizons.core.dependencyInjection.ModAccessorInjector;
@@ -118,8 +119,8 @@ public class LodRenderer
 	
 	private void renderTerrain(RenderParams renderParams, IProfilerWrapper profiler, boolean runningDeferredPass)
 	{
-		//====================//
 		// validate rendering //
+		//====================//
 		//====================//
 		//region
 		
@@ -202,6 +203,8 @@ public class LodRenderer
 				renderFog |= renderParams.vanillaFogEnabled;
 			}
 			
+			DhApiBeforeFogRenderEvent.EventParam fogRenderEventParam = FogRenderParamFactory.createRenderParam(renderParams);
+			
 			//endregion
 			
 			
@@ -270,11 +273,13 @@ public class LodRenderer
 				
 				// fog
 				
-				if (renderFog)
+				boolean cancelFogEvent = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeFogRenderEvent.class, fogRenderEventParam);
+				if (renderFog
+					&& !cancelFogEvent)
 				{
 					profiler.popPush("LOD Fog");
 					
-					this.fogRenderer.render(renderParams);
+					this.fogRenderer.render(renderParams, fogRenderEventParam.getFogRenderParam());
 				}
 				
 				
@@ -333,11 +338,13 @@ public class LodRenderer
 					this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
 					
 					
-					if (renderFog)
+					boolean cancelFogEvent = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeFogRenderEvent.class, fogRenderEventParam);
+					if (renderFog
+						&& !cancelFogEvent)
 					{
 						profiler.popPush("LOD Fog");
 						
-						this.fogRenderer.render(renderParams);
+						this.fogRenderer.render(renderParams, fogRenderEventParam.getFogRenderParam());
 					}
 				}
 			}
