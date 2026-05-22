@@ -35,6 +35,18 @@ import java.util.Map;
  */
 public class DependencyInjector<BindableType extends IBindable> implements IDependencyInjector<BindableType> // Note to self: Don't try adding a generic type to IDhApiEvent, the constructor won't accept it
 {
+	/** 
+	 * empty list is to reduce GC pressure slightly in the common path
+	 * that {@link DependencyInjector#getInternalLogic(Class, boolean)} is called
+	 * when nothing has been bound.
+	 */
+	private static final ArrayList<?> EMPTY_GET_ALL_LIST = new ArrayList<>();
+	static
+	{
+		EMPTY_GET_ALL_LIST.add(null);
+	}
+	
+	
 	protected final HashMap<Class<? extends BindableType>, ArrayList<BindableType>> dependencies = new HashMap<>();
 	
 	/** Internal class reference to BindableType since we can't get it any other way. */
@@ -246,9 +258,7 @@ public class DependencyInjector<BindableType extends IBindable> implements IDepe
 		
 		
 		// return an empty list to prevent null pointers
-		ArrayList<T> emptyList = new ArrayList<T>();
-		emptyList.add(null);
-		return emptyList;
+		return (ArrayList<T>)EMPTY_GET_ALL_LIST;
 	}
 	
 	//endregion
