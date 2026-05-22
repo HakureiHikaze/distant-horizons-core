@@ -387,9 +387,9 @@
     "Ignored Dimension CSV",
   "distanthorizons.config.client.advanced.graphics.experimental.ignoredDimensionCsv.@tooltip":
     "A comma separated list of dimension resource locations where DH won't render. Example: \"minecraft:the_nether,minecraft:the_end\" \n\nFor Minecraft 1.12.2 and older:\nOpen the F3 screen and copy the dimension name shown in yellow.\n\nNote: \nSome DH settings will be disabled and/or changed to improve \nvisuals when DH rendering is disabled.",
-  "distanthorizons.config.client.advanced.graphics.experimental.renderingApi":
-    "Rendering API",
-  "distanthorizons.config.client.advanced.graphics.experimental.renderingApi.@tooltip":
+  "distanthorizons.config.client.advanced.graphics.experimental.renderingEngine":
+    "Rendering Engine",
+  "distanthorizons.config.client.advanced.graphics.experimental.renderingEngine.@tooltip":
     "Requires a restart to change.",
     
 
@@ -1057,11 +1057,11 @@
   "distanthorizons.config.enum.EDhApiGrassSideRendering.AS_DIRT":
     "As Dirt",
 
-  "distanthorizons.config.enum.EDhApiRenderApi.AUTO":
+  "distanthorizons.config.enum.EDhApiRenderingEngine.AUTO":
     "Auto",
-  "distanthorizons.config.enum.EDhApiRenderApi.OPEN_GL":
+  "distanthorizons.config.enum.EDhApiRenderingEngine.OPEN_GL":
     "OpenGL",
-  "distanthorizons.config.enum.EDhApiRenderApi.BLAZE_3D":
+  "distanthorizons.config.enum.EDhApiRenderingEngine.BLAZE_3D":
     "Blaze3D"
     
     
