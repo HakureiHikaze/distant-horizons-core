@@ -75,8 +75,6 @@ public class LodBufferContainer implements AutoCloseable
 		this.minCornerBlockPos = minCornerBlockPos;
 		this.vboOpaqueWrappers = new IVertexBufferWrapper[0];
 		this.vboTransparentWrappers = new IVertexBufferWrapper[0];
-		
-		this.uniformContainer.createUniformData(this);
 	}
 	
 	//endregion

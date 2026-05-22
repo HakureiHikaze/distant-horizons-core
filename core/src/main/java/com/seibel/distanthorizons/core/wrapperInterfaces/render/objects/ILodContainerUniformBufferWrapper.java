@@ -24,11 +24,11 @@ import com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding.LodBuff
 /**
  * @see LodBufferContainer
  */
-public interface ILodContainerUniformBufferWrapper extends IUniformBufferWrapper
+public interface ILodContainerUniformBufferWrapper extends AutoCloseable
 {
+	/** does nothing if the buffer has already been uploaded */
+	void tryUpload(LodBufferContainer bufferContainer);
 	
-	void createUniformData(LodBufferContainer bufferContainer);
-	
-	void tryUpload();
+	@Override void close();
 	
 }
