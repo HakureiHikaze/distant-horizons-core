@@ -185,7 +185,13 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 			this.enabledRenderSectionLock.lock();
 			
 			tempProcessNodeList.clear();
-			tempProcessNodeList.addAll(this.enabledSections);
+			
+			// manual add and loop to reduce GC pressure due to addAll() doing unnecessary
+			// array copies
+			for (int i = 0; i < this.enabledSections.size(); i++)
+			{
+				tempProcessNodeList.add(this.enabledSections.get(i));
+			}
 		}
 		finally
 		{
