@@ -479,25 +479,21 @@ public class RenderDataPointReducingList extends AbstractPhantomArrayList
 	@VisibleForTesting
 	public void sortBySize(int size) 
 	{
-		ShortArrayList array = this.sortingArray;
 		it.unimi.dsi.fastutil.Arrays.quickSort(
-			0,
-			size,
-			// comparator
-			(int index1, int index2) -> 
-			{
-				return Integer.compare(
-					this.getSize(this.getSortingIndex(index1)),
-					this.getSize(this.getSortingIndex(index2))
-				);
-			},
-			// swapper
-			(int index1, int index2) -> 
-			{
-				ShortArrays.swap(array.elements(), index1, index2);
-			}
+			0, size,
+			this::sortBySizeComparator,
+			this::sortBySizeSwapper
 		);
 	}
+	// class methods to try reducing GC pressure vs in-line lambdas
+	private int sortBySizeComparator(int index1, int index2)
+	{
+		return Integer.compare(
+			this.getSize(this.getSortingIndex(index1)),
+			this.getSize(this.getSortingIndex(index2))
+		);
+	}
+	private void sortBySizeSwapper(int index1, int index2) { ShortArrays.swap(this.sortingArray.elements(), index1, index2); }
 	
 	/**
 	 * sorts our {@link #sortingArray} in order of lowest-to-highest,
@@ -506,25 +502,21 @@ public class RenderDataPointReducingList extends AbstractPhantomArrayList
 	@VisibleForTesting
 	public void sortByPosition(int size) 
 	{
-		ShortArrayList array = this.sortingArray;
 		it.unimi.dsi.fastutil.Arrays.quickSort(
-			0,
-			size,
-			// comparator
-			(int index1, int index2) -> 
-			{
-				return Integer.compare(
-					this.getMinY(this.getSortingIndex(index1)),
-					this.getMinY(this.getSortingIndex(index2))
-				);
-			},
-			// swapper
-			(int index1, int index2) -> 
-			{
-				ShortArrays.swap(array.elements(), index1, index2);
-			}
+			0, size,
+			this::sortByPositionComparator,
+			this::sortByPositionSwapper
 		);
 	}
+	// class methods to try reducing GC pressure vs in-line lambdas
+	private int sortByPositionComparator(int index1, int index2)
+	{
+		return Integer.compare(
+			this.getMinY(this.getSortingIndex(index1)),
+			this.getMinY(this.getSortingIndex(index2))
+		);
+	}
+	private void sortByPositionSwapper(int index1, int index2) { ShortArrays.swap(this.sortingArray.elements(), index1, index2); }
 	
 	/**
 	 * moves the smaller node to the correct position in the list,
