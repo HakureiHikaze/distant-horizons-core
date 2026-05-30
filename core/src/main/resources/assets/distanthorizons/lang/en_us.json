@@ -201,7 +201,10 @@
     "Cloud Enabled Dimension CSV List",
   "distanthorizons.config.client.advanced.graphics.genericRendering.dimensionEnabledCloudRenderingCsv.@tooltip":
     "A comma separated separated list of dimension resource locations where DH clouds will render. \n\nExample: \"minecraft:overworld,minecraft:the_end\" \n\nChanges require a world re-load.",
-  
+  "distanthorizons.config.client.advanced.graphics.genericRendering.enableMultiLayerClouds":
+    "Enable Multi-layer clouds",
+  "distanthorizons.config.client.advanced.graphics.genericRendering.enableMultiLayerClouds.@tooltip":
+    "False = DH will render a single layer of clouds, like vanilla Minecraft. \nTrue = DH will render 3 layers of clouds at different heights.",
 
 
   "distanthorizons.config.client.advanced.graphics.fog":

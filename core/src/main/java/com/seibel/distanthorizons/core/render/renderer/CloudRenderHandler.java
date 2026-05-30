@@ -74,13 +74,16 @@ public class CloudRenderHandler
 	 */
 	private static final int CLOUD_INSTANCE_RADIUS_COUNT = 5;
 	
+	/** if multi-layer clouds are enabled how many layers should be rendered? */
+	private static final int CLOUD_LAYER_COUNT = 3;
+	
 	private static final float MOVE_SPEED_IN_BLOCKS_PER_SECOND = 6.0f;
 	
 	
-	private final IDhApiRenderableBoxGroup[][] boxGroupByOffset
+	private final IDhApiRenderableBoxGroup[][][] boxGroupByOffset
 			// radius * 2 to get the diameter
 			// + 1 so we get an odd number wide (needed so we can have a center position)
-			= new IDhApiRenderableBoxGroup[(CLOUD_INSTANCE_RADIUS_COUNT * 2) + 1][(CLOUD_INSTANCE_RADIUS_COUNT * 2) + 1];
+			= new IDhApiRenderableBoxGroup[CLOUD_LAYER_COUNT][(CLOUD_INSTANCE_RADIUS_COUNT * 2) + 1][(CLOUD_INSTANCE_RADIUS_COUNT * 2) + 1];
 	
 	private final IDhClientLevel level;
 	private final IDhGenericRenderer renderer;
@@ -260,32 +263,42 @@ public class CloudRenderHandler
 		
 		// slightly lighter shading than the default
 		DhApiRenderableBoxGroupShading cloudShading = DhApiRenderableBoxGroupShading.getUnshaded();
-		cloudShading.north = cloudShading.south = 0.9f;
-		cloudShading.east = cloudShading.west = 0.8f;
-		cloudShading.top = 1.0f;
-		cloudShading.bottom = 0.7f;
-		
-		
-		for (int x = -CLOUD_INSTANCE_RADIUS_COUNT; x <= CLOUD_INSTANCE_RADIUS_COUNT; x++)
 		{
-			for (int z = -CLOUD_INSTANCE_RADIUS_COUNT; z <= CLOUD_INSTANCE_RADIUS_COUNT; z++)
+			cloudShading.north = 0.9f;
+			cloudShading.south = cloudShading.north;
+			
+			cloudShading.east = 0.8f;
+			cloudShading.west = cloudShading.east;
+			
+			cloudShading.top = 1.0f;
+			cloudShading.bottom = 0.7f;
+		}
+		
+		for (int y = CLOUD_LAYER_COUNT-1; y >= 0; y--) // start from the top down so transparency could be attempted
+		{
+			for (int x = -CLOUD_INSTANCE_RADIUS_COUNT; x <= CLOUD_INSTANCE_RADIUS_COUNT; x++)
 			{
-				IDhApiRenderableBoxGroup boxGroup = GENERIC_OBJECT_FACTORY.createRelativePositionedGroup(
+				for (int z = -CLOUD_INSTANCE_RADIUS_COUNT; z <= CLOUD_INSTANCE_RADIUS_COUNT; z++)
+				{
+					IDhApiRenderableBoxGroup boxGroup = GENERIC_OBJECT_FACTORY.createRelativePositionedGroup(
 						ModInfo.NAME + ":Clouds",
 						new DhApiVec3d(0, 0, 0), // the offset will be set during rendering
 						boxList);
-				
-				// since cloud colors are set by the level based on the time of day lighting should affect it
-				boxGroup.setBlockLight(LodUtil.MAX_MC_LIGHT);
-				boxGroup.setSkyLight(LodUtil.MAX_MC_LIGHT);
-				boxGroup.setSsaoEnabled(false);
-				boxGroup.setShading(cloudShading);
-				
-				CloudParams cloudParams = new CloudParams(textureWidth, x, z);
-				boxGroup.setPreRenderFunc((renderParam) -> this.preRender(renderParam, cloudParams));
-				
-				this.renderer.add(boxGroup);
-				this.boxGroupByOffset[x+CLOUD_INSTANCE_RADIUS_COUNT][z+CLOUD_INSTANCE_RADIUS_COUNT] = boxGroup;
+					
+					// since cloud colors are set by the level based on the time of day lighting should affect it
+					boxGroup.setBlockLight(LodUtil.MAX_MC_LIGHT);
+					boxGroup.setSkyLight(LodUtil.MAX_MC_LIGHT);
+					boxGroup.setSsaoEnabled(false);
+					boxGroup.setShading(cloudShading);
+					
+					CloudParams cloudParams = new CloudParams(
+						textureWidth,
+						y, x, z);
+					boxGroup.setPreRenderFunc((renderParam) -> this.preRender(renderParam, cloudParams));
+					
+					this.renderer.add(boxGroup);
+					this.boxGroupByOffset[y][x + CLOUD_INSTANCE_RADIUS_COUNT][z + CLOUD_INSTANCE_RADIUS_COUNT] = boxGroup;
+				}
 			}
 		}
 	}
@@ -301,15 +314,24 @@ public class CloudRenderHandler
 	
 	private void preRender(DhApiRenderParam renderParam, CloudParams cloudParams)
 	{
-		IDhApiRenderableBoxGroup boxGroup = this.boxGroupByOffset[cloudParams.instanceOffsetX+CLOUD_INSTANCE_RADIUS_COUNT][cloudParams.instanceOffsetZ+CLOUD_INSTANCE_RADIUS_COUNT];
+		IDhApiRenderableBoxGroup boxGroup = this.boxGroupByOffset[cloudParams.instanceOffsetY][cloudParams.instanceOffsetX+CLOUD_INSTANCE_RADIUS_COUNT][cloudParams.instanceOffsetZ+CLOUD_INSTANCE_RADIUS_COUNT];
 		
 		
 		
 		//===================//
 		// should we render? //
 		//===================//
+		//region
 		
 		boolean renderClouds = Config.Client.Advanced.Graphics.GenericRendering.enableCloudRendering.get();
+		
+		boolean renderSingleCloudLayer = !Config.Client.Advanced.Graphics.GenericRendering.enableMultiLayerClouds.get();
+		if (renderSingleCloudLayer
+			&& cloudParams.instanceOffsetY != 0)
+		{
+			renderClouds = false;
+		}
+		
 		boxGroup.setActive(renderClouds);
 		if(!renderClouds)
 		{
@@ -322,27 +344,33 @@ public class CloudRenderHandler
 			return;
 		}
 		
+		//endregion
+		
 		
 		
 		//================//
 		// cloud movement //
 		//================//
+		//region
 		
 		long currentTime = System.currentTimeMillis();
 		float deltaTime = (currentTime - cloudParams.lastFrameTime) / 1000.0f; // Delta time in seconds
 		cloudParams.lastFrameTime = currentTime;
 		
-		float deltaX = MOVE_SPEED_IN_BLOCKS_PER_SECOND * deltaTime;
+		float deltaX = (MOVE_SPEED_IN_BLOCKS_PER_SECOND + cloudParams.heightSpeedOffset) * deltaTime;
 		// negative delta is to match vanilla's cloud movement
 		cloudParams.deltaOffsetX -= deltaX;
 		// wrap the cloud around after reaching the edge
 		cloudParams.deltaOffsetX %= cloudParams.widthInBlocks;
+		
+		//endregion
 		
 		
 		
 		//============================//
 		// camera movement and offset //
 		//============================//
+		//region
 		
 		// camera position
 		int cameraPosX = (int)MC_RENDER.getCameraExactPosition().x;
@@ -363,7 +391,10 @@ public class CloudRenderHandler
 				cloudParams.deltaOffsetX
 				+ (cloudParams.instanceOffsetX * cloudParams.widthInBlocks)
 				+ instanceOffsetX + cloudParams.halfWidthInBlocks;
-		float newMinPosY = this.level.getLevelWrapper().getMaxHeight() + 200;
+		float newMinPosY = 
+			this.level.getLevelWrapper().getMaxHeight()
+			+ 200 // render clouds at least 200 blocks above the height limit to prevent players/blocks from intersecting (since DH always renders behind everything else)
+			+ cloudParams.heightOffset;
 		float newMinPosZ = cloudParams.deltaOffsetZ
 				+ (cloudParams.instanceOffsetZ * cloudParams.widthInBlocks)
 				+ instanceOffsetZ + cloudParams.halfWidthInBlocks;
@@ -377,11 +408,16 @@ public class CloudRenderHandler
 			boxGroup.setActive(false);
 		}
 		
+		boxGroup.setOriginBlockPos(new DhApiVec3d(newMinPosX, newMinPosY, newMinPosZ));
+		
+		//endregion
+		
 		
 		
 		//===========================//
 		// update color and position //
 		//===========================//
+		//region
 		
 		// if debug colors are enabled don't change them
 		if (!DEBUG_BORDER_COLORS
@@ -390,6 +426,27 @@ public class CloudRenderHandler
 		{
 			// cloud color changes based on the time of day and weather so we need to get it from the level
 			Color newCloudColor = clientLevelWrapper.getCloudColor(renderParam.partialTicks);
+			Color sky = MC_RENDER.getSkyColor();
+			
+			float skyColPercent = 0.0f;
+			switch (cloudParams.instanceOffsetY)
+			{
+				case 0:
+					skyColPercent = 0.0f; // use only cloud color
+					break;
+				case 1:
+					skyColPercent = 0.15f; // use some sky color
+					break;
+				case 2:
+					skyColPercent = 0.30f;
+					break;
+			}
+			
+			newCloudColor = new Color(
+				(int) mixColors(newCloudColor.getRed(), sky.getRed(), skyColPercent),
+				(int) mixColors(newCloudColor.getGreen(), sky.getGreen(), skyColPercent),
+				(int) mixColors(newCloudColor.getBlue(), sky.getBlue(), skyColPercent)
+			);
 			
 			
 			// all boxes should have the same color, so we can get their current color
@@ -418,8 +475,13 @@ public class CloudRenderHandler
 			}
 		}
 		
-		boxGroup.setOriginBlockPos(new DhApiVec3d(newMinPosX, newMinPosY, newMinPosZ));
+		//endregion
 	}
+	/**
+	 * based on the OpenGL spec <br>
+	 * https://registry.khronos.org/OpenGL-Refpages/gl4/html/mix.xhtml
+	 */
+	private float mixColors(float x, float y, float a) { return x * (1 - a) + y * a; }
 	private boolean shouldCloudBeCulled(
 			float minPosX, float minPosY, float minPosZ,
 			CloudParams cloudParams)
@@ -568,8 +630,12 @@ public class CloudRenderHandler
 		public final int widthInBlocks;
 		public final int halfWidthInBlocks;
 		
+		public final int instanceOffsetY;
 		public final int instanceOffsetX;
 		public final int instanceOffsetZ;
+		
+		public final int heightOffset;
+		public final float heightSpeedOffset;
 		
 		
 		/** how far this cloud group has moved in the X direction based on time */
@@ -586,14 +652,25 @@ public class CloudRenderHandler
 		
 		// constructor //
 		
-		public CloudParams(int textureWidth, int instanceOffsetX, int instanceOffsetZ)
+		public CloudParams(int textureWidth, int instanceOffsetY, int instanceOffsetX, int instanceOffsetZ)
 		{
 			this.textureWidth = textureWidth;
 			this.widthInBlocks = (this.textureWidth * CLOUD_BOX_WIDTH);
 			this.halfWidthInBlocks = this.widthInBlocks / 2;
 			
+			this.instanceOffsetY = instanceOffsetY;
 			this.instanceOffsetX = instanceOffsetX;
 			this.instanceOffsetZ = instanceOffsetZ;
+			
+			
+			// each layer up increases by 512 blocks
+			this.heightOffset = instanceOffsetY * 512;
+			// have higher cloud layers move faster
+			this.heightSpeedOffset = instanceOffsetY * 10f;
+			
+			// offset each layer a bit so the duplicated texture use isn't as obvious
+			this.deltaOffsetX = this.widthInBlocks * instanceOffsetY * 0.75f;
+			this.deltaOffsetZ = this.widthInBlocks * instanceOffsetY * 1.5f;
 		}
 		
 	}

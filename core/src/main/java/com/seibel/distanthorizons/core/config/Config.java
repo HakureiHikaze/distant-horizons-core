@@ -373,6 +373,14 @@ public class Config
 							+ "")
 						.build();
 					
+					public static ConfigEntry<Boolean> enableMultiLayerClouds = new ConfigEntry.Builder<Boolean>()
+						.set(true)
+						.comment(""
+							+ "False = DH will render a single layer of clouds, like vanilla Minecraft. \n"
+							+ "True = DH will render 3 layers of clouds at different heights. \n"
+							+ "")
+						.build();
+					
 					public static ConfigEntry<String> dimensionEnabledCloudRenderingCsv = new ConfigEntry.Builder<String>()
 						.set("minecraft:overworld")
 						.setAppearance(EConfigEntryAppearance.ALL)
