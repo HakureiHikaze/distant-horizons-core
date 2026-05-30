@@ -41,28 +41,28 @@ public final class BufferQuad
 	public static final int MAX_QUAD_WIDTH_FOR_EARTH_CURVATURE = LodUtil.CHUNK_WIDTH;
 	
 	
-	public final short x;
-	public final short y;
-	public final short z;
+	public short x;
+	public short y;
+	public short z;
 	
 	public short widthEastWest;
 	/** This is both North/South and Up/Down since the merging logic is the same either way */
 	public short widthNorthSouthOrHeight;
 	
-	public final int color;
+	public int color;
 	/** used by the Iris shader mod to determine how each LOD should be rendered */
-	public final byte irisBlockMaterialId;
+	public byte irisBlockMaterialId;
 	
-	public final byte skyLight;
-	public final byte blockLight;
-	public final EDhDirection direction;
+	public byte skyLight;
+	public byte blockLight;
+	public EDhDirection direction;
 	
 	public boolean hasError = false;
 	
 	// Pre-computed sort keys to avoid recomputing on every comparison
 	// Slight increase in memory for reduction in cpu usage
-	public final long sortKeyEastWest;
-	public final long sortKeyNorthSouth;
+	public long sortKeyEastWest;
+	public long sortKeyNorthSouth;
 	
 	
 	
@@ -71,15 +71,17 @@ public final class BufferQuad
 	//=============//
 	//region
 	
-	public BufferQuad(
-			short x, short y, short z, short widthEastWest, short widthNorthSouthOrHeight,
-			int color, byte irisBlockMaterialId, byte skylight, byte blockLight,
-			EDhDirection direction)
+	public BufferQuad() {}
+	
+	public void set(short x, short y, short z, short widthEastWest, short widthNorthSouthOrHeight,
+		int color, byte irisBlockMaterialId, byte skylight, byte blockLight,
+		EDhDirection direction)
 	{
 		if (widthEastWest == 0 || widthNorthSouthOrHeight == 0)
 		{
 			throw new IllegalArgumentException("Size 0 quad!");
 		}
+		
 		if (widthEastWest < 0 || widthNorthSouthOrHeight < 0)
 		{
 			throw new IllegalArgumentException("Negative sized quad!");

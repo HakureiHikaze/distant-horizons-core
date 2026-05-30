@@ -47,6 +47,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.WillNotClose;
 import java.awt.*;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -171,20 +173,26 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 				try
 				{
 					// build LOD data on a DH thread
-					LodQuadBuilder lodQuadBuilder = this.getAndBuildRenderData();
-					if (lodQuadBuilder == null)
+					try (LodQuadBuilder lodQuadBuilder = this.getAndBuildRenderData())
 					{
-						future.complete(null);
-						return;
-					}
-					
-					// uploading will primarily happen on the render thread
-					this.uploadToGpuAsync(future, lodQuadBuilder)
-						.thenRun(() ->
+						if (lodQuadBuilder == null)
 						{
-							// the future is passed in separately (IE not using the local var) to prevent any possible race condition null pointers
 							future.complete(null);
-						});
+							return;
+						}
+						
+						// create CPU vertex buffers
+						ArrayList<ByteBuffer> opaqueBuffers = lodQuadBuilder.makeOpaqueVertexBuffers();
+						ArrayList<ByteBuffer> transparentBuffers = lodQuadBuilder.makeTransparentVertexBuffers();
+						
+						// uploading will primarily happen on the render thread
+						this.uploadToGpuAsync(future, opaqueBuffers, transparentBuffers)
+							.thenRun(() ->
+							{
+								// the future is passed in separately (IE not using the local var) to prevent any possible race condition null pointers
+								future.complete(null);
+							});
+					}
 				}
 				catch (Exception e)
 				{
@@ -225,7 +233,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 			
 			
 			boolean enableTransparency = Config.Client.Advanced.Graphics.Quality.transparency.get() == EDhApiTransparency.COMPLETE;
-			LodQuadBuilder lodQuadBuilder = new LodQuadBuilder(enableTransparency, this.clientLevel.getClientLevelWrapper());
+			LodQuadBuilder lodQuadBuilder = LodQuadBuilder.getBuilder(enableTransparency, this.clientLevel.getClientLevelWrapper());
 			
 			
 			// get the adjacent positions
@@ -303,10 +311,11 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 	
 	
 	private synchronized CompletableFuture<LodBufferContainer> uploadToGpuAsync(
-		CompletableFuture<Void> parentFuture, 
-		LodQuadBuilder lodQuadBuilder)
+		CompletableFuture<Void> parentFuture,
+		ArrayList<ByteBuffer> opaqueBuffers,
+		ArrayList<ByteBuffer> transparentBuffers)
 	{
-		CompletableFuture<LodBufferContainer> uploadFuture = LodBufferContainer.tryMakeAndUploadBuffersAsync(this.pos, this.clientLevel, lodQuadBuilder);
+		CompletableFuture<LodBufferContainer> uploadFuture = LodBufferContainer.tryMakeAndUploadBuffersAsync(this.pos, this.clientLevel, opaqueBuffers, transparentBuffers);
 		uploadFuture.whenComplete((bufferContainer, e) ->
 		{
 			try

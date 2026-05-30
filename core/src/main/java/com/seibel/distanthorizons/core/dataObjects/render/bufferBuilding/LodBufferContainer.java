@@ -89,7 +89,9 @@ public class LodBufferContainer implements AutoCloseable
 	/** Should be run on a DH thread. */
 	public static CompletableFuture<LodBufferContainer> tryMakeAndUploadBuffersAsync(
 		long pos, IDhClientLevel clientLevel,
-		LodQuadBuilder builder)
+		ArrayList<ByteBuffer> opaqueBuffers,
+		ArrayList<ByteBuffer> transparentBuffers
+	)
 	{
 		// new upload needed
 		CompletableFuture<LodBufferContainer> future = new CompletableFuture<>();
@@ -106,10 +108,6 @@ public class LodBufferContainer implements AutoCloseable
 			clientLevel.getLevelWrapper().getMinHeight(),
 			DhSectionPos.getMinCornerBlockZ(pos));
 		LodBufferContainer bufferContainer = new LodBufferContainer(pos, minCornerBlockPos);
-		
-		// create CPU vertex buffers
-		ArrayList<ByteBuffer> opaqueBuffers = builder.makeOpaqueVertexBuffers();
-		ArrayList<ByteBuffer> transparentBuffers = builder.makeTransparentVertexBuffers();
 		
 		// update arrays to contain buffers
 		bufferContainer.vboOpaqueWrappers = resizeWrapperArray(bufferContainer.vboOpaqueWrappers, opaqueBuffers.size());

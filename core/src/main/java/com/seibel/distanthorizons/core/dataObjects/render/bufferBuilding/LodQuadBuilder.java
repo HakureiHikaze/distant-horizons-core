@@ -40,21 +40,13 @@ import org.lwjgl.system.MemoryUtil;
  *
  * Note: the magic number 6 you see throughout this method represents the number of sides on a cube.
  */
-public class LodQuadBuilder
+public class LodQuadBuilder implements AutoCloseable
 {
 	private static final DhLogger LOGGER = new DhLoggerBuilder().build();
 	private static final IMinecraftRenderWrapper MC_RENDER = SingletonInjector.INSTANCE.get(IMinecraftRenderWrapper.class);
 	
-	@SuppressWarnings("unchecked")
-	private final ArrayList<BufferQuad>[] opaqueQuads = (ArrayList<BufferQuad>[]) new ArrayList[6];
-	@SuppressWarnings("unchecked")
-	private final ArrayList<BufferQuad>[] transparentQuads = (ArrayList<BufferQuad>[]) new ArrayList[6];
-	
-	private final boolean doTransparency;
-	private final IClientLevelWrapper clientLevelWrapper;
-	
-	private final EDhApiDebugRendering debugRenderingMode;
-	private final EDhApiGrassSideRendering grassSideRenderingMode;
+	/** ThreadLocal is the simplest way to allow each LOD loading thread to have their own builder */
+	private static final ThreadLocal<LodQuadBuilder> THREAD_LOCAL = ThreadLocal.withInitial(LodQuadBuilder::new);
 	
 	/** the number of bytes for a single vertex */
 	public static final int BYTES_PER_VERTEX = 16;
@@ -111,6 +103,26 @@ public class LodQuadBuilder
 		};
 	//endregion
 	
+	
+	
+	@SuppressWarnings("unchecked")
+	private final ArrayList<BufferQuad>[] opaqueQuads = (ArrayList<BufferQuad>[]) new ArrayList[6];
+	@SuppressWarnings("unchecked")
+	private final ArrayList<BufferQuad>[] transparentQuads = (ArrayList<BufferQuad>[]) new ArrayList[6];
+	
+	/** 
+	 * Caching the BufferQuad objects reduces overhead slightly. <br>
+	 * Caching is handled per builder (vs globally in {@link BufferQuad} itself) 
+	 * to prevent concurrency overhead.
+	 */
+	private final ArrayList<BufferQuad> bufferQuadCacheList = new ArrayList<>();
+	
+	private boolean doTransparency;
+	private IClientLevelWrapper clientLevelWrapper;
+	
+	private EDhApiDebugRendering debugRenderingMode;
+	private EDhApiGrassSideRendering grassSideRenderingMode;
+	
 	private int premergeCount = 0;
 	
 	
@@ -120,20 +132,31 @@ public class LodQuadBuilder
 	//=============//
 	//region
 	
-	public LodQuadBuilder(boolean doTransparency, IClientLevelWrapper clientLevelWrapper)
+	private LodQuadBuilder() 
 	{
-		this.doTransparency = doTransparency;
 		for (int i = 0; i < 6; i++)
 		{
 			this.opaqueQuads[i] = new ArrayList<>();
 			this.transparentQuads[i] = new ArrayList<>();
 		}
+	}
+	
+	public static LodQuadBuilder getBuilder(boolean doTransparency, IClientLevelWrapper clientLevelWrapper)
+	{
+		LodQuadBuilder builder = THREAD_LOCAL.get();
+		builder.set(doTransparency, clientLevelWrapper);
+		return builder;
+	}
+	private void set(boolean doTransparency, IClientLevelWrapper clientLevelWrapper)
+	{
+		this.doTransparency = doTransparency;
 		
 		this.clientLevelWrapper = clientLevelWrapper;
 		
 		this.debugRenderingMode = Config.Client.Advanced.Debugging.debugRenderingColors.get();
 		this.grassSideRenderingMode = Config.Client.Advanced.Graphics.Quality.grassSideRendering.get();
 		
+		this.premergeCount = 0;
 	}
 	
 	//endregion
@@ -167,7 +190,8 @@ public class LodQuadBuilder
 			quadList = this.opaqueQuads[dir.ordinal()]; 
 		}
 		
-		BufferQuad quad = new BufferQuad(x, y, z, width, height, color, irisBlockMaterialId, skyLight, blockLight, dir);
+		BufferQuad quad = this.getOrCreateBufferQuad();
+		quad.set(x, y, z, width, height, color, irisBlockMaterialId, skyLight, blockLight, dir);
 		if (!quadList.isEmpty()
 			&& (
 				quadList.get(quadList.size() - 1).tryMerge(quad, BufferMergeDirectionEnum.EastWest)
@@ -189,7 +213,8 @@ public class LodQuadBuilder
 				? this.transparentQuads[EDhDirection.UP.ordinal()] 
 				: this.opaqueQuads[EDhDirection.UP.ordinal()];
 		
-		BufferQuad quad = new BufferQuad(minX, maxY, minZ, blockWidth, blockWidth, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.UP);
+		BufferQuad quad = this.getOrCreateBufferQuad();
+		quad.set(minX, maxY, minZ, blockWidth, blockWidth, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.UP);
 		quadList.add(quad);
 	}
 	
@@ -199,7 +224,8 @@ public class LodQuadBuilder
 				? this.transparentQuads[EDhDirection.DOWN.ordinal()]
 				: this.opaqueQuads[EDhDirection.DOWN.ordinal()];
 		
-		BufferQuad quad = new BufferQuad(x, y, z, blockWidth, blockWidth, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.DOWN);
+		BufferQuad quad = this.getOrCreateBufferQuad();
+		quad.set(x, y, z, blockWidth, blockWidth, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.DOWN);
 		quadArray.add(quad);
 	}
 	
@@ -511,6 +537,67 @@ public class LodQuadBuilder
 		maxBufferByteSize = fullSizedBuffer;
 		
 		return fullSizedBuffer;
+	}
+	
+	//endregion
+	
+	
+	
+	//=====================//
+	// buffer quad pooling //
+	//=====================//
+	//region
+	
+	private BufferQuad getOrCreateBufferQuad()
+	{
+		// start from the back of the list so we don't have
+		// to move the array around
+		int index = bufferQuadCacheList.size() - 1;
+		if (index < 0)
+		{
+			// cache empty, create a new object
+			return new BufferQuad();
+		}
+		
+		BufferQuad quad = bufferQuadCacheList.remove(index);
+		if (quad != null) // shouldn't happen, but just in case
+		{
+			return quad;
+		}
+		
+		return new BufferQuad();
+	}
+	
+	private static void returnQuadsToCache(ArrayList<BufferQuad> quadCache, ArrayList<BufferQuad>[] quadsToReturn)
+	{
+		for (int i = 0; i < quadsToReturn.length; i++)
+		{
+			// manual add and loop to reduce GC pressure due to addAll() doing unnecessary
+			// array copies
+			for (int j = 0; j < quadsToReturn[i].size(); j++)
+			{
+				quadCache.add(quadsToReturn[i].get(j));
+			}
+			
+			quadsToReturn[i].clear();
+		}
+	}
+	
+	//endregion
+	
+	
+	
+	//================//
+	// base overrides //
+	//================//
+	//region
+	
+	// can be used/closed multiple times
+	@Override 
+	public void close()
+	{
+		returnQuadsToCache(this.bufferQuadCacheList, this.opaqueQuads);
+		returnQuadsToCache(this.bufferQuadCacheList, this.transparentQuads);
 	}
 	
 	//endregion
