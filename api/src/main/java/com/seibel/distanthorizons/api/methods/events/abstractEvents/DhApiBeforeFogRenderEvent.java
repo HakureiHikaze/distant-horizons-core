@@ -60,9 +60,9 @@ public abstract class DhApiBeforeFogRenderEvent implements IDhApiCancelableEvent
 	
 	public static class EventParam implements IDhApiEventParam
 	{
-		private final DhApiRenderParam renderParam;
-		private final DhApiFogRenderParam originalFogRenderParam;
-		private final DhApiMutableFogRenderParam fogRenderParam;
+		private DhApiRenderParam renderParam;
+		private DhApiFogRenderParam originalFogRenderParam;
+		private DhApiMutableFogRenderParam fogRenderParam;
 		
 		
 		
@@ -71,7 +71,9 @@ public abstract class DhApiBeforeFogRenderEvent implements IDhApiCancelableEvent
 		//=============//
 		//region
 		
-		public EventParam(DhApiRenderParam renderParam, DhApiFogRenderParam fogRenderParam) 
+		public EventParam() {}
+		
+		public void update(DhApiRenderParam renderParam, DhApiFogRenderParam fogRenderParam)
 		{
 			this.renderParam = renderParam;
 			this.originalFogRenderParam = fogRenderParam;

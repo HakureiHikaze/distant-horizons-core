@@ -99,6 +99,11 @@ public class ClientApi
 	 * Only downside is making sure each variable is populated before rendering.
 	 */
 	public static final DhRenderState RENDER_STATE = new DhRenderState();
+	/** 
+	 * static variable so we don't have to re-create it each frame,
+	 * reducing GC pressure.
+	 */
+	private static final RenderParams RENDER_PARAMS = new RenderParams();
 	
 	/**
 	 * 50ms = 20 FPS
@@ -147,8 +152,6 @@ public class ClientApi
 	public RollingAverage cameraSpeedRollingAverage = new RollingAverage(40);
 	private Vec3d lastCameraPosForSpeedCheck = new Vec3d();
 	private long msSinceLastSpeedCheck = 0L;
-	
-	public static long firstRenderTimeMs = 0;
 	
 	/** 
 	 * keeping track of this is necessary to fix
@@ -570,7 +573,7 @@ public class ClientApi
 			// render prep and actual rendering into different threads/methods
 			// this is annoying since it's possible to start a render with only
 			// partially complete info, but there isn't a better option at the moment
-			RenderParams renderParams = new RenderParams(renderPass, RENDER_STATE);
+			RENDER_PARAMS.update(renderPass, RENDER_STATE);
 			
 			//endregion
 			
@@ -581,12 +584,7 @@ public class ClientApi
 			//============//
 			//region
 			
-			if (firstRenderTimeMs == 0)
-			{
-				firstRenderTimeMs = System.currentTimeMillis();
-			}
-			
-			String validationMessage = renderParams.getValidationErrorMessage(firstRenderTimeMs);
+			String validationMessage = RENDER_PARAMS.getValidationErrorMessage();
 			if (validationMessage != null)
 			{
 				// store the error message so it can be seen on the F3 screen
@@ -632,10 +630,10 @@ public class ClientApi
 				{
 					if (!renderingDeferredLayer)
 					{
-						boolean renderingCancelled = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderEvent.class, renderParams);
+						boolean renderingCancelled = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderEvent.class, RENDER_PARAMS);
 						if (!renderingCancelled)
 						{
-							LodRenderer.INSTANCE.render(renderParams, profiler);
+							LodRenderer.INSTANCE.render(RENDER_PARAMS, profiler);
 						}
 						
 						if (!DhApi.Delayed.renderProxy.getDeferTransparentRendering())
@@ -645,10 +643,10 @@ public class ClientApi
 					}
 					else
 					{
-						boolean renderingCancelled = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeDeferredRenderEvent.class, renderParams);
+						boolean renderingCancelled = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeDeferredRenderEvent.class, RENDER_PARAMS);
 						if (!renderingCancelled)
 						{
-							LodRenderer.INSTANCE.renderDeferred(renderParams, profiler);
+							LodRenderer.INSTANCE.renderDeferred(RENDER_PARAMS, profiler);
 						}
 						
 						
@@ -669,11 +667,11 @@ public class ClientApi
 						{
 							// meta renderer needed for render state/texture
 							// for setup on some APIs (IE openGL)
-							metaRenderer.runRenderPassSetup(renderParams);
+							metaRenderer.runRenderPassSetup(RENDER_PARAMS);
 							
-							testRenderer.render(renderParams);
+							testRenderer.render(RENDER_PARAMS);
 							
-							metaRenderer.runRenderPassCleanup(renderParams);
+							metaRenderer.runRenderPassCleanup(RENDER_PARAMS);
 						}
 						else
 						{
@@ -730,8 +728,8 @@ public class ClientApi
 			// don't fade when Iris shaders are active, otherwise the rendering can get weird
 			&& !DhApiRenderProxy.INSTANCE.getDeferTransparentRendering())
 		{
-			RenderParams renderParams = new RenderParams(EDhApiRenderPass.OPAQUE, RENDER_STATE);
-			fadeRenderer.render(renderParams);
+			RENDER_PARAMS.update(EDhApiRenderPass.OPAQUE, RENDER_STATE);
+			fadeRenderer.render(RENDER_PARAMS);
 		}
 	}
 	/** 
@@ -761,8 +759,8 @@ public class ClientApi
 				&& !DhApiRenderProxy.INSTANCE.getDeferTransparentRendering();
 			if (renderFade)
 			{
-				RenderParams renderParams = new RenderParams(EDhApiRenderPass.TRANSPARENT, RENDER_STATE);
-				fadeRenderer.render(renderParams);
+				RENDER_PARAMS.update(EDhApiRenderPass.TRANSPARENT, RENDER_STATE);
+				fadeRenderer.render(RENDER_PARAMS);
 			}
 		}
 	}

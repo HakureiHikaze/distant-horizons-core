@@ -59,23 +59,25 @@ public abstract class DhApiBeforeBufferRenderEvent implements IDhApiEvent<DhApiB
 		 * Measured in blocks.
 		 * Should be applied to the model view matrix to move the buffer into its proper place. 
 		 */
-		public final DhApiVec3f modelPos;
+		public DhApiVec3f modelPos;
 		
 		
-		public EventParam(DhApiRenderParam parent, DhApiVec3f modelPos)
+		
+		public EventParam() { }
+		
+		public void update(DhApiRenderParam parent, DhApiVec3f modelPos)
 		{
-			super(parent);
+			super.update(parent);
 			this.modelPos = modelPos;
 		}
 		
 		
+		
+		@Override 
+		public boolean getCopyBeforeFire() { return false; }
+		
 		@Override
-		public EventParam copy()
-		{
-			return new EventParam(
-					this, this.modelPos.copy()
-			);
-		}
+		public EventParam copy() { return this; }
 	}
 	
 }

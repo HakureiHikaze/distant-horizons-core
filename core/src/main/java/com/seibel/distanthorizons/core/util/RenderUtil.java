@@ -34,7 +34,6 @@ import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IIrisAccess
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.AbstractDhRenderApiDefinition;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
 import com.seibel.distanthorizons.coreapi.util.MathUtil;
-import com.seibel.distanthorizons.core.util.math.Mat4f;
 
 /**
  * This holds miscellaneous helper code
@@ -76,7 +75,7 @@ public class RenderUtil
 	 *
 	 * @param mcProjMat Minecraft's current projection matrix
 	 */
-	public static Mat4f createLodProjectionMatrix(DhApiMat4f mcProjMat)
+	public static void setDhProjectionMatrix(DhApiMat4f updateMatrix, DhApiMat4f mcProjMat)
 	{
 		// in James' testing a near clip plane distance of 2 blocks is enough to allow the fragment
 		// culling to take effect instead of seeing the near clip plane.
@@ -93,28 +92,32 @@ public class RenderUtil
 		float farClipDist = RenderUtil.getFarClipPlaneDistanceInBlocks();
 		
 		// Create a copy of the current matrix, so it won't be modified.
-		Mat4f lodProj = new Mat4f(mcProjMat);
+		updateMatrix.set(mcProjMat);
 		
 		
 		// Set new far and near clip plane values.
 		if (RENDER_API_DEF.getRenderDepth() == EDhRenderDepth.FORWARD_Z)
 		{
-			lodProj.setClipPlanes(nearClipDist, farClipDist, false);
+			setClipPlanes(updateMatrix, nearClipDist, farClipDist, false);
 		}
 		else
 		{
-			lodProj.setClipPlanes(farClipDist, nearClipDist, true);
+			setClipPlanes(updateMatrix, farClipDist, nearClipDist, true);
 		}
-		
-		return lodProj;
 	}
 	
-	/** create and return a new projection matrix based on MC's modelView and projection matrices */
-	public static Mat4f createLodModelViewMatrix(DhApiMat4f mcModelViewMat)
+	/**
+	 * Changes the values that store the clipping planes.
+	 * Formula for calculating matrix values is the same that OpenGL uses when making matrices.
+	 *
+	 * @param nearClip New near clipping plane value.
+	 * @param farClip New far clipping plane value.
+	 */
+	public static void setClipPlanes(DhApiMat4f matrix, float nearClip, float farClip, boolean zZeroToOne)
 	{
-		// nothing beyond copying needs to be done to MC's MVM currently,
-		// this method is just here in case that changes in the future
-		return new Mat4f(mcModelViewMat);
+		// formula copied JOML's implementation to match Minecraft
+		matrix.m22 = (zZeroToOne ? farClip : farClip + nearClip) / (nearClip - farClip);
+		matrix.m23 = (zZeroToOne ? farClip : farClip + farClip) * nearClip / (nearClip - farClip);
 	}
 	
 	//endregion

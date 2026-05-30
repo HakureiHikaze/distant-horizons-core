@@ -21,7 +21,6 @@ package com.seibel.distanthorizons.core.render.renderer;
 
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiTransparency;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.*;
-import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiFogRenderParam;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding.LodBufferContainer;
 import com.seibel.distanthorizons.core.dependencyInjection.ModAccessorInjector;
@@ -119,9 +118,9 @@ public class LodRenderer
 	
 	private void renderTerrain(RenderParams renderParams, IProfilerWrapper profiler, boolean runningDeferredPass)
 	{
-		// validate rendering //
-		//====================//
-		//====================//
+		//===============//
+		// validate pass //
+		//===============//
 		//region
 		
 		boolean deferTransparentRendering = DhApiRenderProxy.INSTANCE.getDeferTransparentRendering();
@@ -147,7 +146,7 @@ public class LodRenderer
 		//=================//
 		//region
 		
-		ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderSetupEvent.class, renderParams);
+		ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderSetupEvent.class, renderParams.apiCopy);
 		try (IProfilerWrapper.IProfileBlock terrainRender_profile = profiler.push("LOD GL setup")) // starts the new profile block for most DH rendering
 		{
 			
@@ -203,7 +202,7 @@ public class LodRenderer
 				renderFog |= renderParams.vanillaFogEnabled;
 			}
 			
-			DhApiBeforeFogRenderEvent.EventParam fogRenderEventParam = FogRenderParamFactory.createRenderParam(renderParams);
+			DhApiBeforeFogRenderEvent.EventParam fogRenderEventParam = FogRenderParamFactory.getRenderParam(renderParams);
 			
 			//endregion
 			
@@ -216,7 +215,7 @@ public class LodRenderer
 			if (!runningDeferredPass)
 			{
 				// needs to be fired after all the textures have been created/bound
-				boolean clearTextures = !ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeTextureClearEvent.class, renderParams);
+				boolean clearTextures = !ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeTextureClearEvent.class, renderParams.apiCopy);
 				if (clearTextures)
 				{
 					this.metaRenderer.clearDhDepthAndColorTextures(renderParams);
@@ -318,7 +317,7 @@ public class LodRenderer
 				// Apply to the MC Framebuffer //
 				//=============================//
 				
-				boolean cancelApplyShader = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeApplyShaderRenderEvent.class, renderParams);
+				boolean cancelApplyShader = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeApplyShaderRenderEvent.class, renderParams.apiCopy);
 				if (!cancelApplyShader)
 				{
 					profiler.popPush("Apply to MC");
@@ -356,7 +355,7 @@ public class LodRenderer
 			//================//
 			
 			profiler.popPush("LOD cleanup");
-			ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderCleanupEvent.class, renderParams);
+			ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderCleanupEvent.class, renderParams.apiCopy);
 			
 			this.metaRenderer.runRenderPassCleanup(renderParams);
 		}

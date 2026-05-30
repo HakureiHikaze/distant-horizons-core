@@ -22,6 +22,7 @@ package com.seibel.distanthorizons.core.render;
 import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiCullingFrustum;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
+import com.seibel.distanthorizons.api.objects.math.DhApiMat4f;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding.LodBufferContainer;
 import com.seibel.distanthorizons.core.dependencyInjection.ModAccessorInjector;
@@ -36,9 +37,11 @@ import com.seibel.distanthorizons.core.render.QuadTree.LodRenderSection;
 import com.seibel.distanthorizons.core.render.renderer.LodRenderer;
 import com.seibel.distanthorizons.core.render.renderer.cullingFrustum.DhFrustumBounds;
 import com.seibel.distanthorizons.core.render.renderer.cullingFrustum.NeverCullFrustum;
+import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.objects.SortedArraySet;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IIrisAccessor;
+import com.seibel.distanthorizons.coreapi.ModInfo;
 import com.seibel.distanthorizons.coreapi.interfaces.dependencyInjection.IOverrideInjector;
 import com.seibel.distanthorizons.core.util.math.Mat4f;
 import com.seibel.distanthorizons.core.util.math.Vec3d;
@@ -57,6 +60,13 @@ public class RenderBufferHandler implements AutoCloseable
 	private static final IMinecraftRenderWrapper MC_RENDER = SingletonInjector.INSTANCE.get(IMinecraftRenderWrapper.class);
 
 	private static final IIrisAccessor IRIS_ACCESSOR = ModAccessorInjector.INSTANCE.get(IIrisAccessor.class);
+	
+	// static values for re-use to reduce GC pressure
+	private static final float[] JOML_TRANSPOSE_ARRAY = new float[16];
+	private static final Matrix4f WORLD_VIEW_JOML_MATRIX = new Matrix4f();
+	private static final Matrix4f WORLD_VIEW_PROJ_JOML_MATRIX = new Matrix4f();
+	private static final Mat4f FRUSTOM_DH_MATRIX = new Mat4f();
+	
 	
 	/** contains all relevant data */
 	public final LodQuadTree lodQuadTree;
@@ -123,6 +133,14 @@ public class RenderBufferHandler implements AutoCloseable
 	 */
 	public void buildRenderList(RenderParams renderParams)
 	{
+		if (ModInfo.IS_DEV_BUILD)
+		{
+			if (!RenderThreadTaskHandler.INSTANCE.isCurrentThread())
+			{
+				LodUtil.assertNotReach("Should only be run on the render thread");
+			}
+		}
+		
 		// clear the old list so we can start fresh
 		this.loadedNearToFarBuffers.clear();
 		
@@ -156,18 +174,21 @@ public class RenderBufferHandler implements AutoCloseable
 			
 			Vec3d cameraPos = MC_RENDER.getCameraExactPosition();
 			
-			Matrix4fc matWorldView = new Matrix4f()
-					.setTransposed(renderParams.mcModelViewMatrix.getValuesAsArray())
-					.translate(
-							-(float) cameraPos.x, 
-							-(float) cameraPos.y, 
-							-(float) cameraPos.z);
+			renderParams.mcModelViewMatrix.putValuesInArray(JOML_TRANSPOSE_ARRAY);
+			WORLD_VIEW_JOML_MATRIX
+				.setTransposed(JOML_TRANSPOSE_ARRAY)
+				.translate(
+					-(float) cameraPos.x,
+					-(float) cameraPos.y,
+					-(float) cameraPos.z);
 			
-			Matrix4fc matWorldViewProjection = new Matrix4f()
-					.setTransposed(renderParams.dhProjectionMatrix.getValuesAsArray())
-					.mul(matWorldView);
-			
-			frustum.update(worldMinY, worldMinY + worldHeight, new Mat4f(matWorldViewProjection));
+			renderParams.dhProjectionMatrix.putValuesInArray(JOML_TRANSPOSE_ARRAY);
+			WORLD_VIEW_PROJ_JOML_MATRIX
+				.setTransposed(JOML_TRANSPOSE_ARRAY)
+				.mul(WORLD_VIEW_JOML_MATRIX);
+
+			FRUSTOM_DH_MATRIX.set(WORLD_VIEW_PROJ_JOML_MATRIX);
+			frustum.update(worldMinY, worldMinY + worldHeight, FRUSTOM_DH_MATRIX);
 		}
 		
 		
@@ -175,6 +196,7 @@ public class RenderBufferHandler implements AutoCloseable
 		//=========================//
 		// Update the section list //
 		//=========================//
+		//region
 		
 		if (isShadowPass)
 		{
@@ -251,6 +273,9 @@ public class RenderBufferHandler implements AutoCloseable
 		{
 			this.visibleBufferCount = this.loadedNearToFarBuffers.size();
 		}
+		
+		//endregion
+		
 	}
 	
 	//endregion

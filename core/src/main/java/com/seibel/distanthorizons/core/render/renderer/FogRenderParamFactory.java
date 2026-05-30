@@ -21,9 +21,18 @@ public class FogRenderParamFactory
 {
 	private static final IMinecraftRenderWrapper MC_RENDER = SingletonInjector.INSTANCE.get(IMinecraftRenderWrapper.class);
 	
+	/** cached object to reduce GC pressure */
+	private static final DhApiBeforeFogRenderEvent.EventParam EVENT_PARAM = new DhApiBeforeFogRenderEvent.EventParam();
 	
 	
-	public static DhApiBeforeFogRenderEvent.EventParam createRenderParam(RenderParams renderParams)
+	
+	//=========//
+	// methods //
+	//=========//
+	//region
+	
+	/** returns a cached object to reduce GC pressure */
+	public static DhApiBeforeFogRenderEvent.EventParam getRenderParam(RenderParams renderParams)
 	{
 		Color fogColor = getFogColor(renderParams.partialTicks);
 		
@@ -74,8 +83,8 @@ public class FogRenderParamFactory
 			heightFogDensity
 		);
 		
-		DhApiBeforeFogRenderEvent.EventParam fogRenderEventParam = new DhApiBeforeFogRenderEvent.EventParam(renderParams, fogRenderParam);
-		return fogRenderEventParam;
+		EVENT_PARAM.update(renderParams, fogRenderParam);
+		return EVENT_PARAM;
 	}
 	
 	private static Color getFogColor(float partialTicks)
@@ -93,6 +102,8 @@ public class FogRenderParamFactory
 		
 		return fogColor;
 	}
+	
+	//endregion
 	
 	
 	

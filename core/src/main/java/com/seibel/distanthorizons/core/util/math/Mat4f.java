@@ -20,8 +20,6 @@
 package com.seibel.distanthorizons.core.util.math;
 
 import com.seibel.distanthorizons.api.objects.math.DhApiMat4f;
-import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
-import com.seibel.distanthorizons.core.wrapperInterfaces.render.AbstractDhRenderApiDefinition;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
@@ -36,12 +34,33 @@ import java.nio.FloatBuffer;
  */
 public class Mat4f extends DhApiMat4f
 {
+	/**
+	 * A matrix containing all 0's. <br><br>
+	 *
+	 * Should not be modified. <br>
+	 * Can be used for comparison testing.
+	 */
+	public static final DhApiMat4f EMPTY = new DhApiMat4f();
+	/**
+	 * The 4x4 identity matrix. <br><br>
+	 *
+	 * Should not be modified. <br>
+	 * Can be used for comparison testing.
+	 */
+	public static final DhApiMat4f IDENTITY = new DhApiMat4f();
+	static
+	{
+		IDENTITY.setIdentity();
+	}
+	
+	
 	
 	//==============//
 	// constructors //
 	//==============//
 	
-	public Mat4f() { /* all values are 0 */ }
+	/** all values are 0 */
+	public Mat4f() { }
 	
 	public Mat4f(DhApiMat4f sourceMatrix) { super(sourceMatrix); }
 	
@@ -50,56 +69,31 @@ public class Mat4f extends DhApiMat4f
 	/** Expects the values of the input array to be in row major order (AKA rows then columns) */
 	public Mat4f(float[] values) { super(values); }
 	
-	public Mat4f(Matrix4fc sourceMatrix) { this(convertJomlMatrixToArray(sourceMatrix)); }
-	private static float[] convertJomlMatrixToArray(Matrix4fc sourceMatrix)
+	public Mat4f(Matrix4fc sourceMatrix) { this.set(sourceMatrix); }
+	
+	public void set(Matrix4fc sourceMatrix)
 	{
-		FloatBuffer buffer = FloatBuffer.allocate(16);
+		// JOML matricies are stored transposed vs DH's matricies
+		this.m00 = sourceMatrix.m00();
+		this.m01 = sourceMatrix.m10();
+		this.m02 = sourceMatrix.m20();
+		this.m03 = sourceMatrix.m30();
 		
-		buffer.put(bufferIndex(0, 0), sourceMatrix.m00());
-		buffer.put(bufferIndex(0, 1), sourceMatrix.m01());
-		buffer.put(bufferIndex(0, 2), sourceMatrix.m02());
-		buffer.put(bufferIndex(0, 3), sourceMatrix.m03());
+		this.m10 = sourceMatrix.m01();
+		this.m11 = sourceMatrix.m11();
+		this.m12 = sourceMatrix.m21();
+		this.m13 = sourceMatrix.m31();
 		
-		buffer.put(bufferIndex(1, 0), sourceMatrix.m10());
-		buffer.put(bufferIndex(1, 1), sourceMatrix.m11());
-		buffer.put(bufferIndex(1, 2), sourceMatrix.m12());
-		buffer.put(bufferIndex(1, 3), sourceMatrix.m13());
+		this.m20 = sourceMatrix.m02();
+		this.m21 = sourceMatrix.m12();
+		this.m22 = sourceMatrix.m22();
+		this.m23 = sourceMatrix.m32();
 		
-		buffer.put(bufferIndex(2, 0), sourceMatrix.m20());
-		buffer.put(bufferIndex(2, 1), sourceMatrix.m21());
-		buffer.put(bufferIndex(2, 2), sourceMatrix.m22());
-		buffer.put(bufferIndex(2, 3), sourceMatrix.m23());
-		
-		buffer.put(bufferIndex(3, 0), sourceMatrix.m30());
-		buffer.put(bufferIndex(3, 1), sourceMatrix.m31());
-		buffer.put(bufferIndex(3, 2), sourceMatrix.m32());
-		buffer.put(bufferIndex(3, 3), sourceMatrix.m33());
-		
-		return buffer.array();
+		this.m30 = sourceMatrix.m03();
+		this.m31 = sourceMatrix.m13();
+		this.m32 = sourceMatrix.m23();
+		this.m33 = sourceMatrix.m33();
 	}
-	private static int bufferIndex(int xIndex, int zIndex) { return (zIndex * 4) + xIndex; }
-	
-	
-	public void store(FloatBuffer floatBuffer)
-	{
-		floatBuffer.put(bufferIndex(0, 0), this.m00);
-		floatBuffer.put(bufferIndex(0, 1), this.m01);
-		floatBuffer.put(bufferIndex(0, 2), this.m02);
-		floatBuffer.put(bufferIndex(0, 3), this.m03);
-		floatBuffer.put(bufferIndex(1, 0), this.m10);
-		floatBuffer.put(bufferIndex(1, 1), this.m11);
-		floatBuffer.put(bufferIndex(1, 2), this.m12);
-		floatBuffer.put(bufferIndex(1, 3), this.m13);
-		floatBuffer.put(bufferIndex(2, 0), this.m20);
-		floatBuffer.put(bufferIndex(2, 1), this.m21);
-		floatBuffer.put(bufferIndex(2, 2), this.m22);
-		floatBuffer.put(bufferIndex(2, 3), this.m23);
-		floatBuffer.put(bufferIndex(3, 0), this.m30);
-		floatBuffer.put(bufferIndex(3, 1), this.m31);
-		floatBuffer.put(bufferIndex(3, 2), this.m32);
-		floatBuffer.put(bufferIndex(3, 3), this.m33);
-	}
-	
 	
 	public static Matrix4f createJomlMatrix(DhApiMat4f matrix)
 	{
@@ -171,26 +165,6 @@ public class Mat4f extends DhApiMat4f
 	// Forge methods //
 	//===============//
 	
-	public void set(DhApiMat4f mat)
-	{
-		this.m00 = mat.m00;
-		this.m01 = mat.m01;
-		this.m02 = mat.m02;
-		this.m03 = mat.m03;
-		this.m10 = mat.m10;
-		this.m11 = mat.m11;
-		this.m12 = mat.m12;
-		this.m13 = mat.m13;
-		this.m20 = mat.m20;
-		this.m21 = mat.m21;
-		this.m22 = mat.m22;
-		this.m23 = mat.m23;
-		this.m30 = mat.m30;
-		this.m31 = mat.m31;
-		this.m32 = mat.m32;
-		this.m33 = mat.m33;
-	}
-	
 	public void add(DhApiMat4f other)
 	{
 		m00 += other.m00;
@@ -229,20 +203,8 @@ public class Mat4f extends DhApiMat4f
 		this.m23 = z;
 	}
 	
-	/**
-	 * Changes the values that store the clipping planes.
-	 * Formula for calculating matrix values is the same that OpenGL uses when making matrices.
-	 *
-	 * @param nearClip New near clipping plane value.
-	 * @param farClip New far clipping plane value.
-	 */
-	public void setClipPlanes(float nearClip, float farClip, boolean zZeroToOne)
-	{
-		//convert to matrix values, formula copied JOML's implementation to match Minecraft
-		this.m22 = (zZeroToOne ? farClip : farClip + nearClip) / (nearClip - farClip);
-		this.m23 = (zZeroToOne ? farClip : farClip + farClip) * nearClip / (nearClip - farClip);
-	}
-	
 	public Mat4f copy() { return new Mat4f(this); }
+	
+	
 	
 }

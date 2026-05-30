@@ -54,44 +54,45 @@ public abstract class DhApiBeforeGenericObjectRenderEvent implements IDhApiCance
 	
 	public static class EventParam extends DhApiRenderParam implements IDhApiEventParam
 	{
-		public final long boxGroupId;
-		public final String resourceLocationNamespace;
-		public final String resourceLocationPath;
+		public long boxGroupId;
+		public String resourceLocationNamespace;
+		public String resourceLocationPath;
 		
 		
-		public EventParam(
-				DhApiRenderParam renderParam,
-				IDhApiRenderableBoxGroup boxGroup
-			) 
+		
+		//==============//
+		// constructors //
+		//==============//
+		//region
+		
+		public EventParam() { }
+		
+		/** internal DH method */
+		public void update(DhApiRenderParam renderParam, IDhApiRenderableBoxGroup boxGroup)
 		{
-			super(renderParam); 
+			super.update(renderParam);
 			
 			this.boxGroupId = boxGroup.getId();
 			this.resourceLocationNamespace = boxGroup.getResourceLocationNamespace();
 			this.resourceLocationPath = boxGroup.getResourceLocationPath();
 		}
-		public EventParam(
-				DhApiRenderParam renderParam,
-				long boxGroupId, String resourceLocationNamespace, String resourceLocationPath
-			)
-		{
-			super(renderParam);
-			
-			this.boxGroupId = boxGroupId;
-			this.resourceLocationNamespace = resourceLocationNamespace;
-			this.resourceLocationPath = resourceLocationPath;
-		}
+		
+		//endregion
 		
 		
+		
+		//================//
+		// base overrides //
+		//================//
+		//region
 		
 		@Override
-		public EventParam copy()
-		{
-			return new EventParam(
-				this, 
-				this.boxGroupId, this.resourceLocationNamespace, this.resourceLocationPath
-			);
-		}
+		public EventParam copy() { return this; }
+		
+		//endregion
+		
+		
+		
 	}
 	
 }

@@ -21,6 +21,8 @@ package com.seibel.distanthorizons.api.objects.math;
 
 import com.seibel.distanthorizons.api.interfaces.util.IDhApiCopyable;
 
+import java.nio.FloatBuffer;
+
 /**
  * An (almost) exact copy of Minecraft's 1.16.5
  * implementation of a 4x4 float matrix. <br><br>
@@ -33,7 +35,7 @@ import com.seibel.distanthorizons.api.interfaces.util.IDhApiCopyable;
  * </code>
  * 
  * @author James Seibel
- * @version 2024-6-30
+ * @version 2026-05-22
  */
 public class DhApiMat4f implements IDhApiCopyable
 {
@@ -62,6 +64,7 @@ public class DhApiMat4f implements IDhApiCopyable
 	//==============//
 	// constructors //
 	//==============//
+	//region
 	
 	public DhApiMat4f() { /* all values are 0 */ }
 	
@@ -71,14 +74,17 @@ public class DhApiMat4f implements IDhApiCopyable
 		this.m01 = sourceMatrix.m01;
 		this.m02 = sourceMatrix.m02;
 		this.m03 = sourceMatrix.m03;
+		
 		this.m10 = sourceMatrix.m10;
 		this.m11 = sourceMatrix.m11;
 		this.m12 = sourceMatrix.m12;
 		this.m13 = sourceMatrix.m13;
+		
 		this.m20 = sourceMatrix.m20;
 		this.m21 = sourceMatrix.m21;
 		this.m22 = sourceMatrix.m22;
 		this.m23 = sourceMatrix.m23;
+		
 		this.m30 = sourceMatrix.m30;
 		this.m31 = sourceMatrix.m31;
 		this.m32 = sourceMatrix.m32;
@@ -109,12 +115,74 @@ public class DhApiMat4f implements IDhApiCopyable
 		this.m33 = values[15];
 	}
 	
+	//endregion
 	
 	
 	
 	//=========//
 	// methods //
 	//=========//
+	//region
+	
+	/** Returns the values of this matrix in row major order (AKA rows then columns) */
+	public float[] getValuesAsArray()
+	{
+		float[] array = new float[16];
+		this.putValuesInArray(array);
+		return array;
+	}
+	
+	/** 
+	 * Returns the values of this matrix in row major order (AKA rows then columns) 
+	 * @since API 7.0.0
+	 */
+	public void putValuesInArray(float[] array)
+	{
+		array[0] = this.m00;
+		array[1] = this.m01;
+		array[2] = this.m02;
+		array[3] = this.m03;
+		
+		array[4] = this.m10;
+		array[5] = this.m11;
+		array[6] = this.m12;
+		array[7] = this.m13;
+		
+		array[8] = this.m20;
+		array[9] = this.m21;
+		array[10] = this.m22;
+		array[11] = this.m23;
+		
+		array[12] = this.m30;
+		array[13] = this.m31;
+		array[14] = this.m32;
+		array[15] = this.m33;
+	}
+	
+	
+	/** @since API 7.0.0 */
+	public void set(DhApiMat4f mat)
+	{
+		this.m00 = mat.m00;
+		this.m01 = mat.m01;
+		this.m02 = mat.m02;
+		this.m03 = mat.m03;
+		
+		this.m10 = mat.m10;
+		this.m11 = mat.m11;
+		this.m12 = mat.m12;
+		this.m13 = mat.m13;
+		
+		this.m20 = mat.m20;
+		this.m21 = mat.m21;
+		this.m22 = mat.m22;
+		this.m23 = mat.m23;
+		
+		this.m30 = mat.m30;
+		this.m31 = mat.m31;
+		this.m32 = mat.m32;
+		this.m33 = mat.m33;
+	}
 	
 	public void setIdentity()
 	{
@@ -279,47 +347,14 @@ public class DhApiMat4f implements IDhApiCopyable
 		this.m33 *= scalar;
 	}
 	
-	
-	
-	
-	//==================//
-	// Distant Horizons //
-	//      methods     //
-	//==================//
-	
-	private static int getArrayIndex(int xIndex, int zIndex) { return (zIndex * 4) + xIndex; }
-	
-	/** Returns the values of this matrix in row major order (AKA rows then columns) */
-	public float[] getValuesAsArray()
-	{
-		return new float[]{
-				this.m00,
-				this.m01,
-				this.m02,
-				this.m03,
-				
-				this.m10,
-				this.m11,
-				this.m12,
-				this.m13,
-				
-				this.m20,
-				this.m21,
-				this.m22,
-				this.m23,
-				
-				this.m30,
-				this.m31,
-				this.m32,
-				this.m33,
-		};
-	}
+	//endregion
 	
 	
 	
 	//================//
 	// base overrides //
 	//================//
+	//region
 	
 	@Override
 	public boolean equals(Object obj)
@@ -387,5 +422,9 @@ public class DhApiMat4f implements IDhApiCopyable
 	
 	@Override
 	public DhApiMat4f copy() { return new DhApiMat4f(this); }
+	
+	//endregion
+	
+	
 	
 }
