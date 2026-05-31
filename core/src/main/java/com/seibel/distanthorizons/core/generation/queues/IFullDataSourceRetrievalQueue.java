@@ -65,6 +65,12 @@ public interface IFullDataSourceRetrievalQueue extends Closeable
 	 */
 	byte highestDataDetail();
 	
+	/** 
+	 * Returns a value like "downloading" or "generating" depending on how the LODs are being retrieved.
+	 * Used to make the progress message easier to understand.
+	 */
+	String getRetrievalTypeName();
+	
 	//endregion
 	
 	

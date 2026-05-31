@@ -51,6 +51,9 @@ public class RemoteWorldRetrievalQueue extends AbstractFullDataNetworkRequestQue
 	@Override
 	public byte highestDataDetail() { return LodUtil.BLOCK_DETAIL_LEVEL; }
 	
+	@Override 
+	public String getRetrievalTypeName() { return "downloading"; }
+	
 	@Override
 	public CompletableFuture<DataSourceRetrievalResult> submitRetrievalTask(long sectionPos, byte requiredDataDetail)
 	{
