@@ -19,12 +19,15 @@
 
 package com.seibel.distanthorizons.core.world;
 
+import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiLevelLoadEvent;
+import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiLevelUnloadEvent;
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
 import com.seibel.distanthorizons.core.enums.MinecraftTextFormat;
 import com.seibel.distanthorizons.core.generation.PregenManager;
 import com.seibel.distanthorizons.core.level.DhServerLevel;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.ILevelWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IServerLevelWrapper;
+import com.seibel.distanthorizons.coreapi.DependencyInjection.ApiEventInjector;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -64,7 +67,9 @@ public class DhServerWorld extends AbstractDhServerWorld<DhServerLevel>
 			{
 				try
 				{
-					return new DhServerLevel(this.saveStructure, (IServerLevelWrapper) serverLevelWrapper, this.getServerPlayerStateManager());
+					DhServerLevel level = new DhServerLevel(this.saveStructure, (IServerLevelWrapper) serverLevelWrapper, this.getServerPlayerStateManager());
+					ApiEventInjector.INSTANCE.fireAllEvents(DhApiLevelLoadEvent.class, new DhApiLevelLoadEvent.EventParam(wrapper));
+					return level;
 				}
 				catch (Exception e)
 				{
@@ -80,19 +85,22 @@ public class DhServerWorld extends AbstractDhServerWorld<DhServerLevel>
 	}
 	
 	@Override
-	public void unloadLevel(@NotNull ILevelWrapper wrapper)
+	public boolean unloadLevel(@NotNull ILevelWrapper wrapper)
 	{
 		if (!(wrapper instanceof IServerLevelWrapper))
 		{
-			return;
+			return false;
 		}
 		
 		if (this.dhLevelByLevelWrapper.containsKey(wrapper))
 		{
-			DhServerLevel level = this.dhLevelByLevelWrapper.get(wrapper);
 			wrapper.onUnload();
 			this.dhLevelByLevelWrapper.remove(wrapper).close();
+			ApiEventInjector.INSTANCE.fireAllEvents(DhApiLevelUnloadEvent.class, new DhApiLevelUnloadEvent.EventParam(wrapper));
+			return true;
 		}
+		
+		return false;
 	}
 	
 	@Override

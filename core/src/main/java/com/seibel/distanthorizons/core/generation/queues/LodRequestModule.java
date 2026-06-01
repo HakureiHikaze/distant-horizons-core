@@ -123,17 +123,6 @@ public class LodRequestModule implements Closeable
 		// if the world is read only don't generate anything
 		shouldDoWorldGen &= !DhApiWorldProxy.INSTANCE.tryGetReadOnly();
 		
-		// don't generate chunks for client levels that aren't being rendered
-		// (this can happen when moving between dimensions)
-		if (this.level instanceof IDhClientLevel)
-		{
-			boolean isRendering = ((IDhClientLevel) this.level).isRendering();
-			if (!isRendering)
-			{
-				shouldDoWorldGen = false;
-			}
-		}
-		
 		
 		
 		boolean isWorldGenRunning = this.isWorldGenRunning();

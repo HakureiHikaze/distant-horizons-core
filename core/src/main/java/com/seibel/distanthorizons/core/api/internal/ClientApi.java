@@ -41,6 +41,7 @@ import com.seibel.distanthorizons.core.util.objects.Pair;
 import com.seibel.distanthorizons.core.util.objects.RollingAverage;
 import com.seibel.distanthorizons.core.util.threading.ThreadPoolUtil;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
+import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IImmersivePortalsAccessor;
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IIrisAccessor;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.renderPass.IDhMetaRenderer;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.renderPass.IDhVanillaFadeRenderer;
@@ -53,7 +54,6 @@ import com.seibel.distanthorizons.coreapi.ModInfo;
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiDebugRendering;
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiRendererMode;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
-import com.seibel.distanthorizons.core.level.IServerKeyedClientLevel;
 import com.seibel.distanthorizons.core.world.AbstractDhWorld;
 import com.seibel.distanthorizons.core.world.DhClientWorld;
 import com.seibel.distanthorizons.core.wrapperInterfaces.chunk.IChunkWrapper;
@@ -65,9 +65,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import java.awt.*;
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -86,6 +86,12 @@ public class ClientApi
 	
 	private static final IMinecraftClientWrapper MC_CLIENT = SingletonInjector.INSTANCE.get(IMinecraftClientWrapper.class);
 	private static final IMinecraftRenderWrapper MC_RENDER = SingletonInjector.INSTANCE.get(IMinecraftRenderWrapper.class);
+	
+	/** Delayed accessing is necessary since this object will be created before the mod accessors are bound. */
+	private static class DelayedAccessors 
+	{
+		public static final IImmersivePortalsAccessor IMMERSIVE_PORTALS = ModAccessorInjector.INSTANCE.get(IImmersivePortalsAccessor.class);
+	}
 	
 	/** this includes the is dev build message and low allocated memory warning */
 	private static final int MS_BETWEEN_STATIC_STARTUP_MESSAGES = 4_000;
@@ -124,7 +130,7 @@ public class ClientApi
 	
 	public boolean rendererDisabledBecauseOfExceptions = false;
 	
-	private final ClientPluginChannelApi pluginChannelApi = new ClientPluginChannelApi(this::clientLevelLoadEvent, this::clientLevelUnloadEvent);
+	private final ClientPluginChannelApi pluginChannelApi = new ClientPluginChannelApi();
 	
 	/** Delay loading the first level to give the server some time to respond with level to actually load */
 	private Timer firstLevelLoadTimer;
@@ -132,8 +138,8 @@ public class ClientApi
 	
 	/** Holds any levels that were loaded before the {@link ClientApi#onClientOnlyConnected} was fired. */
 	public final HashSet<IClientLevelWrapper> waitingClientLevels = new HashSet<>();
-	/** Holds any chunks that were loaded before the {@link ClientApi#clientLevelLoadEvent(IClientLevelWrapper)} was fired. */
-	public final HashMap<Pair<IClientLevelWrapper, DhChunkPos>, IChunkWrapper> waitingChunkByClientLevelAndPos = new HashMap<>();
+	/** Holds any chunks that were found before the client levels are loaded. */
+	public final Map<Pair<IClientLevelWrapper, DhChunkPos>, IChunkWrapper> waitingChunkByClientLevelAndPos = new ConcurrentHashMap<>();
 	
 	/** publicly available so {@link F3Screen} can display the error */
 	@Nullable
@@ -149,9 +155,10 @@ public class ClientApi
 	 * tracked should also be to keep the ratio roughly the same.
 	 * @see ClientApi#MIN_MS_BETWEEN_SPEED_CHECKS
 	 */
-	public RollingAverage cameraSpeedRollingAverage = new RollingAverage(40);
+	private final RollingAverage cameraSpeedRollingAverage = new RollingAverage(40);
 	private Vec3d lastCameraPosForSpeedCheck = new Vec3d();
 	private long msSinceLastSpeedCheck = 0L;
+	public double getAvgCameraSpeed() { return cameraSpeedRollingAverage.getAverage(); }
 	
 	/** 
 	 * keeping track of this is necessary to fix
@@ -179,7 +186,7 @@ public class ClientApi
 	
 	/**
 	 * May be fired slightly before or after the associated
-	 * {@link ClientApi#clientLevelLoadEvent(IClientLevelWrapper)} event
+	 * level is loaded
 	 * depending on how the host mod loader functions. <br><br>
 	 * 
 	 * Synchronized shouldn't be necessary, but is present to match {@see onClientOnlyDisconnected} and prevent any unforeseen issues. 
@@ -216,14 +223,6 @@ public class ClientApi
 			
 			this.pluginChannelApi.onJoinServer(world.networkState.getSession());
 			world.networkState.sendConfigMessage();
-			
-			LOGGER.info("Loading [" + this.waitingClientLevels.size() + "] waiting client level wrappers.");
-			for (IClientLevelWrapper level : this.waitingClientLevels)
-			{
-				this.clientLevelLoadEvent(level);
-			}
-			
-			this.waitingClientLevels.clear();
 		}
 	}
 	
@@ -250,7 +249,6 @@ public class ClientApi
 		
 		// remove any waiting items
 		this.waitingChunkByClientLevelAndPos.clear();
-		this.waitingClientLevels.clear();
 	}
 	
 	//endregion
@@ -262,44 +260,12 @@ public class ClientApi
 	//==============//
 	//region level events
 	
-	public void clientLevelUnloadEvent(IClientLevelWrapper level)
+	/** 
+	 * used in conjunction with the server networking to
+	 * handle level load requests. 
+	 */
+	public boolean canLoadClientLevel(IClientLevelWrapper wrapper) 
 	{
-		try
-		{
-			LOGGER.info("Unloading client level [" + level.getClass().getSimpleName() + "]-[" + level.getDhIdentifier() + "].");
-			
-			if (level instanceof IServerKeyedClientLevel)
-			{
-				this.pluginChannelApi.onClientLevelUnload();
-			}
-			
-			AbstractDhWorld world = SharedApi.getAbstractDhWorld();
-			if (world != null)
-			{
-				world.unloadLevel(level);
-				ApiEventInjector.INSTANCE.fireAllEvents(DhApiLevelUnloadEvent.class, new DhApiLevelUnloadEvent.EventParam(level));
-			}
-			else
-			{
-				this.waitingClientLevels.remove(level);
-			}
-		}
-		catch (Exception e)
-		{
-			// handle errors here to prevent blowing up a mixin or API up stream
-			LOGGER.error("Unexpected error in ClientApi.clientLevelUnloadEvent(), error: "+e.getMessage(), e);
-		}
-	}
-	
-	public void clientLevelLoadEvent(@Nullable IClientLevelWrapper levelWrapper)
-	{
-		// can happen if there was an issue during level load
-		if (levelWrapper == null)
-		{
-			return;
-		}
-		
-		
 		// wait a moment before loading the level to give the server a chance to handle the client's login request
 		if (MC_CLIENT.clientConnectedToDedicatedServer())
 		{
@@ -309,48 +275,41 @@ public class ClientApi
 				this.firstLevelLoadTimer.schedule(new TimerTask()
 				{
 					@Override
-					public void run() { ClientApi.this.clientLevelLoadEvent(levelWrapper); }
+					public void run() { canLoadClientLevel(wrapper); }
 				}, FIRST_LEVEL_LOAD_DELAY_IN_MS);
-				return;
+				return false;
 			}
+			
 			this.firstLevelLoadTimer.cancel();
 		}
 		
-		
-		try
+		if (!this.pluginChannelApi.allowLevelLoading(wrapper))
 		{
-			LOGGER.info("Loading client level [" + levelWrapper + "]-[" + levelWrapper.getDhIdentifier() + "].");
-			
+			LOGGER.debug("Client levels in this connection are managed by the server, skipping auto-load of: ["+wrapper+"]");
 			AbstractDhWorld world = SharedApi.getAbstractDhWorld();
-			if (world != null)
+			if (world == null)
 			{
-				if (!this.pluginChannelApi.allowLevelLoading(levelWrapper))
-				{
-					LOGGER.info("Levels in this connection are managed by the server, skipping auto-load.");
-					
-					// Instead of attempting to load themselves, send the config and wait for a server provided level key.
-					((DhClientWorld) world).networkState.sendConfigMessage();
-					return;
-				}
-				
-				
-				world.getOrLoadLevel(levelWrapper);
-				ApiEventInjector.INSTANCE.fireAllEvents(DhApiLevelLoadEvent.class, new DhApiLevelLoadEvent.EventParam(levelWrapper));
-				
-				this.loadWaitingChunksForLevel(levelWrapper);
+				return false;
 			}
-			else
-			{
-				this.waitingClientLevels.add(levelWrapper);
-			}
+			
+			// Instead of attempting to load themselves, send the config and wait for a server provided level key.
+			((DhClientWorld) world).networkState.sendLevelInitRequest(wrapper.getDimensionName());
+			return false;
 		}
-		catch (Exception e)
-		{
-			// handle errors here to prevent blowing up a mixin or API up stream
-			LOGGER.error("Unexpected error in ClientApi.clientLevelLoadEvent(), error: "+e.getMessage(), e);
-		}
+		
+		return true;
 	}
-	private void loadWaitingChunksForLevel(IClientLevelWrapper level)
+	
+	//endregion
+	
+	
+	
+	//==============//
+	// level events //
+	//==============//
+	//region
+	
+	public void loadWaitingChunksForLevel(IClientLevelWrapper level)
 	{
 		HashSet<Pair<IClientLevelWrapper, DhChunkPos>> keysToRemove = new HashSet<>();
 		for (Pair<IClientLevelWrapper, DhChunkPos> levelChunkPair : this.waitingChunkByClientLevelAndPos.keySet())
@@ -501,7 +460,10 @@ public class ClientApi
 					//region
 					
 					long nowMs = System.currentTimeMillis();
-					if (this.msSinceLastSpeedCheck + MIN_MS_BETWEEN_SPEED_CHECKS < nowMs)
+					if (this.msSinceLastSpeedCheck + MIN_MS_BETWEEN_SPEED_CHECKS < nowMs 
+						// don't track camera speed for dimensions the player isn't in
+						&& (DelayedAccessors.IMMERSIVE_PORTALS == null 
+							|| !DelayedAccessors.IMMERSIVE_PORTALS.isRenderingPortal()))
 					{
 						// calc time since last check
 						double secSinceLastCheck = (nowMs - this.msSinceLastSpeedCheck) / 1_000.0;
@@ -725,8 +687,7 @@ public class ClientApi
 				// or if LOD-only mode is enabled (fading is used to remove the MC render pass)
 				|| Config.Client.Advanced.Debugging.lodOnlyMode.get()
 			)
-			// don't fade when Iris shaders are active, otherwise the rendering can get weird
-			&& !DhApiRenderProxy.INSTANCE.getDeferTransparentRendering())
+			&& shouldRenderFade())
 		{
 			RENDER_PARAMS.update(EDhApiRenderPass.OPAQUE, RENDER_STATE);
 			fadeRenderer.render(RENDER_PARAMS);
@@ -755,14 +716,32 @@ public class ClientApi
 					// or if LOD-only mode is enabled (fading is used to remove the MC render pass)
 					|| Config.Client.Advanced.Debugging.lodOnlyMode.get()
 				)
-				// don't fade when Iris shaders are active, otherwise the rendering can get weird
-				&& !DhApiRenderProxy.INSTANCE.getDeferTransparentRendering();
+				&& shouldRenderFade();
 			if (renderFade)
 			{
 				RENDER_PARAMS.update(EDhApiRenderPass.TRANSPARENT, RENDER_STATE);
 				fadeRenderer.render(RENDER_PARAMS);
 			}
 		}
+	}
+	
+	private static boolean shouldRenderFade()
+	{
+		// don't fade when Iris shaders are active, otherwise the rendering can get weird
+		if (DhApiRenderProxy.INSTANCE.getDeferTransparentRendering())
+		{
+			return false;
+		}
+		
+		// Don't render fade through immersive portals, this causes the fade to apply incorrectly
+		IImmersivePortalsAccessor immersivePortals = ModAccessorInjector.INSTANCE.get(IImmersivePortalsAccessor.class);
+		if (immersivePortals != null 
+			&& immersivePortals.isRenderingPortal())
+		{
+			return false;
+		}
+		
+		return true;
 	}
 	
 	//endregion

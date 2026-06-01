@@ -19,7 +19,9 @@
 
 package com.seibel.distanthorizons.core.wrapperInterfaces.minecraft;
 
+import com.seibel.distanthorizons.core.wrapperInterfaces.world.IServerLevelWrapper;
 import com.seibel.distanthorizons.coreapi.interfaces.dependencyInjection.IBindable;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 
@@ -31,6 +33,9 @@ public interface IMinecraftSharedWrapper extends IBindable
 	
 	int getPlayerCount();
 	
+	/** If used on the client will only return a non-null object if the client is hosting a LAN server */
+	@Nullable
+	IServerLevelWrapper getWrappedServerLevelWithDimensionResourceLocation(String dimensionResourceLocation);
 	
 	
 }

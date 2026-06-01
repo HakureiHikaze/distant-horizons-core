@@ -24,6 +24,7 @@ import com.seibel.distanthorizons.core.pos.DhChunkPos;
 import com.seibel.distanthorizons.core.render.RenderThreadTaskHandler;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
 import com.seibel.distanthorizons.coreapi.interfaces.dependencyInjection.IBindable;
+import org.jetbrains.annotations.Nullable;
 
 public interface IMinecraftClientWrapper extends IBindable
 {
@@ -64,11 +65,13 @@ public interface IMinecraftClientWrapper extends IBindable
 	 * Returns the level the client is currently in. <br>
 	 * Returns null if the client isn't in a level.
 	 */
+	@Nullable
 	IClientLevelWrapper getWrappedClientLevel();
 	/**
 	 * Returns the level the client is currently in. <br>
 	 * Returns null if the client isn't in a level.
 	 */
+	@Nullable
 	IClientLevelWrapper getWrappedClientLevel(boolean bypassLevelKeyManager);
 	
 	

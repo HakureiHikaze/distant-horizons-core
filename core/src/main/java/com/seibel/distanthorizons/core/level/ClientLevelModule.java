@@ -126,7 +126,7 @@ public class ClientLevelModule implements Closeable, IDataSourceUpdateListenerFu
 		ClientRenderState clientRenderState = new ClientRenderState(this.clientLevel, this.clientLevel.getFullDataProvider());
 		if (!this.ClientRenderStateRef.compareAndSet(null, clientRenderState))
 		{
-			LOGGER.warn("Renderer already started for ["+this+"].");
+			LOGGER.warn("Renderer already started for ["+this.clientLevel.getClientLevelWrapper()+"].");
 			clientRenderState.close();
 		}
 	}

@@ -99,8 +99,6 @@ public interface IMinecraftRenderWrapper extends IBindable
 	@Nullable
 	ILightMapWrapper getLightmapWrapper(@NotNull ILevelWrapper level);
 	
-	float getShade(EDhDirection lodDirection);
-	
 	
 	
 }

@@ -41,7 +41,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface IDhWorld extends Closeable
 {
-	
 	@Nullable
 	IDhLevel getOrLoadLevel(@NotNull ILevelWrapper levelWrapper);
 	@Nullable
@@ -49,6 +48,14 @@ public interface IDhWorld extends Closeable
 	Iterable<? extends IDhLevel> getAllLoadedLevels();
 	int getLoadedLevelCount();
 	
-	void unloadLevel(@NotNull ILevelWrapper levelWrapper);
+	/**
+	 * Returns
+	 * true if the level was unloaded, 
+	 * false if the level isn't present in this world 
+	 *       or couldn't be unloaded for some other reason 
+	 */
+	boolean unloadLevel(@NotNull ILevelWrapper levelWrapper);
+	
+	
 	
 }

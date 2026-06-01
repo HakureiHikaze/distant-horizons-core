@@ -9,7 +9,6 @@ import com.seibel.distanthorizons.core.multiplayer.server.FullDataSourceRequestH
 import com.seibel.distanthorizons.core.multiplayer.server.ServerPlayerState;
 import com.seibel.distanthorizons.core.multiplayer.server.ServerPlayerStateManager;
 import com.seibel.distanthorizons.core.network.exceptions.RequestOutOfRangeException;
-import com.seibel.distanthorizons.core.network.exceptions.RequestRejectedException;
 import com.seibel.distanthorizons.core.network.exceptions.SectionRequiresSplittingException;
 import com.seibel.distanthorizons.core.network.messages.AbstractNetworkMessage;
 import com.seibel.distanthorizons.core.network.messages.AbstractTrackableMessage;
@@ -199,26 +198,6 @@ public abstract class AbstractDhServerLevel extends AbstractDhLevel implements I
 		}
 		
 		LodUtil.assertTrue(message.getSession().serverPlayer != null);
-		
-		// Check if the player is in this dimension,
-		// since handling multiple dimensions isn't allowed
-		if (message.getSession().serverPlayer.getLevel() != this.getLevelWrapper())
-		{
-			// If the message can be replied to - reply with an error, otherwise just ignore
-			if (message instanceof AbstractTrackableMessage)
-			{
-				((AbstractTrackableMessage) message).sendResponse(
-						new RequestRejectedException(
-								"Generation not allowed. " +
-										"Requested dimension: ["+((ILevelRelatedMessage) message).getLevelName()+"], " +
-										"player dimension: [" + message.getSession().serverPlayer.getLevel().getDhIdentifier() + "], " +
-										"handler dimension: [" + this.getLevelWrapper().getDhIdentifier() + "]"
-						)
-				);
-			}
-			
-			return false;
-		}
 		
 		return true;
 	}

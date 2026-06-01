@@ -420,7 +420,7 @@ public class LodQuadBuilder implements AutoCloseable
 								// for horizontal and bottom faces of grass blocks, use the  dirt color to
 								// prevent green cliff walls
 								color = this.clientLevelWrapper.getDirtBlockColor();
-								color = ColorUtil.applyShade(color, MC_RENDER.getShade(quad.direction));
+								color = ColorUtil.applyShade(color, this.clientLevelWrapper.getShade(quad.direction));
 							}
 						}
 					}

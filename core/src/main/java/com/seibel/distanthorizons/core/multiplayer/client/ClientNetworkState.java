@@ -13,6 +13,7 @@ import com.seibel.distanthorizons.core.network.event.ScopedNetworkEventSource;
 import com.seibel.distanthorizons.core.network.event.internal.CloseInternalEvent;
 import com.seibel.distanthorizons.core.network.event.internal.IncompatibleMessageInternalEvent;
 import com.seibel.distanthorizons.core.network.messages.base.LevelInitMessage;
+import com.seibel.distanthorizons.core.network.messages.base.RequestLevelInitMessage;
 import com.seibel.distanthorizons.core.network.messages.base.SessionConfigMessage;
 import com.seibel.distanthorizons.core.network.messages.fullData.FullDataSourceResponseMessage;
 import com.seibel.distanthorizons.core.network.messages.fullData.FullDataSplitMessage;
@@ -164,7 +165,8 @@ public class ClientNetworkState implements Closeable
 	// send message //
 	//==============//
 	
-	
+	public void sendLevelInitRequest(String clientLevelKey) 
+	{ this.getSession().sendMessage(new RequestLevelInitMessage(clientLevelKey)); }
 	
 	public void sendConfigMessage() { this.sendConfigMessage(true); }
 	public void sendConfigMessage(boolean blocking)

@@ -168,15 +168,17 @@ public class DhClientLevel extends AbstractDhLevel implements IDhClientLevel
 			}
 			
 			
+			// Check this before decoding data to prevent errors if multiple client levels 
+			// are receiving data at once (Immersive Portals compatibility).
+			boolean isSameLevel = message.isSameLevelAs(this.levelWrapper);
+			//NETWORK_LOGGER.debug("Buffer ["+message.payload.dtoBufferId+"] isSameLevel: ["+isSameLevel+"]");
+			if (!isSameLevel)
+			{
+				return;
+			}
+			
 			try (FullDataSourceV2DTO dataSourceDto = this.networkState.fullDataPayloadReceiver.decodeDataSource(message.payload))
 			{
-				boolean isSameLevel = message.isSameLevelAs(this.levelWrapper);
-				NETWORK_LOGGER.debug("Buffer ["+message.payload.dtoBufferId+"] isSameLevel: ["+isSameLevel+"]");
-				if (!isSameLevel)
-				{
-					return;
-				}
-				
 				
 				Executor executor = ThreadPoolUtil.getFileHandlerExecutor();
 				if (executor != null)
@@ -220,6 +222,15 @@ public class DhClientLevel extends AbstractDhLevel implements IDhClientLevel
 	{
 		try
 		{
+			// only tick the level the player is currently in
+			// (done to prevent ticking LodQuadTree's for levels that aren't rendering)
+			IClientLevelWrapper clientLevelWrapper = MC_CLIENT.getWrappedClientLevel();
+			if (clientLevelWrapper == null 
+				|| clientLevelWrapper.getDhLevel() != this)
+			{
+				return;
+			}
+			
 			this.clientside.clientTick();
 			
 			if (this.syncOnLoadRequestQueue != null)

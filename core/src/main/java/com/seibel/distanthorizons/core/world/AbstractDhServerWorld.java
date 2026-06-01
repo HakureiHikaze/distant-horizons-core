@@ -1,5 +1,6 @@
 package com.seibel.distanthorizons.core.world;
 
+import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiLevelUnloadEvent;
 import com.seibel.distanthorizons.core.file.structure.LocalSaveStructure;
 import com.seibel.distanthorizons.core.level.AbstractDhServerLevel;
 import com.seibel.distanthorizons.core.level.IDhLevel;
@@ -8,6 +9,7 @@ import com.seibel.distanthorizons.core.multiplayer.server.ServerPlayerStateManag
 import com.seibel.distanthorizons.core.wrapperInterfaces.misc.IServerPlayerWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.ILevelWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IServerLevelWrapper;
+import com.seibel.distanthorizons.coreapi.DependencyInjection.ApiEventInjector;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -138,6 +140,7 @@ public abstract class AbstractDhServerWorld<TDhServerLevel extends AbstractDhSer
 			if (serverLevelWrapper != null)
 			{
 				serverLevelWrapper.onUnload();
+				ApiEventInjector.INSTANCE.fireAllEvents(DhApiLevelUnloadEvent.class, new DhApiLevelUnloadEvent.EventParam(serverLevelWrapper));
 			}
 			
 			

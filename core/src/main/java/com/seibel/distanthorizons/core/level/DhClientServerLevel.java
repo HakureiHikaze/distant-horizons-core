@@ -72,7 +72,19 @@ public class DhClientServerLevel extends AbstractDhServerLevel implements IDhCli
 	//region
 	
 	@Override
-	public void clientTick() { this.clientside.clientTick(); }
+	public void clientTick()
+	{
+		// only tick the level the player is currently in
+		// (done to prevent ticking LodQuadTree's for levels that aren't rendering)
+		IClientLevelWrapper clientLevelWrapper = MC_CLIENT.getWrappedClientLevel();
+		if (clientLevelWrapper == null
+			|| clientLevelWrapper.getDhLevel() != this)
+		{
+			return;
+		}
+		
+		this.clientside.clientTick();
+	}
 	
 	//endregion
 	

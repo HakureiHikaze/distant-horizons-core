@@ -179,7 +179,7 @@ public class RenderUtil
 		
 		if (Config.Client.Advanced.Graphics.Culling.reduceOverdrawWithFastMovement.get())
 		{
-			double avgSpeed = ClientApi.INSTANCE.cameraSpeedRollingAverage.getAverage();
+			double avgSpeed = ClientApi.INSTANCE.getAvgCameraSpeed();
 			if (avgSpeed >= DynamicOverdraw.MIN_SPEED)
 			{
 				// if the player is moving fast enough,
