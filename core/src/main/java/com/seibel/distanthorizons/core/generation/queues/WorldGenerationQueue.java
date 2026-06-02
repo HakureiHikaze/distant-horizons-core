@@ -593,7 +593,7 @@ public class WorldGenerationQueue implements IFullDataSourceRetrievalQueue, IDeb
 	@Override public byte lowestDataDetail() { return this.lowestDataDetail; }
 	@Override public byte highestDataDetail() { return this.highestDataDetail; }
 	
-	@Override public String getRetrievalTypeName() { return "generating"; }
+	@Override public String getRetrievalTypeName() { return "generating chunks"; }
 	
 	@Override public int getEstimatedRemainingTaskCount() { return this.estimatedRemainingTaskCount; }
 	@Override public void setEstimatedRemainingTaskCount(int newEstimate) { this.estimatedRemainingTaskCount = newEstimate; }

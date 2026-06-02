@@ -102,7 +102,7 @@ public abstract class AbstractLodRequestState
 		remainingChunkCount += this.retrievalQueue.getQueuedChunkCount();
 		String remainingChunkCountStr = F3Screen.NUMBER_FORMAT.format(remainingChunkCount);
 		
-		String message = "DH is "+this.retrievalQueue.getRetrievalTypeName()+" chunks. ";
+		String message = "DH is "+this.retrievalQueue.getRetrievalTypeName()+". ";
 		if (this.dhLevel.getClass() == DhServerLevel.class)
 		{
 			// server levels can have multiple world generators running at once,
