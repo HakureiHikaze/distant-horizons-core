@@ -205,21 +205,20 @@ public class RenderableBoxGroup
 			this.vertexBufferContainer = this.altVertexBufferContainer;
 			this.altVertexBufferContainer = temp;
 			
-			this.vertexDataDirty = false;
-			
 			return;
 		}
 		
 		
 		
-		// if the vertex data is already up to date, do nothing
-		if (!this.vertexDataDirty)
+		// executor should always be available, if not that probably means the level is being shut down
+		PriorityTaskPicker.Executor executor = ThreadPoolUtil.getRenderLoadingExecutor();
+		if (executor == null || executor.isTerminated())
 		{
 			return;
 		}
 		
-		PriorityTaskPicker.Executor executor = ThreadPoolUtil.getRenderLoadingExecutor();
-		if (executor == null || executor.isTerminated())
+		// if the vertex data is already up to date, do nothing
+		if (!this.vertexDataDirty)
 		{
 			return;
 		}
@@ -250,6 +249,9 @@ public class RenderableBoxGroup
 				{
 					this.altVertexBufferContainer.updateVertexData(this.uploadBoxList);
 					this.altVertexBufferContainer.setState(IDhGenericObjectVertexBufferContainer.EState.READY_TO_UPLOAD);
+					
+					// upload complete
+					this.vertexDataDirty = false;
 				}
 				catch (Exception e)
 				{
