@@ -7,9 +7,9 @@ import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.render.RenderParams;
-import com.seibel.distanthorizons.core.util.math.Mat4f;
-import com.seibel.distanthorizons.core.util.math.Vec3d;
-import com.seibel.distanthorizons.core.util.math.Vec3f;
+import com.seibel.distanthorizons.core.util.math.DhMat4f;
+import com.seibel.distanthorizons.core.util.math.DhVec3d;
+import com.seibel.distanthorizons.core.util.math.DhVec3f;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.coreapi.interfaces.dependencyInjection.IBindable;
 import org.jetbrains.annotations.NotNull;
@@ -35,8 +35,8 @@ public abstract class AbstractDebugWireframeRenderer implements IBindable
 	protected final PriorityBlockingQueue<BoxParticle> particles = new PriorityBlockingQueue<>();
 	
 	// used when rendering
-	protected Mat4f dhMvmProjMatrixThisFrame;
-	protected Vec3f camPosFloatThisFrame;
+	protected DhMat4f dhMvmProjMatrixThisFrame;
+	protected DhVec3f camPosFloatThisFrame;
 	
 	
 	
@@ -47,9 +47,9 @@ public abstract class AbstractDebugWireframeRenderer implements IBindable
 	
 	public void render(RenderParams renderParams)
 	{
-		this.dhMvmProjMatrixThisFrame = new Mat4f(renderParams.dhMvmProjMatrix);
-		Vec3d camPos = MC_RENDER.getCameraExactPosition();
-		this.camPosFloatThisFrame = new Vec3f((float) camPos.x, (float) camPos.y, (float) camPos.z);
+		this.dhMvmProjMatrixThisFrame = new DhMat4f(renderParams.dhMvmProjMatrix);
+		DhVec3d camPos = MC_RENDER.getCameraExactPosition();
+		this.camPosFloatThisFrame = new DhVec3f((float) camPos.x, (float) camPos.y, (float) camPos.z);
 		
 		
 		this.rendererLists.render(this);
@@ -113,8 +113,8 @@ public abstract class AbstractDebugWireframeRenderer implements IBindable
 	
 	public static final class Box
 	{
-		public Vec3f minPos;
-		public Vec3f maxPos;
+		public DhVec3f minPos;
+		public DhVec3f maxPos;
 		public Color color;
 		
 		
@@ -128,13 +128,13 @@ public abstract class AbstractDebugWireframeRenderer implements IBindable
 			int maxBlockPosX = minBlockPosX + DhSectionPos.getBlockWidth(pos);
 			int maxBlockPosZ = minBlockPosZ + DhSectionPos.getBlockWidth(pos);
 			
-			this.minPos = new Vec3f(minBlockPosX + edgeOffset, minY, minBlockPosZ + edgeOffset);
-			this.maxPos = new Vec3f(maxBlockPosX - edgeOffset, maxY, maxBlockPosZ - edgeOffset);
+			this.minPos = new DhVec3f(minBlockPosX + edgeOffset, minY, minBlockPosZ + edgeOffset);
+			this.maxPos = new DhVec3f(maxBlockPosX - edgeOffset, maxY, maxBlockPosZ - edgeOffset);
 			this.color = color;
 		}
 		
 		/** only used for */
-		public Box(Vec3f minPos, Vec3f maxPos, Color color)
+		public Box(DhVec3f minPos, DhVec3f maxPos, Color color)
 		{
 			this.minPos = minPos;
 			this.maxPos = maxPos;
@@ -177,8 +177,8 @@ public abstract class AbstractDebugWireframeRenderer implements IBindable
 			float yDiff = this.yChange * percent;
 			
 			return new Box(
-				new Vec3f(this.box.minPos.x, this.box.minPos.y + yDiff, this.box.minPos.z),
-				new Vec3f(this.box.maxPos.x, this.box.maxPos.y + yDiff, this.box.maxPos.z),
+				new DhVec3f(this.box.minPos.x, this.box.minPos.y + yDiff, this.box.minPos.z),
+				new DhVec3f(this.box.maxPos.x, this.box.maxPos.y + yDiff, this.box.maxPos.z),
 				this.box.color);
 		}
 		

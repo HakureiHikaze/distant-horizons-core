@@ -29,29 +29,29 @@ import com.seibel.distanthorizons.coreapi.util.MathUtil;
  * @author James Seibel
  * @version 11-11-2021
  */
-public class Vec3f extends DhApiVec3f
+public class DhVec3f extends DhApiVec3f
 {
 	//==============//
 	// constructors //
 	//==============//
 	
-	public Vec3f() { this(0,0,0); }
+	public DhVec3f() { this(0,0,0); }
 	
-	public Vec3f(float x, float y, float z)
+	public DhVec3f(float x, float y, float z)
 	{
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 	
-	public Vec3f(DhApiVec3f pos)
+	public DhVec3f(DhApiVec3f pos)
 	{
 		this.x = pos.x;
 		this.y = pos.y;
 		this.z = pos.z;
 	}
 	
-	public Vec3f(Vec3d pos)
+	public DhVec3f(DhVec3d pos)
 	{
 		this.x = (float) pos.x;
 		this.y = (float) pos.y;
@@ -93,21 +93,21 @@ public class Vec3f extends DhApiVec3f
 		this.z += z;
 	}
 	
-	public void add(Vec3f vector)
+	public void add(DhVec3f vector)
 	{
 		this.x += vector.x;
 		this.y += vector.y;
 		this.z += vector.z;
 	}
 	
-	public void subtract(Vec3f vector)
+	public void subtract(DhVec3f vector)
 	{
 		this.x -= vector.x;
 		this.y -= vector.y;
 		this.z -= vector.z;
 	}
 	
-	public float dotProduct(Vec3f vector) { return this.x * vector.x + this.y * vector.y + this.z * vector.z; }
+	public float dotProduct(DhVec3f vector) { return this.x * vector.x + this.y * vector.y + this.z * vector.z; }
 	
 	/** @return true if normalization had to be done */
 	public boolean normalize()
@@ -127,7 +127,7 @@ public class Vec3f extends DhApiVec3f
 		}
 	}
 	
-	public void crossProduct(Vec3f vector)
+	public void crossProduct(DhVec3f vector)
 	{
 		float f = this.x;
 		float f1 = this.y;
@@ -167,6 +167,6 @@ public class Vec3f extends DhApiVec3f
 		this.z = z;
 	}
 	
-	public Vec3f copy() { return new Vec3f(this.x, this.y, this.z); }
+	public DhVec3f copy() { return new DhVec3f(this.x, this.y, this.z); }
 	
 }

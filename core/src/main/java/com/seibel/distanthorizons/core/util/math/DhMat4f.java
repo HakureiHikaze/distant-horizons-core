@@ -32,7 +32,7 @@ import java.nio.FloatBuffer;
  * @author James Seibel
  * @version 11-11-2021
  */
-public class Mat4f extends DhApiMat4f
+public class DhMat4f extends DhApiMat4f
 {
 	/**
 	 * A matrix containing all 0's. <br><br>
@@ -60,16 +60,16 @@ public class Mat4f extends DhApiMat4f
 	//==============//
 	
 	/** all values are 0 */
-	public Mat4f() { }
+	public DhMat4f() { }
 	
-	public Mat4f(DhApiMat4f sourceMatrix) { super(sourceMatrix); }
+	public DhMat4f(DhApiMat4f sourceMatrix) { super(sourceMatrix); }
 	
 	/** Expects the values of the input buffer to be in row major order (AKA rows then columns) */
-	public Mat4f(FloatBuffer buffer) { this(buffer.array()); }
+	public DhMat4f(FloatBuffer buffer) { this(buffer.array()); }
 	/** Expects the values of the input array to be in row major order (AKA rows then columns) */
-	public Mat4f(float[] values) { super(values); }
+	public DhMat4f(float[] values) { super(values); }
 	
-	public Mat4f(Matrix4fc sourceMatrix) { this.set(sourceMatrix); }
+	public DhMat4f(Matrix4fc sourceMatrix) { this.set(sourceMatrix); }
 	
 	public void set(Matrix4fc sourceMatrix)
 	{
@@ -120,10 +120,10 @@ public class Mat4f extends DhApiMat4f
 	// methods //
 	//=========//
 	
-	public static Mat4f perspective(double fov, float widthHeightRatio, float nearClipPlane, float farClipPlane)
+	public static DhMat4f perspective(double fov, float widthHeightRatio, float nearClipPlane, float farClipPlane)
 	{
 		float f = (float) (1.0D / Math.tan(fov * ((float) Math.PI / 180F) / 2.0D));
-		Mat4f matrix = new Mat4f();
+		DhMat4f matrix = new DhMat4f();
 		matrix.m00 = f / widthHeightRatio;
 		matrix.m11 = f;
 		matrix.m22 = (farClipPlane + nearClipPlane) / (nearClipPlane - farClipPlane);
@@ -136,9 +136,9 @@ public class Mat4f extends DhApiMat4f
 	public void multiplyTranslationMatrix(double x, double y, double z)
 	{ multiply(createTranslateMatrix((float) x, (float) y, (float) z)); }
 	
-	public static Mat4f createScaleMatrix(float x, float y, float z)
+	public static DhMat4f createScaleMatrix(float x, float y, float z)
 	{
-		Mat4f matrix = new Mat4f();
+		DhMat4f matrix = new DhMat4f();
 		matrix.m00 = x;
 		matrix.m11 = y;
 		matrix.m22 = z;
@@ -146,9 +146,9 @@ public class Mat4f extends DhApiMat4f
 		return matrix;
 	}
 	
-	public static Mat4f createTranslateMatrix(float x, float y, float z)
+	public static DhMat4f createTranslateMatrix(float x, float y, float z)
 	{
-		Mat4f matrix = new Mat4f();
+		DhMat4f matrix = new DhMat4f();
 		matrix.m00 = 1.0F;
 		matrix.m11 = 1.0F;
 		matrix.m22 = 1.0F;
@@ -203,7 +203,7 @@ public class Mat4f extends DhApiMat4f
 		this.m23 = z;
 	}
 	
-	public Mat4f copy() { return new Mat4f(this); }
+	public DhMat4f copy() { return new DhMat4f(this); }
 	
 	
 	

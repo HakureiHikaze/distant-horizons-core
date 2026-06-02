@@ -29,7 +29,7 @@ import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos2D;
 import com.seibel.distanthorizons.core.render.QuadTree.LodQuadTree;
 import com.seibel.distanthorizons.core.render.RenderBufferHandler;
 import com.seibel.distanthorizons.core.util.LodUtil;
-import com.seibel.distanthorizons.core.util.math.Vec3d;
+import com.seibel.distanthorizons.core.util.math.DhVec3d;
 import com.seibel.distanthorizons.core.wrapperInterfaces.IWrapperFactory;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftClientWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
@@ -110,7 +110,7 @@ public class ClientLevelModule implements Closeable, IDataSourceUpdateListenerFu
 		}
 		
 		// use camera position instead of player pos so free cam mods work better
-		Vec3d cameraDoublePos = MC_RENDER.getCameraExactPosition();
+		DhVec3d cameraDoublePos = MC_RENDER.getCameraExactPosition();
 		DhBlockPos2D cameraBlockPos = new DhBlockPos2D((int)cameraDoublePos.x, (int)cameraDoublePos.z);
 		clientRenderState.quadtree.tryTick(cameraBlockPos);
 	}

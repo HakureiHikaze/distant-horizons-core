@@ -29,27 +29,27 @@ import com.seibel.distanthorizons.api.objects.math.DhApiVec3i;
  * @author James Seibel
  * @version 2022-11-19
  */
-public class Vec3i extends DhApiVec3i // extends the API object so it can be returned through the API
+public class DhVec3i extends DhApiVec3i // extends the API object so it can be returned through the API
 {
-	public static Vec3i XNeg = new Vec3i(-1, 0, 0);
-	public static Vec3i XPos = new Vec3i(1, 0, 0);
-	public static Vec3i YNeg = new Vec3i(0, -1, 0);
-	public static Vec3i YPos = new Vec3i(0, 1, 0);
-	public static Vec3i ZNeg = new Vec3i(0, 0, -1);
-	public static Vec3i ZPos = new Vec3i(0, 0, 1);
+	public static DhVec3i XNeg = new DhVec3i(-1, 0, 0);
+	public static DhVec3i XPos = new DhVec3i(1, 0, 0);
+	public static DhVec3i YNeg = new DhVec3i(0, -1, 0);
+	public static DhVec3i YPos = new DhVec3i(0, 1, 0);
+	public static DhVec3i ZNeg = new DhVec3i(0, 0, -1);
+	public static DhVec3i ZPos = new DhVec3i(0, 0, 1);
 	
 	// x,y,z variables are handled in the parent object
 	
 	
 	
-	public Vec3i()
+	public DhVec3i()
 	{
 		this.x = 0;
 		this.y = 0;
 		this.z = 0;
 	}
 	
-	public Vec3i(int x, int y, int z)
+	public DhVec3i(int x, int y, int z)
 	{
 		this.x = x;
 		this.y = y;
@@ -93,14 +93,14 @@ public class Vec3i extends DhApiVec3i // extends the API object so it can be ret
 		this.z += z;
 	}
 	
-	public void add(Vec3i vector)
+	public void add(DhVec3i vector)
 	{
 		this.x += vector.x;
 		this.y += vector.y;
 		this.z += vector.z;
 	}
 	
-	public void subtract(Vec3i vector)
+	public void subtract(DhVec3i vector)
 	{
 		this.x -= vector.x;
 		this.y -= vector.y;
@@ -116,7 +116,7 @@ public class Vec3i extends DhApiVec3i // extends the API object so it can be ret
 		return (xAdd * xAdd) + (yAdd * yAdd) + (zAdd * zAdd);
 	}
 	
-	public int distManhattan(Vec3i otherVec)
+	public int distManhattan(DhVec3i otherVec)
 	{
 		float xSub = Math.abs(otherVec.x - this.x);
 		float ySub = Math.abs(otherVec.y - this.y);
@@ -125,30 +125,30 @@ public class Vec3i extends DhApiVec3i // extends the API object so it can be ret
 	}
 	
 	/** inner product */
-	public float dotProduct(Vec3i vector)
+	public float dotProduct(DhVec3i vector)
 	{
 		return (this.x * vector.x) + (this.y * vector.y) + (this.z * vector.z);
 	}
 	
 	/** Cross product */
-	public Vec3i cross(Vec3i otherVec)
+	public DhVec3i cross(DhVec3i otherVec)
 	{
-		return new Vec3i(
+		return new DhVec3i(
 				(this.y * otherVec.z) - (this.z * otherVec.y),
 				(this.z * otherVec.x) - (this.x * otherVec.z),
 				(this.x * otherVec.y) - (this.y * otherVec.x));
 	}
 	
-	public Vec3i copy()
+	public DhVec3i copy()
 	{
-		return new Vec3i(this.x, this.y, this.z);
+		return new DhVec3i(this.x, this.y, this.z);
 	}
 	
 	
 	
 	
 	// Forge start
-	public Vec3i(int[] values) { this.set(values); }
+	public DhVec3i(int[] values) { this.set(values); }
 	
 	public void set(int[] values)
 	{

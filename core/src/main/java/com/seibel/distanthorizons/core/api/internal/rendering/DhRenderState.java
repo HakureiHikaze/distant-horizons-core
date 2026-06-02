@@ -1,7 +1,7 @@
 package com.seibel.distanthorizons.core.api.internal.rendering;
 
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
-import com.seibel.distanthorizons.core.util.math.Mat4f;
+import com.seibel.distanthorizons.core.util.math.DhMat4f;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
 
@@ -12,8 +12,8 @@ import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapp
  */
 public class DhRenderState
 {
-	public Mat4f mcModelViewMatrix = null;
-	public Mat4f mcProjectionMatrix = null;
+	public DhMat4f mcModelViewMatrix = null;
+	public DhMat4f mcProjectionMatrix = null;
 	/** 
 	 * percentage of time into the current client tick. <br><br>
 	 * 

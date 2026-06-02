@@ -31,8 +31,8 @@ import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.level.IDhClientLevel;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.util.LodUtil;
-import com.seibel.distanthorizons.core.util.math.Vec3d;
-import com.seibel.distanthorizons.core.util.math.Vec3f;
+import com.seibel.distanthorizons.core.util.math.DhVec3d;
+import com.seibel.distanthorizons.core.util.math.DhVec3f;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.renderPass.IDhGenericRenderer;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
@@ -89,13 +89,13 @@ public class CloudRenderHandler
 	private final IDhGenericRenderer renderer;
 	
 	/** cached array so we don't need to re-create it each frame for each cloud group */
-	private final Vec3d[] cullingCorners = new Vec3d[]
+	private final DhVec3d[] cullingCorners = new DhVec3d[]
 		{
 			// the values of each will be overwritten during the culling pass
-			new Vec3d(),
-			new Vec3d(),
-			new Vec3d(),
-			new Vec3d(),
+			new DhVec3d(),
+			new DhVec3d(),
+			new DhVec3d(),
+			new DhVec3d(),
 		};
 	
 	
@@ -511,8 +511,8 @@ public class CloudRenderHandler
 		this.cullingCorners[3].y = minPosY;
 		this.cullingCorners[3].z = minPosZ + cloudParams.widthInBlocks;
 		
-		Vec3d cameraPos = MC_RENDER.getCameraExactPosition();
-		Vec3f cameraLookAtVector = MC_RENDER.getLookAtVector();
+		DhVec3d cameraPos = MC_RENDER.getCameraExactPosition();
+		DhVec3f cameraLookAtVector = MC_RENDER.getLookAtVector();
 		cameraLookAtVector.normalize();
 		
 		double renderDistance = Config.Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius.get()
@@ -529,14 +529,14 @@ public class CloudRenderHandler
 		boolean allOutsideRenderDistance = true;
 		boolean allBehindCamera = true;
 		
-		for (Vec3d corner : this.cullingCorners)
+		for (DhVec3d corner : this.cullingCorners)
 		{
 			// Check if the corner is within the render distance
 			// (ignoring height, since LODs also ignore height)
 			
-			Vec3d cornerNoHeight = new Vec3d(corner); 
+			DhVec3d cornerNoHeight = new DhVec3d(corner); 
 			cornerNoHeight.y = 0;
-			Vec3d cameraPosNoHeight = new Vec3d(cameraPos); 
+			DhVec3d cameraPosNoHeight = new DhVec3d(cameraPos); 
 			cameraPosNoHeight.y = 0;
 			
 			double cornerDistance = cornerNoHeight.getDistance(cameraPosNoHeight);
@@ -547,7 +547,7 @@ public class CloudRenderHandler
 			
 			
 			// Check if the corner is in front of the camera (dot product > 0 means in front)
-			Vec3f toCorner = new Vec3f(
+			DhVec3f toCorner = new DhVec3f(
 					(float) (corner.x - cameraPos.x),
 					(float) (corner.y - cameraPos.y),
 					(float) (corner.z - cameraPos.z));

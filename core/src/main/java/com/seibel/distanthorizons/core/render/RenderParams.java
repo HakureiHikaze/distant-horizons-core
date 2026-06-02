@@ -2,15 +2,14 @@ package com.seibel.distanthorizons.core.render;
 
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiRenderPass;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam;
-import com.seibel.distanthorizons.api.objects.math.DhApiMat4f;
 import com.seibel.distanthorizons.core.api.internal.SharedApi;
 import com.seibel.distanthorizons.core.api.internal.rendering.DhRenderState;
 import com.seibel.distanthorizons.core.dependencyInjection.ModAccessorInjector;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.level.IDhClientLevel;
 import com.seibel.distanthorizons.core.util.RenderUtil;
-import com.seibel.distanthorizons.core.util.math.Mat4f;
-import com.seibel.distanthorizons.core.util.math.Vec3d;
+import com.seibel.distanthorizons.core.util.math.DhMat4f;
+import com.seibel.distanthorizons.core.util.math.DhVec3d;
 import com.seibel.distanthorizons.core.world.IDhClientWorld;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftClientWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
@@ -46,7 +45,7 @@ public class RenderParams extends DhApiRenderParam
 	public ILightMapWrapper lightmap;
 	public RenderBufferHandler renderBufferHandler;
 	public IDhGenericRenderer genericRenderer;
-	public Vec3d exactCameraPosition;
+	public DhVec3d exactCameraPosition;
 	/** @see DhRenderState#vanillaFogEnabled */
 	public boolean vanillaFogEnabled;
 	
@@ -154,14 +153,14 @@ public class RenderParams extends DhApiRenderParam
 			return "No Generic Renderer Present";
 		}
 		
-		if (this.dhModelViewMatrix.equals(Mat4f.IDENTITY) 
-			|| this.dhModelViewMatrix.equals(Mat4f.EMPTY))
+		if (this.dhModelViewMatrix.equals(DhMat4f.IDENTITY) 
+			|| this.dhModelViewMatrix.equals(DhMat4f.EMPTY))
 		{
 			return "No DH MVM Matrix Given";
 		}
 		
-		if (this.mcModelViewMatrix.equals(Mat4f.IDENTITY) 
-			|| this.mcModelViewMatrix.equals(Mat4f.EMPTY))
+		if (this.mcModelViewMatrix.equals(DhMat4f.IDENTITY) 
+			|| this.mcModelViewMatrix.equals(DhMat4f.EMPTY))
 		{
 			return "No MC MVM Matrix Given";
 		}

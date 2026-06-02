@@ -22,7 +22,6 @@ package com.seibel.distanthorizons.core.render;
 import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiCullingFrustum;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
-import com.seibel.distanthorizons.api.objects.math.DhApiMat4f;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding.LodBufferContainer;
 import com.seibel.distanthorizons.core.dependencyInjection.ModAccessorInjector;
@@ -43,10 +42,9 @@ import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRen
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IIrisAccessor;
 import com.seibel.distanthorizons.coreapi.ModInfo;
 import com.seibel.distanthorizons.coreapi.interfaces.dependencyInjection.IOverrideInjector;
-import com.seibel.distanthorizons.core.util.math.Mat4f;
-import com.seibel.distanthorizons.core.util.math.Vec3d;
+import com.seibel.distanthorizons.core.util.math.DhMat4f;
+import com.seibel.distanthorizons.core.util.math.DhVec3d;
 import org.joml.Matrix4f;
-import org.joml.Matrix4fc;
 
 import java.util.ArrayList;
 
@@ -65,7 +63,7 @@ public class RenderBufferHandler implements AutoCloseable
 	private static final float[] JOML_TRANSPOSE_ARRAY = new float[16];
 	private static final Matrix4f WORLD_VIEW_JOML_MATRIX = new Matrix4f();
 	private static final Matrix4f WORLD_VIEW_PROJ_JOML_MATRIX = new Matrix4f();
-	private static final Mat4f FRUSTOM_DH_MATRIX = new Mat4f();
+	private static final DhMat4f FRUSTOM_DH_MATRIX = new DhMat4f();
 	
 	
 	/** contains all relevant data */
@@ -172,7 +170,7 @@ public class RenderBufferHandler implements AutoCloseable
 			int worldMinY = renderParams.clientLevelWrapper.getMinHeight();
 			int worldHeight = renderParams.clientLevelWrapper.getMaxHeight();
 			
-			Vec3d cameraPos = MC_RENDER.getCameraExactPosition();
+			DhVec3d cameraPos = MC_RENDER.getCameraExactPosition();
 			
 			renderParams.mcModelViewMatrix.putValuesInArray(JOML_TRANSPOSE_ARRAY);
 			WORLD_VIEW_JOML_MATRIX

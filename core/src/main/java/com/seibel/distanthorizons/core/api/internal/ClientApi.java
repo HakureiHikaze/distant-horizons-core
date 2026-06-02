@@ -36,7 +36,7 @@ import com.seibel.distanthorizons.core.render.RenderParams;
 import com.seibel.distanthorizons.core.render.RenderThreadTaskHandler;
 import com.seibel.distanthorizons.core.render.renderer.*;
 import com.seibel.distanthorizons.core.util.TimerUtil;
-import com.seibel.distanthorizons.core.util.math.Vec3d;
+import com.seibel.distanthorizons.core.util.math.DhVec3d;
 import com.seibel.distanthorizons.core.util.objects.Pair;
 import com.seibel.distanthorizons.core.util.objects.RollingAverage;
 import com.seibel.distanthorizons.core.util.threading.ThreadPoolUtil;
@@ -156,7 +156,7 @@ public class ClientApi
 	 * @see ClientApi#MIN_MS_BETWEEN_SPEED_CHECKS
 	 */
 	private final RollingAverage cameraSpeedRollingAverage = new RollingAverage(40);
-	private Vec3d lastCameraPosForSpeedCheck = new Vec3d();
+	private DhVec3d lastCameraPosForSpeedCheck = new DhVec3d();
 	private long msSinceLastSpeedCheck = 0L;
 	public double getAvgCameraSpeed() { return cameraSpeedRollingAverage.getAverage(); }
 	
@@ -470,7 +470,7 @@ public class ClientApi
 						this.msSinceLastSpeedCheck = nowMs;
 						
 						// get the distance traveled since last frame
-						Vec3d camPos = MC_RENDER.getCameraExactPosition();
+						DhVec3d camPos = MC_RENDER.getCameraExactPosition();
 						double distanceInBlocks = camPos.getDistance(this.lastCameraPosForSpeedCheck);
 						double speed = distanceInBlocks / secSinceLastCheck;
 						

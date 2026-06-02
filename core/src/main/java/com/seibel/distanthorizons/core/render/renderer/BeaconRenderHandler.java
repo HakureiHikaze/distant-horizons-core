@@ -34,7 +34,7 @@ import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos;
 import com.seibel.distanthorizons.core.sql.dto.BeaconBeamDTO;
 import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.RenderUtil;
-import com.seibel.distanthorizons.core.util.math.Vec3d;
+import com.seibel.distanthorizons.core.util.math.DhVec3d;
 import com.seibel.distanthorizons.core.util.threading.ThreadPoolUtil;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.renderPass.IDhGenericRenderer;
@@ -138,7 +138,7 @@ public class BeaconRenderHandler
 						// lock to make sure we don't try adding beacons to the arrays while processing them
 						this.updateLock.lock();
 						
-						Vec3d cameraPos = MC_RENDER.getCameraExactPosition();
+						DhVec3d cameraPos = MC_RENDER.getCameraExactPosition();
 						
 						// fading by the overdraw prevention amount helps reduce beacons from rendering strangely
 						// on the border of DH's render distance
@@ -156,7 +156,7 @@ public class BeaconRenderHandler
 						for (DhApiRenderableBox box : this.fullBeaconBoxList)
 						{
 							// if a beacon is outside the vanilla render distance render it
-							double distance = Vec3d.getHorizontalDistance(cameraPos, box.minPos);
+							double distance = DhVec3d.getHorizontalDistance(cameraPos, box.minPos);
 							if (distance > dhFadeDistance)
 							{
 								this.activeBeaconBoxRenderGroup.add(box);

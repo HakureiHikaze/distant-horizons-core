@@ -20,7 +20,6 @@
 package com.seibel.distanthorizons.core.util.math;
 
 import com.seibel.distanthorizons.api.objects.math.DhApiVec3d;
-import com.seibel.distanthorizons.api.objects.math.DhApiVec3f;
 import com.seibel.distanthorizons.coreapi.util.MathUtil;
 
 /**
@@ -31,16 +30,16 @@ import com.seibel.distanthorizons.coreapi.util.MathUtil;
  * @author James Seibel
  * @version 11-18-2021
  */
-public class Vec3d extends DhApiVec3d
+public class DhVec3d extends DhApiVec3d
 {
-	public static Vec3d XNeg = new Vec3d(-1.0F, 0.0F, 0.0F);
-	public static Vec3d XPos = new Vec3d(1.0F, 0.0F, 0.0F);
-	public static Vec3d YNeg = new Vec3d(0.0F, -1.0F, 0.0F);
-	public static Vec3d YPos = new Vec3d(0.0F, 1.0F, 0.0F);
-	public static Vec3d ZNeg = new Vec3d(0.0F, 0.0F, -1.0F);
-	public static Vec3d ZPos = new Vec3d(0.0F, 0.0F, 1.0F);
+	public static DhVec3d XNeg = new DhVec3d(-1.0F, 0.0F, 0.0F);
+	public static DhVec3d XPos = new DhVec3d(1.0F, 0.0F, 0.0F);
+	public static DhVec3d YNeg = new DhVec3d(0.0F, -1.0F, 0.0F);
+	public static DhVec3d YPos = new DhVec3d(0.0F, 1.0F, 0.0F);
+	public static DhVec3d ZNeg = new DhVec3d(0.0F, 0.0F, -1.0F);
+	public static DhVec3d ZPos = new DhVec3d(0.0F, 0.0F, 1.0F);
 	
-	public static final Vec3d ZERO_VECTOR = new Vec3d(0.0D, 0.0D, 0.0D);
+	public static final DhVec3d ZERO_VECTOR = new DhVec3d(0.0D, 0.0D, 0.0D);
 	
 	
 	
@@ -48,26 +47,26 @@ public class Vec3d extends DhApiVec3d
 	// constructors //
 	//==============//
 	
-	public Vec3d() { }
+	public DhVec3d() { }
 	
-	public Vec3d(double x, double y, double z)
+	public DhVec3d(double x, double y, double z)
 	{
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 	
-	public Vec3d(DhApiVec3d that)
+	public DhVec3d(DhApiVec3d that)
 	{
 		this.x = that.x;
 		this.y = that.y;
 		this.z = that.z;
 	}
 	
-	public Vec3d(double[] values) { this.set(values); }
+	public DhVec3d(double[] values) { this.set(values); }
 	
 	
-	public Vec3d copy() { return new Vec3d(this); }
+	public DhVec3d copy() { return new DhVec3d(this); }
 	
 	
 	
@@ -110,29 +109,29 @@ public class Vec3d extends DhApiVec3d
 		this.z += z;
 	}
 	
-	public void add(Vec3d vector)
+	public void add(DhVec3d vector)
 	{
 		this.x += vector.x;
 		this.y += vector.y;
 		this.z += vector.z;
 	}
 	
-	public void subtract(Vec3d vector)
+	public void subtract(DhVec3d vector)
 	{
 		this.x -= vector.x;
 		this.y -= vector.y;
 		this.z -= vector.z;
 	}
 	
-	public double dotProduct(Vec3d vector) { return this.x * vector.x + this.y * vector.y + this.z * vector.z; }
+	public double dotProduct(DhVec3d vector) { return this.x * vector.x + this.y * vector.y + this.z * vector.z; }
 	
-	public Vec3d normalize()
+	public DhVec3d normalize()
 	{
 		double value = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-		return value < 1.0E-4D ? ZERO_VECTOR : new Vec3d(this.x / value, this.y / value, this.z / value);
+		return value < 1.0E-4D ? ZERO_VECTOR : new DhVec3d(this.x / value, this.y / value, this.z / value);
 	}
 	
-	public void crossProduct(Vec3d vector)
+	public void crossProduct(DhVec3d vector)
 	{
 		double f = this.x;
 		double f1 = this.y;
@@ -168,9 +167,9 @@ public class Vec3d extends DhApiVec3d
 				+ Math.pow(a.z - b.z, 2));
 	}
 	
-	/** @see Vec3d#getSquaredDistance(DhApiVec3d, DhApiVec3d)  */
+	/** @see DhVec3d#getSquaredDistance(DhApiVec3d, DhApiVec3d)  */
 	public double getSquaredDistance(DhApiVec3d other) { return getSquaredDistance(this, other); }
-	/** slightly faster version of {@link Vec3d#getDistance} */
+	/** slightly faster version of {@link DhVec3d#getDistance} */
 	public static double getSquaredDistance(DhApiVec3d a, DhApiVec3d b)
 	{
 		return Math.pow(a.x - b.x, 2)
@@ -178,7 +177,7 @@ public class Vec3d extends DhApiVec3d
 				+ Math.pow(a.z - b.z, 2);
 	}
 	
-	/** @see Vec3d#getHorizontalDistance(DhApiVec3d, DhApiVec3d)  */
+	/** @see DhVec3d#getHorizontalDistance(DhApiVec3d, DhApiVec3d)  */
 	public double getHorizontalDistance(DhApiVec3d other) { return getHorizontalDistance(this, other); }
 	/** Gets the distance between points A and B, ignoring Y height. */
 	public static double getHorizontalDistance(DhApiVec3d a, DhApiVec3d b)

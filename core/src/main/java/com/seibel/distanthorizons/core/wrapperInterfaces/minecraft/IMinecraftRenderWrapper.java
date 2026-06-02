@@ -22,12 +22,11 @@ package com.seibel.distanthorizons.core.wrapperInterfaces.minecraft;
 import java.awt.Color;
 
 import com.seibel.distanthorizons.core.api.internal.rendering.DhRenderState;
-import com.seibel.distanthorizons.core.enums.EDhDirection;
 import com.seibel.distanthorizons.api.enums.config.EDhApiRenderingApi;
 import com.seibel.distanthorizons.core.wrapperInterfaces.misc.ILightMapWrapper;
 import com.seibel.distanthorizons.coreapi.interfaces.dependencyInjection.IBindable;
-import com.seibel.distanthorizons.core.util.math.Vec3d;
-import com.seibel.distanthorizons.core.util.math.Vec3f;
+import com.seibel.distanthorizons.core.util.math.DhVec3d;
+import com.seibel.distanthorizons.core.util.math.DhVec3f;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.ILevelWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +40,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public interface IMinecraftRenderWrapper extends IBindable
 {
-	Vec3f getLookAtVector();
+	DhVec3f getLookAtVector();
 	
 	boolean playerHasBlindingEffect();
 	
@@ -60,7 +59,7 @@ public interface IMinecraftRenderWrapper extends IBindable
 	 */
 	float getPartialTickTime();
 	
-	Vec3d getCameraExactPosition();
+	DhVec3d getCameraExactPosition();
 	
 	Color getFogColor(float partialTicks);
 	

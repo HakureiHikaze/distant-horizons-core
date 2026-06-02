@@ -22,7 +22,7 @@ package com.seibel.distanthorizons.core.pos;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos2D;
 import com.seibel.distanthorizons.core.util.LodUtil;
-import com.seibel.distanthorizons.core.util.math.Vec3d;
+import com.seibel.distanthorizons.core.util.math.DhVec3d;
 
 /**
  * immutable <br><br>
@@ -65,7 +65,7 @@ public class DhChunkPos
 		// >> 4 is the Same as div 16
 		this(blockPos.x >> 4, blockPos.z >> 4);
 	}
-	public DhChunkPos(Vec3d pos)
+	public DhChunkPos(DhVec3d pos)
 	{
 		// >> 4 is the Same as div 16
 		this(((int)pos.x) >> 4, ((int)pos.z) >> 4);

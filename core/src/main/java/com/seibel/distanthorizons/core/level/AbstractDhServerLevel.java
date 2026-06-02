@@ -21,14 +21,13 @@ import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos2D;
 import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.WorldGenUtil;
-import com.seibel.distanthorizons.core.util.math.Vec3d;
+import com.seibel.distanthorizons.core.util.math.DhVec3d;
 import com.seibel.distanthorizons.core.wrapperInterfaces.misc.IServerPlayerWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.ILevelWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IServerLevelWrapper;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -113,7 +112,7 @@ public abstract class AbstractDhServerLevel extends AbstractDhLevel implements I
 		this.worldGenPlayerCenteringQueue.add(firstPlayer);
 		this.worldGenPlayerCenteringQueue.remove(firstPlayer);
 		
-		Vec3d position = firstPlayer.getPosition();
+		DhVec3d position = firstPlayer.getPosition();
 		return new DhBlockPos2D((int) position.x, (int) position.z);
 	}
 	
@@ -132,7 +131,7 @@ public abstract class AbstractDhServerLevel extends AbstractDhLevel implements I
 				return;
 			}
 			
-			Vec3d playerPosition = serverPlayerState.getServerPlayer().getPosition();
+			DhVec3d playerPosition = serverPlayerState.getServerPlayer().getPosition();
 			int distanceFromPlayer = DhSectionPos.getChebyshevSignedBlockDistance(message.sectionPos, new DhBlockPos2D((int) playerPosition.x, (int) playerPosition.z)) / 16;
 			
 			ServerPlayerState.RateLimiterSet rateLimiterSet = serverPlayerState.getRateLimiterSet(this);
@@ -249,7 +248,7 @@ public abstract class AbstractDhServerLevel extends AbstractDhLevel implements I
 						continue;
 					}
 					
-					Vec3d playerPosition = serverPlayerState.getServerPlayer().getPosition();
+					DhVec3d playerPosition = serverPlayerState.getServerPlayer().getPosition();
 					int distanceFromPlayer = DhSectionPos.getChebyshevSignedBlockDistance(data.getPos(), new DhBlockPos2D((int) playerPosition.x, (int) playerPosition.z)) / 16;
 					if (distanceFromPlayer <= serverPlayerState.sessionConfig.getMaxUpdateDistanceRadius())
 					{
