@@ -86,6 +86,10 @@ public class DhApiGraphicsConfig implements IDhApiGraphicsConfig
 	{ return new DhApiConfigValue<EDhApiHorizontalQuality, EDhApiHorizontalQuality>(Config.Client.Advanced.Graphics.Quality.horizontalQuality); }
 	
 	@Override
+	public IDhApiConfigValue<Boolean> useCameraPositionForQualityDropOff()
+	{ return new DhApiConfigValue<Boolean, Boolean>(Config.Client.Advanced.Graphics.Quality.useCameraPositionForQualityDropOff); }
+	
+	@Override
 	public IDhApiConfigValue<EDhApiTransparency> transparency()
 	{ return new DhApiConfigValue<EDhApiTransparency, EDhApiTransparency>(Config.Client.Advanced.Graphics.Quality.transparency); }
 	

@@ -109,10 +109,21 @@ public class ClientLevelModule implements Closeable, IDataSourceUpdateListenerFu
 			this.ClientRenderStateRef.set(clientRenderState);
 		}
 		
-		// use camera position instead of player pos so free cam mods work better
-		DhVec3d cameraDoublePos = MC_RENDER.getCameraExactPosition();
-		DhBlockPos2D cameraBlockPos = new DhBlockPos2D((int)cameraDoublePos.x, (int)cameraDoublePos.z);
-		clientRenderState.quadtree.tryTick(cameraBlockPos);
+		
+		DhBlockPos2D quadTreeTickBlockPos;
+		if (Config.Client.Advanced.Graphics.Quality.useCameraPositionForQualityDropOff.get())
+		{
+			// use camera position allow free cam mods work better
+			DhVec3d cameraDoublePos = MC_RENDER.getCameraExactPosition();
+			quadTreeTickBlockPos = new DhBlockPos2D((int)cameraDoublePos.x, (int)cameraDoublePos.z);
+		}
+		else
+		{
+			// player position allows multi-cam mods to work better
+			quadTreeTickBlockPos = new DhBlockPos2D(MC_CLIENT.getPlayerBlockPos());
+		}
+		
+		clientRenderState.quadtree.tryTick(quadTreeTickBlockPos);
 	}
 	
 	

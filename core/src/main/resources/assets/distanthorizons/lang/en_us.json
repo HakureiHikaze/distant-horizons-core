@@ -127,6 +127,10 @@
     "Vertical Quality",
   "distanthorizons.config.client.advanced.graphics.quality.verticalQuality.@tooltip":
     "How well LODs represent overhangs, caves, cliffsides, etc.\n\nHigher options will increase memory and GPU usage.",
+  "distanthorizons.config.client.advanced.graphics.quality.useCameraPositionForQualityDropOff":
+    "Use Camera Pos for Quality Drop-Off",
+  "distanthorizons.config.client.advanced.graphics.quality.useCameraPositionForQualityDropOff.@tooltip":
+    "If true DH will try to use the camera position when \ndetermining LOD quality drop-off. \nIf false DH will use the player's position. \n\nEnabling helps free-cam mods render correctly. \nDisabling helps multi-camera mods render correctly (ie Immersive Portals or camera mods).",
   "distanthorizons.config.client.advanced.graphics.quality.horizontalScale":
     "Horizontal Scale",
   "distanthorizons.config.client.advanced.graphics.quality.horizontalScale.@tooltip":

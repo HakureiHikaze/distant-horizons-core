@@ -223,6 +223,18 @@ public class Config
 						.addListener(ReloadLodsConfigEventHandler.DELAYED_INSTANCE)
 						.build();
 					
+					public static ConfigEntry<Boolean> useCameraPositionForQualityDropOff = new ConfigEntry.Builder<Boolean>()
+						.set(true)
+						.comment(""
+							+ "If true DH will try to use the camera position when \n"
+							+ "determining LOD quality drop-off. \n"
+							+ "If false DH will use the player's position. \n"
+							+ " \n"
+							+ "Enabling helps free-cam mods render correctly. \n"
+							+ "Disabling helps multi-camera mods render correctly (ie Immersive Portals or camera mods). \n"
+							+ "")
+						.build();
+					
 					public static ConfigUISpacer qualitySpacer = new ConfigUISpacer.Builder().build();
 					
 					public static ConfigEntry<EDhApiTransparency> transparency = new ConfigEntry.Builder<EDhApiTransparency>()
