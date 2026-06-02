@@ -48,8 +48,7 @@ public abstract class AbstractDebugWireframeRenderer implements IBindable
 	public void render(RenderParams renderParams)
 	{
 		this.dhMvmProjMatrixThisFrame = new DhMat4f(renderParams.dhMvmProjMatrix);
-		DhVec3d camPos = MC_RENDER.getCameraExactPosition();
-		this.camPosFloatThisFrame = new DhVec3f((float) camPos.x, (float) camPos.y, (float) camPos.z);
+		this.camPosFloatThisFrame = new DhVec3f(renderParams.exactCameraPosition);
 		
 		
 		this.rendererLists.render(this);

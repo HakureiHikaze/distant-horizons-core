@@ -59,6 +59,13 @@ public interface IMinecraftRenderWrapper extends IBindable
 	 */
 	float getPartialTickTime();
 	
+	/** 
+	 * When other mods are present and
+	 * this method is called outside the render thread
+	 * this may return undesirable positions.
+	 * (Normally this position is used to get
+	 * the position the player's camera).
+	 */
 	DhVec3d getCameraExactPosition();
 	
 	Color getFogColor(float partialTicks);

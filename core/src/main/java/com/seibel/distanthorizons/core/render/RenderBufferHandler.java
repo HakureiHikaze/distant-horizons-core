@@ -170,15 +170,13 @@ public class RenderBufferHandler implements AutoCloseable
 			int worldMinY = renderParams.clientLevelWrapper.getMinHeight();
 			int worldHeight = renderParams.clientLevelWrapper.getMaxHeight();
 			
-			DhVec3d cameraPos = MC_RENDER.getCameraExactPosition();
-			
 			renderParams.mcModelViewMatrix.putValuesInArray(JOML_TRANSPOSE_ARRAY);
 			WORLD_VIEW_JOML_MATRIX
 				.setTransposed(JOML_TRANSPOSE_ARRAY)
 				.translate(
-					-(float) cameraPos.x,
-					-(float) cameraPos.y,
-					-(float) cameraPos.z);
+					-(float) renderParams.exactCameraPosition.x,
+					-(float) renderParams.exactCameraPosition.y,
+					-(float) renderParams.exactCameraPosition.z);
 			
 			renderParams.dhProjectionMatrix.putValuesInArray(JOML_TRANSPOSE_ARRAY);
 			WORLD_VIEW_PROJ_JOML_MATRIX
