@@ -419,10 +419,8 @@ public class CloudRenderHandler
 		//===========================//
 		//region
 		
-		// if debug colors are enabled don't change them
-		if (!DEBUG_BORDER_COLORS
-			// don't modify cloud groups that aren't active
-			&& boxGroup.isActive())
+		// don't replace the debug colors
+		if (!DEBUG_BORDER_COLORS)
 		{
 			// cloud color changes based on the time of day and weather so we need to get it from the level
 			Color newCloudColor = clientLevelWrapper.getCloudColor(renderParam.partialTicks);
@@ -449,13 +447,9 @@ public class CloudRenderHandler
 			);
 			
 			
-			// all boxes should have the same color, so we can get their current color
-			// via the first box
-			DhApiRenderableBox firstBox = boxGroup.get(0);
-			Color currentBoxColor = firstBox.color;
 			
 			// update the boxes if their color should be changed
-			if (!newCloudColor.equals(currentBoxColor))
+			if (!newCloudColor.equals(cloudParams.previousColor))
 			{
 				// Note: cloud instances may share boxes
 				// because of that this method may only need to be called once per all clouds
@@ -463,12 +457,7 @@ public class CloudRenderHandler
 				{
 					box.color = newCloudColor;
 				}
-			}
-			
-			
-			// trigger an update if this cloud section has a different color
-			if (!cloudParams.previousColor.equals(newCloudColor))
-			{
+				
 				cloudParams.previousColor = newCloudColor;
 				
 				boxGroup.triggerBoxChange();
