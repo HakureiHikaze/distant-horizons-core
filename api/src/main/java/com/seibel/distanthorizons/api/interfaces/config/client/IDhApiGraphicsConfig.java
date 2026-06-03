@@ -92,6 +92,8 @@ public interface IDhApiGraphicsConfig extends IDhApiConfigGroup
 	 * <br><br>
 	 * Enabling helps free-cam mods render correctly. <br>
 	 * Disabling helps multi-camera mods render correctly (ie Immersive Portals or camera mods).
+	 * 
+	 * @since API 7.0.0
 	 */
 	IDhApiConfigValue<Boolean> useCameraPositionForQualityDropOff();
 	
