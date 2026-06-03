@@ -75,9 +75,13 @@ public class DhServerWorld extends AbstractDhServerWorld<DhServerLevel>
 				{
 					LOGGER.fatal("Failed to load server level, error: ["+e.getMessage()+"].", e);
 					
+					String r = MinecraftTextFormat.RED;
+					String y = MinecraftTextFormat.YELLOW;
+					String cf = MinecraftTextFormat.CLEAR_FORMATTING;
+					
 					ClientApi.INSTANCE.showChatMessageNextFrame(
-						MinecraftTextFormat.RED + "Distant Horizons: Server level loading failed." + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
-						"Unable to load level ["+serverLevelWrapper.getDhIdentifier()+"], LODs may not appear. See log for more information.");
+						r + "Distant Horizons: Server level loading failed." + cf + "\n" +
+						"Unable to load level ["+y+serverLevelWrapper.getDhIdentifier()+cf+"], LODs may not appear. See log for more information.");
 					
 					return null;
 				}

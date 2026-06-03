@@ -98,9 +98,13 @@ public class DhClientServerWorld extends AbstractDhServerWorld<DhClientServerLev
 				{
 					LOGGER.fatal("Failed to load client-server level, error: ["+e.getMessage()+"].", e);
 					
+					String r = MinecraftTextFormat.RED;
+					String y = MinecraftTextFormat.YELLOW;
+					String cf = MinecraftTextFormat.CLEAR_FORMATTING;
+					
 					ClientApi.INSTANCE.showChatMessageNextFrame(// red text		
-						MinecraftTextFormat.RED + "Distant Horizons: ClientServer level loading failed." + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
-						"Unable to load level ["+levelWrapper.getDhIdentifier()+"], LODs may not appear. See log for more information.");
+						r + "Distant Horizons: ClientServer level loading failed." + cf + "\n" +
+						"Unable to load level ["+y+levelWrapper.getDhIdentifier()+cf+"], LODs may not appear. See log for more information.");
 					
 					return null;
 				}
