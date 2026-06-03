@@ -19,10 +19,13 @@
 
 package com.seibel.distanthorizons.core.sql.repo;
 
+import com.seibel.distanthorizons.core.api.internal.ClientApi;
+import com.seibel.distanthorizons.core.enums.MinecraftTextFormat;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.sql.DatabaseUpdater;
 import com.seibel.distanthorizons.core.sql.DbConnectionClosedException;
+import com.seibel.distanthorizons.core.sql.DbCorruptedException;
 import com.seibel.distanthorizons.core.sql.dto.IBaseDTO;
 import com.seibel.distanthorizons.core.sql.repo.phantoms.AutoClosableTrackingWrapper;
 import com.seibel.distanthorizons.core.util.ExceptionUtil;
@@ -37,6 +40,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -55,6 +59,7 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 	
 	private static final ConcurrentHashMap<String, Connection> CONNECTIONS_BY_CONNECTION_STRING = new ConcurrentHashMap<>();
 	private static final ConcurrentHashMap<AbstractDhRepo<?, ?>, String> ACTIVE_CONNECTION_STRINGS_BY_REPO = new ConcurrentHashMap<>();
+	private static final Set<String> CORRUPTED_DB_PATHS = Collections.newSetFromMap(new ConcurrentHashMap<>());
 	
 	
 	
@@ -69,6 +74,8 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 	public final Class<? extends TDTO> dtoClass;
 	
 	protected final KeyedLockContainer<TKey> saveLockContainer = new KeyedLockContainer<>();
+	
+	private final AtomicBoolean databaseCorruptedRef = new AtomicBoolean(false);
 	
 	
 	
@@ -227,7 +234,6 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 		finally
 		{
 			saveLock.unlock();
-			//this.tryTriggerWalFlush();
 		}
 	}
 	private void insert(TDTO dto) 
@@ -392,6 +398,13 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 	@Nullable
 	public ResultSet query(@Nullable PreparedStatement statement) throws RuntimeException
 	{
+		// if the DB is corrupted act as if it's closed
+		// that should prevent further harm
+		if (this.databaseCorruptedRef.get())
+		{
+			return null;
+		}
+		
 		// This is done so we don't have to add "if null" checks everywhere.
 		// Normally this should only happen once the DB has been closed.
 		if (statement == null)
@@ -423,6 +436,33 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 			
 			if (DbConnectionClosedException.isClosedException(e))
 			{
+				return null;
+			}
+			else if (DbCorruptedException.isCorruptedException(e))
+			{
+				// error may trigger on multiple threads at once
+				synchronized (this)
+				{
+					// only trigger this error once per database
+					if (!this.databaseCorruptedRef.getAndSet(true)
+						// multiple repos may be open for the same path (client and server levels in singleplayer)
+						&& CORRUPTED_DB_PATHS.add(this.databaseFile.getPath()))
+					{
+						LOGGER.error("DH database file at [" + this.databaseFile.getPath() + "] is corrupted. \n" +
+							"All operations to this DB are disabled, DH may behave strangely if you continue playing. \n" +
+							"Please leave the world and delete the corrupted database file to fix. \n" +
+							"Error: [" + e.getMessage() + "]", e);
+						
+						ClientApi.INSTANCE.showChatMessageNextFrame(
+							MinecraftTextFormat.DARK_RED + MinecraftTextFormat.BOLD + "DH database is corrupted." + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
+								"DH will behave strangely if your continue playing. \n" +
+								"Please leave the world and delete the corrupted database file at: \n" +
+								MinecraftTextFormat.YELLOW + this.databaseFile.getPath() + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
+								"to resolve the issue. \n"
+						);
+					}
+				}
+				
 				return null;
 			}
 			else
@@ -512,6 +552,10 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 				LOGGER.error("Unable to close the connection ["+connectionString+"], error: ["+e.getMessage()+"]");
 			}
 		}
+		
+		
+		// clear the errors so they can be re-fired if needed
+		CORRUPTED_DB_PATHS.clear();
 	}
 	
 	@Override
