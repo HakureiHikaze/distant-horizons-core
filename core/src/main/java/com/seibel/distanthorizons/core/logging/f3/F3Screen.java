@@ -128,7 +128,7 @@ public class F3Screen
 				messageList.add("LOD Pos: "+y+detailLevel+"*"+posX+","+posZ+cf);
 				
 				AbstractDhRenderApiDefinition renderApiDef = SingletonInjector.INSTANCE.get(AbstractDhRenderApiDefinition.class);
-				messageList.add("Rendering API: "+a+renderApiDef.getApiName()+cf);
+				messageList.add("Rendering API: "+a+renderApiDef.getEngineName()+cf);
 			}
 			messageList.add("");
 		}

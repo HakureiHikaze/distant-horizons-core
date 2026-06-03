@@ -20,7 +20,7 @@ public abstract class AbstractDhRenderApiDefinition implements IBindable
 	//region
 	
 	/** Used for debugging */
-	public abstract String getApiName();
+	public abstract String getEngineName();
 	
 	private final boolean useSingleIbo = (EPlatform.get() != EPlatform.MACOS);
 	/**
