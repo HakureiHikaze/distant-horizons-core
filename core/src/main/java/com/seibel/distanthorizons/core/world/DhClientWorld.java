@@ -19,13 +19,16 @@
 
 package com.seibel.distanthorizons.core.world;
 
+import com.google.common.cache.CacheBuilder;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiLevelLoadEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiLevelUnloadEvent;
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
+import com.seibel.distanthorizons.core.api.internal.ClientPluginChannelApi;
 import com.seibel.distanthorizons.core.enums.MinecraftTextFormat;
 import com.seibel.distanthorizons.core.file.structure.ClientOnlySaveStructure;
 import com.seibel.distanthorizons.core.level.DhClientLevel;
 import com.seibel.distanthorizons.core.level.IDhLevel;
+import com.seibel.distanthorizons.core.level.IServerKeyedClientLevel;
 import com.seibel.distanthorizons.core.multiplayer.client.ClientNetworkState;
 import com.seibel.distanthorizons.core.util.TimerUtil;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
@@ -36,6 +39,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 public class DhClientWorld extends AbstractDhWorld implements IDhClientWorld
 {
@@ -58,6 +63,14 @@ public class DhClientWorld extends AbstractDhWorld implements IDhClientWorld
 	
 	private final Timer clientTickTimer = TimerUtil.CreateTimer("ClientTickTimer");
 	
+	public final ClientPluginChannelApi pluginChannelApi = new ClientPluginChannelApi();
+	private static final long FIRST_LEVEL_LOAD_DELAY_IN_MS = 1_000;
+	/** Delay loading the first level to give the server some time to respond with level to actually load */
+	private long allowLoadingLevelsAfter = 0;
+	private final ConcurrentMap<String, Boolean> levelInitRequestDebounce = CacheBuilder.newBuilder()
+		.expireAfterAccess(FIRST_LEVEL_LOAD_DELAY_IN_MS, TimeUnit.MILLISECONDS)
+		.<String, Boolean>build()
+		.asMap();
 	
 	
 	//==============//
@@ -72,6 +85,9 @@ public class DhClientWorld extends AbstractDhWorld implements IDhClientWorld
 		this.clientLevelByDhId = new ConcurrentHashMap<>();
 		
 		LOGGER.info("Started DhWorld of type " + this.environment);
+		
+		this.pluginChannelApi.onJoinServer(networkState.getSession());
+		this.networkState.sendConfigMessage();
 		
 		this.clientTickTimer.scheduleAtFixedRate(new TimerTask()
 		{
@@ -119,7 +135,7 @@ public class DhClientWorld extends AbstractDhWorld implements IDhClientWorld
 	{
 		try
 		{
-			if (!ClientApi.INSTANCE.canLoadClientLevel(clientLevelWrapper))
+			if (!this.ensureLevelKeyWhenAvailable(clientLevelWrapper))
 			{
 				return null;
 			}
@@ -146,6 +162,44 @@ public class DhClientWorld extends AbstractDhWorld implements IDhClientWorld
 			
 			return null;
 		}
+	}
+	
+	private boolean ensureLevelKeyWhenAvailable(@NotNull IClientLevelWrapper clientLevelWrapper)
+	{
+		if (!this.pluginChannelApi.allowLevelLoading(clientLevelWrapper))
+		{
+			LOGGER.debug("Client levels in this connection are managed by the server, skipping auto-load of: ["+clientLevelWrapper+"]");
+			
+			// Instead of attempting to load themselves, send the config and wait for a server provided level key
+			// Debounce is to prevent request spam caused by code trying to load the level every frame
+			levelInitRequestDebounce.computeIfAbsent(clientLevelWrapper.getDimensionName(), dimensionName -> {
+				this.networkState.sendLevelInitRequest(dimensionName);
+				return true;
+			});
+			return false;
+		}
+		
+		// Make non-keyed levels wait some delay since first attempt to load anything,
+		// so the server can reply to the level key request
+		if (!(clientLevelWrapper instanceof IServerKeyedClientLevel))
+		{
+			if (this.allowLoadingLevelsAfter == 0)
+			{
+				// Debounce is to prevent request spam caused by code trying to load the level every frame
+				levelInitRequestDebounce.computeIfAbsent(clientLevelWrapper.getDimensionName(), dimensionName -> {
+					this.networkState.sendLevelInitRequest(dimensionName);
+					return true;
+				});
+				this.allowLoadingLevelsAfter = System.currentTimeMillis() + FIRST_LEVEL_LOAD_DELAY_IN_MS;
+			}
+			
+			if (System.currentTimeMillis() < this.allowLoadingLevelsAfter)
+			{
+				return false;
+			}
+		}
+		
+		return true;
 	}
 	
 	@Override
@@ -202,6 +256,7 @@ public class DhClientWorld extends AbstractDhWorld implements IDhClientWorld
 	public void close()
 	{
 		this.networkState.close();
+		this.pluginChannelApi.reset();
 		
 		ArrayList<CompletableFuture<Void>> closeFutures = new ArrayList<>();
 		for (DhClientLevel dhClientLevel : this.clientLevelByDhId.values())

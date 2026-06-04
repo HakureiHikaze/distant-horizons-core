@@ -130,12 +130,6 @@ public class ClientApi
 	
 	public boolean rendererDisabledBecauseOfExceptions = false;
 	
-	private final ClientPluginChannelApi pluginChannelApi = new ClientPluginChannelApi();
-	
-	/** Delay loading the first level to give the server some time to respond with level to actually load */
-	private Timer firstLevelLoadTimer;
-	private static final long FIRST_LEVEL_LOAD_DELAY_IN_MS = 1_000;
-	
 	/** Holds any levels that were loaded before the {@link ClientApi#onClientOnlyConnected} was fired. */
 	public final HashSet<IClientLevelWrapper> waitingClientLevels = new HashSet<>();
 	/** Holds any chunks that were found before the client levels are loaded. */
@@ -220,22 +214,12 @@ public class ClientApi
 			
 			DhClientWorld world = new DhClientWorld();
 			SharedApi.setDhWorld(world);
-			
-			this.pluginChannelApi.onJoinServer(world.networkState.getSession());
-			world.networkState.sendConfigMessage();
 		}
 	}
 	
 	/** Synchronized to prevent a rare issue where multiple disconnect events are triggered on top of each other. */
 	public synchronized void onClientOnlyDisconnected()
 	{
-		// clear the first time timer
-		if (this.firstLevelLoadTimer != null)
-		{
-			this.firstLevelLoadTimer.cancel();
-			this.firstLevelLoadTimer = null;
-		}
-		
 		AbstractDhWorld world = SharedApi.getAbstractDhWorld();
 		if (world != null)
 		{
@@ -245,59 +229,8 @@ public class ClientApi
 			SharedApi.setDhWorld(null);
 		}
 		
-		this.pluginChannelApi.reset();
-		
 		// remove any waiting items
 		this.waitingChunkByClientLevelAndPos.clear();
-	}
-	
-	//endregion
-	
-	
-	
-	//==============//
-	// level events //
-	//==============//
-	//region level events
-	
-	/** 
-	 * used in conjunction with the server networking to
-	 * handle level load requests. 
-	 */
-	public boolean canLoadClientLevel(IClientLevelWrapper wrapper) 
-	{
-		// wait a moment before loading the level to give the server a chance to handle the client's login request
-		if (MC_CLIENT.clientConnectedToDedicatedServer())
-		{
-			if (this.firstLevelLoadTimer == null)
-			{
-				this.firstLevelLoadTimer = TimerUtil.CreateTimer("FirstLevelLoadTimer");
-				this.firstLevelLoadTimer.schedule(new TimerTask()
-				{
-					@Override
-					public void run() { canLoadClientLevel(wrapper); }
-				}, FIRST_LEVEL_LOAD_DELAY_IN_MS);
-				return false;
-			}
-			
-			this.firstLevelLoadTimer.cancel();
-		}
-		
-		if (!this.pluginChannelApi.allowLevelLoading(wrapper))
-		{
-			LOGGER.debug("Client levels in this connection are managed by the server, skipping auto-load of: ["+wrapper+"]");
-			AbstractDhWorld world = SharedApi.getAbstractDhWorld();
-			if (world == null)
-			{
-				return false;
-			}
-			
-			// Instead of attempting to load themselves, send the config and wait for a server provided level key.
-			((DhClientWorld) world).networkState.sendLevelInitRequest(wrapper.getDimensionName());
-			return false;
-		}
-		
-		return true;
 	}
 	
 	//endregion
@@ -358,7 +291,8 @@ public class ClientApi
 		{
 			executor.execute(() ->
 			{
-				NetworkSession networkSession = this.pluginChannelApi.networkSession;
+				DhClientWorld world = (DhClientWorld) Objects.requireNonNull(SharedApi.tryGetDhClientWorld());
+				NetworkSession networkSession = world.pluginChannelApi.networkSession;
 				if (networkSession != null)
 				{
 					networkSession.tryHandleMessage(message);

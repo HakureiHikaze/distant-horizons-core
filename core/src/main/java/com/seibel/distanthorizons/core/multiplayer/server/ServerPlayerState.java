@@ -69,8 +69,6 @@ public class ServerPlayerState implements Closeable
 		this.networkSession.registerHandler(SessionConfigMessage.class, (sessionConfigMessage) ->
 		{
 			this.sessionConfig.constrainingConfig = sessionConfigMessage.config;
-			
-			this.sendLevelKey();
 			this.sendConfigMessage();
 		});
 		
