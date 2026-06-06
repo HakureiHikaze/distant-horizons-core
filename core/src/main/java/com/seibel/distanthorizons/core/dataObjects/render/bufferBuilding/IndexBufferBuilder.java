@@ -1,7 +1,5 @@
 package com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding;
 
-import org.lwjgl.system.MemoryUtil;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -14,11 +12,10 @@ public class IndexBufferBuilder
 	//==========//
 	//region
 	
-	/** Buffer should be freed by {@link MemoryUtil#memFree} */
 	public static ByteBuffer createBuffer(int quadCount)
 	{
 		int indexCount = quadCount * 6; // 2 triangles per quad
-		ByteBuffer buffer = MemoryUtil.memAlloc(indexCount * Integer.BYTES);
+		ByteBuffer buffer = ByteBuffer.allocateDirect(indexCount * Integer.BYTES);
 		buffer.order(ByteOrder.nativeOrder());
 		buildBufferInt(quadCount, buffer);
 		

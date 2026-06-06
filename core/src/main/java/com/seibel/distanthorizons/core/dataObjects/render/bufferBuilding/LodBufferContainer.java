@@ -32,7 +32,6 @@ import com.seibel.distanthorizons.core.wrapperInterfaces.render.AbstractDhRender
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.objects.ILodContainerUniformBufferWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.objects.IVertexBufferWrapper;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -208,38 +207,7 @@ public class LodBufferContainer implements AutoCloseable
 		
 		
 		
-		//====================//
-		// CPU Buffer cleanup //
-		//====================//
-		//region
-		
-		future.whenComplete((LodBufferContainer lodBufferContainer, Throwable throwable) -> 
-		{
-			// all the buffers must be manually freed to prevent memory leaks
-			
-			tryFreeByteBufferList(opaqueBuffers);
-			tryFreeByteBufferList(transparentBuffers);
-			
-			tryFreeByteBufferList(opaqueIndexBuffers);
-			tryFreeByteBufferList(transparentIndexBuffers);
-			
-		});
-		
-		//endregion
-		
-		
-		
 		return future;
-	}
-	private static void tryFreeByteBufferList(@Nullable ArrayList<ByteBuffer> list)
-	{
-		if (list != null) 
-		{
-			for (ByteBuffer buffer : list) 
-			{
-				MemoryUtil.memFree(buffer);
-			} 
-		}
 	}
 	
 	

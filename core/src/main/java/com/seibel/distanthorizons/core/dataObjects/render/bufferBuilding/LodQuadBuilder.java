@@ -20,6 +20,7 @@
 package com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.*;
 
 import com.seibel.distanthorizons.api.enums.config.EDhApiGrassSideRendering;
@@ -33,7 +34,6 @@ import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.coreapi.util.ColorUtil;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
-import org.lwjgl.system.MemoryUtil;
 
 /**
  * Used to create the quads before they are converted to render-able buffers. <br><br>
@@ -337,7 +337,8 @@ public class LodQuadBuilder implements AutoCloseable
 				if (buffer == null 
 					|| buffer.remaining() < BYTES_PER_QUAD)
 				{
-					buffer = MemoryUtil.memAlloc(getMaxBufferByteSize());
+					buffer = ByteBuffer.allocateDirect(getMaxBufferByteSize());
+					buffer.order(ByteOrder.nativeOrder());
 					byteBufferList.add(buffer);
 				}
 				
