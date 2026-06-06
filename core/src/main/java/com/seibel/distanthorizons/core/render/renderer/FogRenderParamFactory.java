@@ -62,7 +62,10 @@ public class FogRenderParamFactory
 		{
 			// hide everything behind fog
 			farFogStart = 0.0f;
-			farFogEnd = 0.0f;
+			farFogEnd = 1.0f;
+			farFogMin = 1.0f; // minimum fog thickness is 1 so everything renders in fog
+			farFogMax = 1.0f;
+			farFogDensity = 1.0f; // always render max density
 		}
 		
 		DhApiFogRenderParam fogRenderParam = new DhApiFogRenderParam(
@@ -91,7 +94,9 @@ public class FogRenderParamFactory
 	{
 		Color fogColor;
 		
-		if (Config.Client.Advanced.Graphics.Fog.colorMode.get() == EDhApiFogColorMode.USE_SKY_COLOR)
+		if (Config.Client.Advanced.Graphics.Fog.colorMode.get() == EDhApiFogColorMode.USE_SKY_COLOR
+			// when underwater or special fogs are being used, don't use the sky color
+			&& !MC_RENDER.isFogStateSpecial())
 		{
 			fogColor = MC_RENDER.getSkyColor();
 		}
