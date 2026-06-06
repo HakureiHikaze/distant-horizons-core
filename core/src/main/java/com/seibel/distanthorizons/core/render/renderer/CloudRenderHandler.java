@@ -393,7 +393,7 @@ public class CloudRenderHandler
 			+ instanceOffsetX + cloudParams.halfWidthInBlocks;
 		float newMinPosY = 
 			this.level.getLevelWrapper().getMaxHeight()
-			+ 200 // render clouds at least 200 blocks above the height limit to prevent players/blocks from intersecting (since DH always renders behind everything else)
+			+ 100 // render clouds at least 200 blocks above the height limit to prevent players/blocks from intersecting (since DH always renders behind everything else)
 			+ cloudParams.heightOffset;
 		float newMinPosZ = 
 			cloudParams.deltaOffsetZ
