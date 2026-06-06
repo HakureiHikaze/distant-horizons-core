@@ -35,7 +35,7 @@ public interface IMinecraftSharedWrapper extends IBindable
 	
 	/** If used on the client will only return a non-null object if the client is hosting a LAN server */
 	@Nullable
-	IServerLevelWrapper getWrappedServerLevelWithDimensionResourceLocation(String dimensionResourceLocation);
+	IServerLevelWrapper getLevelWrapper(String dimensionResourceLocation);
 	
 	
 }

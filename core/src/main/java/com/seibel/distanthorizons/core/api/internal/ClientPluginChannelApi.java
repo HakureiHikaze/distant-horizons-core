@@ -17,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
-import java.util.function.Consumer;
 
 /**
  * This class is used to manage the level keys.
@@ -84,23 +83,26 @@ public class ClientPluginChannelApi
 			throw new IllegalArgumentException("Server sent invalid level key.");
 		}
 		
-		LOGGER.info("Server level key received: [" + msg.levelKey + "].");
+		LOGGER.info("Level init received for [" + msg.dimensionResourceLocation + "]: server key [" + msg.serverKey + "], level key [" + msg.levelKey + "]");
 		
 		RenderThreadTaskHandler.INSTANCE.queueRunningOnRenderThread("ClientPluginChannelApi onLevelInitMessage", () -> 
 		{
 			IClientLevelWrapper clientLevel = MC.getWrappedClientLevel(true);
-			IServerKeyedClientLevel existingKeyedClientLevel = KEYED_CLIENT_LEVEL_MANAGER.getServerKeyedLevel();
+			IServerKeyedClientLevel existingKeyedClientLevel = KEYED_CLIENT_LEVEL_MANAGER.getServerKeyedLevel(clientLevel);
 			
 			if (existingKeyedClientLevel == null
-					|| !existingKeyedClientLevel.getServerKey().equals(msg.serverKey)
-					|| !existingKeyedClientLevel.getServerLevelKey().equals(msg.levelKey))
+				|| !existingKeyedClientLevel.getServerKey().equals(msg.serverKey)
+				|| !existingKeyedClientLevel.getServerLevelKey().equals(msg.levelKey))
 			{
 				LOGGER.info("Loading level with key: [" + msg.levelKey + "].");
-				IServerKeyedClientLevel keyedLevel = KEYED_CLIENT_LEVEL_MANAGER.setServerKeyedLevel(clientLevel, msg.serverKey, msg.levelKey);
-				AbstractDhWorld world = SharedApi.getAbstractDhWorld();
-				if (world != null)
-				{
-					world.getOrLoadLevel(keyedLevel);
+				
+				IServerKeyedClientLevel keyedLevel = KEYED_CLIENT_LEVEL_MANAGER.setServerKeyedLevel(clientLevel, msg.dimensionResourceLocation, msg.serverKey, msg.levelKey);
+				
+				if (keyedLevel != null) {
+					AbstractDhWorld world = SharedApi.getAbstractDhWorld();
+					if (world != null) {
+						world.getOrLoadLevel(keyedLevel);
+					}
 				}
 			}
 		});

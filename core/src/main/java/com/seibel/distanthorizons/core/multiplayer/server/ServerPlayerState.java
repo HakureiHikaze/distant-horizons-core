@@ -1,7 +1,6 @@
 package com.seibel.distanthorizons.core.multiplayer.server;
 
 import com.seibel.distanthorizons.core.config.Config;
-import com.seibel.distanthorizons.core.config.listeners.ConfigChangeListener;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.level.AbstractDhServerLevel;
 import com.seibel.distanthorizons.core.multiplayer.config.SessionConfig;
@@ -16,7 +15,6 @@ import com.seibel.distanthorizons.core.network.event.internal.CloseInternalEvent
 import com.seibel.distanthorizons.core.network.exceptions.RateLimitedException;
 import com.seibel.distanthorizons.core.network.messages.fullData.FullDataSourceRequestMessage;
 import com.seibel.distanthorizons.core.network.session.NetworkSession;
-import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.ratelimiting.SupplierBasedRateAndConcurrencyLimiter;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftSharedWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.misc.IServerPlayerWrapper;
@@ -25,22 +23,17 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.Closeable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 public class ServerPlayerState implements Closeable
 {
 	private final IMinecraftSharedWrapper MC_SHARED = SingletonInjector.INSTANCE.get(IMinecraftSharedWrapper.class);
 	
-	private final ConfigChangeListener<String> levelKeyPrefixChangeListener
-			= new ConfigChangeListener<>(Config.Server.levelKeyPrefix, this::onLevelKeyPrefixConfigChanged);
 	private final SessionConfig.AnyChangeListener configAnyChangeListener = new SessionConfig.AnyChangeListener(this::sendConfigMessage);
-	
 	
 	private final String serverKeyWithoutId = Config.Server.serverKey.get();
 	private final String serverKey = (this.serverKeyWithoutId.isEmpty() ? "" : Config.Server.serverId.get() + "_" + this.serverKeyWithoutId.trim())
 			.replaceAll("[^" + LevelInitMessage.ALLOWED_CHARS_REGEX + " ]", "")
 			.replaceAll(" ", "_");
-	private String lastLevelKey = "";
 	
 	
 	public final NetworkSession networkSession;
@@ -72,9 +65,21 @@ public class ServerPlayerState implements Closeable
 			this.sendConfigMessage();
 		});
 		
-		this.networkSession.registerHandler(RequestLevelInitMessage.class, (requestLevelInitMessage) ->
+		this.networkSession.registerHandler(RequestLevelInitMessage.class, msg ->
 		{
-			sendLevelKey(requestLevelInitMessage.dimensionResourceLocation);
+			if (!Config.Server.sendLevelKeys.get())
+			{
+				return;
+			}
+			
+			IServerLevelWrapper serverLevelWrapper = MC_SHARED.getLevelWrapper(msg.dimensionResourceLocation);
+			if (serverLevelWrapper == null)
+			{
+				return;
+			}
+			
+			String levelKey = serverLevelWrapper.getKeyedLevelDimensionName();
+			this.networkSession.sendMessage(new LevelInitMessage(msg.dimensionResourceLocation, this.serverKey, levelKey));
 		});
 		
 		
@@ -96,42 +101,6 @@ public class ServerPlayerState implements Closeable
 	// client updating //
 	//=================//
 	
-	private void onLevelKeyPrefixConfigChanged(String newLevelKey) { this.sendLevelKey(); }
-	
-	private void sendLevelKey(String dimensionResourceLocation)
-	{
-		sendLevelKey(() ->
-		{
-			IServerLevelWrapper serverLevelWrapper = MC_SHARED.getWrappedServerLevelWithDimensionResourceLocation(dimensionResourceLocation);
-			if (serverLevelWrapper == null)
-			{
-				LodUtil.assertNotReach("Unable to get server level from");
-			}
-			
-			return serverLevelWrapper.getKeyedLevelDimensionName();
-		});
-	}
-	private void sendLevelKey()
-	{
-		sendLevelKey(() ->
-			this.getServerPlayer()
-				.getLevel()
-				.getKeyedLevelDimensionName());
-	}
-	private void sendLevelKey(Supplier<String> levelKeySupplier)
-	{
-		if (Config.Server.sendLevelKeys.get())
-		{
-			String levelKey = levelKeySupplier.get();
-			// let the client's know about the change
-			if (!levelKey.equals(this.lastLevelKey))
-			{
-				this.lastLevelKey = levelKey;
-				this.networkSession.sendMessage(new LevelInitMessage(this.serverKey, levelKey));
-			}
-		}
-	}
-	
 	private void sendConfigMessage()
 	{
 		double coordinateScale = this.getServerPlayer().getLevel().getDimensionType().getCoordinateScale();
@@ -151,7 +120,6 @@ public class ServerPlayerState implements Closeable
 	public void close()
 	{
 		this.fullDataPayloadSender.close();
-		this.levelKeyPrefixChangeListener.close();
 		this.configAnyChangeListener.close();
 		this.networkSession.close();
 	}
