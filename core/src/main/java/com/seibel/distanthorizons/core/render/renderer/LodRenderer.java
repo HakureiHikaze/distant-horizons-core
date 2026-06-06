@@ -262,16 +262,7 @@ public class LodRenderer
 					this.renderTerrain(this.terrainRenderer, renderBufferHandler, renderParams, /*opaquePass*/ false, profiler);
 				}
 				
-				// far plane clip fading
-				if (Config.Client.Advanced.Graphics.Quality.dhFadeFarClipPlane.get()
-					&& IRIS_ACCESSOR == null)
-				{
-					profiler.popPush("Fade Far Clip Fade");
-					this.farFadeRenderer.render(renderParams);
-				}
-				
 				// fog
-				
 				boolean cancelFogEvent = ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeFogRenderEvent.class, fogRenderEventParam);
 				if (renderFog
 					&& !cancelFogEvent)
@@ -279,6 +270,14 @@ public class LodRenderer
 					profiler.popPush("LOD Fog");
 					
 					this.fogRenderer.render(renderParams, fogRenderEventParam.getFogRenderParam());
+				}
+				
+				// far plane clip fading
+				if (Config.Client.Advanced.Graphics.Quality.dhFadeFarClipPlane.get()
+					&& IRIS_ACCESSOR == null)
+				{
+					profiler.popPush("Fade Far Clip Fade");
+					this.farFadeRenderer.render(renderParams);
 				}
 				
 				
