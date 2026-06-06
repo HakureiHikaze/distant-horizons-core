@@ -425,29 +425,6 @@ public class CloudRenderHandler
 		{
 			// cloud color changes based on the time of day and weather so we need to get it from the level
 			Color newCloudColor = clientLevelWrapper.getCloudColor(renderParam.partialTicks);
-			Color sky = MC_RENDER.getSkyColor();
-			
-			float skyColPercent = 0.0f;
-			switch (cloudParams.instanceOffsetY)
-			{
-				case 0:
-					skyColPercent = 0.0f; // use only cloud color
-					break;
-				case 1:
-					skyColPercent = 0.25f; // use some sky color
-					break;
-				case 2:
-					skyColPercent = 0.40f;
-					break;
-			}
-			
-			newCloudColor = new Color(
-				(int) mixColors(newCloudColor.getRed(), sky.getRed(), skyColPercent),
-				(int) mixColors(newCloudColor.getGreen(), sky.getGreen(), skyColPercent),
-				(int) mixColors(newCloudColor.getBlue(), sky.getBlue(), skyColPercent)
-			);
-			
-			
 			
 			// update the boxes if their color should be changed
 			if (!newCloudColor.equals(cloudParams.previousColor))
