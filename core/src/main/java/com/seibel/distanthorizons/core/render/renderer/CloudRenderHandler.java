@@ -434,10 +434,10 @@ public class CloudRenderHandler
 					skyColPercent = 0.0f; // use only cloud color
 					break;
 				case 1:
-					skyColPercent = 0.15f; // use some sky color
+					skyColPercent = 0.25f; // use some sky color
 					break;
 				case 2:
-					skyColPercent = 0.30f;
+					skyColPercent = 0.40f;
 					break;
 			}
 			
