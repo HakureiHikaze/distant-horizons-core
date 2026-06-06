@@ -388,16 +388,17 @@ public class CloudRenderHandler
 		
 		
 		float newMinPosX = 
-				cloudParams.deltaOffsetX
-				+ (cloudParams.instanceOffsetX * cloudParams.widthInBlocks)
-				+ instanceOffsetX + cloudParams.halfWidthInBlocks;
+			cloudParams.deltaOffsetX
+			+ (cloudParams.instanceOffsetX * cloudParams.widthInBlocks)
+			+ instanceOffsetX + cloudParams.halfWidthInBlocks;
 		float newMinPosY = 
 			this.level.getLevelWrapper().getMaxHeight()
 			+ 200 // render clouds at least 200 blocks above the height limit to prevent players/blocks from intersecting (since DH always renders behind everything else)
 			+ cloudParams.heightOffset;
-		float newMinPosZ = cloudParams.deltaOffsetZ
-				+ (cloudParams.instanceOffsetZ * cloudParams.widthInBlocks)
-				+ instanceOffsetZ + cloudParams.halfWidthInBlocks;
+		float newMinPosZ = 
+			cloudParams.deltaOffsetZ
+			+ (cloudParams.instanceOffsetZ * cloudParams.widthInBlocks)
+			+ instanceOffsetZ + cloudParams.halfWidthInBlocks;
 		
 		boolean cullCloud = this.shouldCloudBeCulled(
 				newMinPosX, newMinPosY, newMinPosZ,
@@ -515,10 +516,13 @@ public class CloudRenderHandler
 		DhVec3f cameraLookAtVector = MC_RENDER.getLookAtVector();
 		cameraLookAtVector.normalize();
 		
-		double renderDistance = Config.Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius.get()
-				// * 1.5 is so we have a little extra buffer where clouds will render further than
-				// necessary to prevent seeing the cloud border
-				* LodUtil.CHUNK_WIDTH * 1.5;
+		double renderDistance = 
+			// minimum distance of 256 to handle 3-layer clouds correctly,
+			// otherwise the upper layers will be culled
+			Math.max(Config.Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius.get(), 256)
+			// * 1.5 is so we have a little extra buffer where clouds will render further than
+			// necessary to prevent seeing the cloud border
+			* LodUtil.CHUNK_WIDTH * 1.5;
 		
 		
 		
