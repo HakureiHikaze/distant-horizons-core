@@ -19,7 +19,6 @@
 
 package com.seibel.distanthorizons.core.world;
 
-import com.google.common.cache.CacheBuilder;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiLevelLoadEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiLevelUnloadEvent;
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
@@ -39,8 +38,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
 
 public class DhClientWorld extends AbstractDhWorld implements IDhClientWorld
 {
@@ -67,10 +64,7 @@ public class DhClientWorld extends AbstractDhWorld implements IDhClientWorld
 	private static final long FIRST_LEVEL_LOAD_DELAY_IN_MS = 1_000;
 	/** Delay loading the first level to give the server some time to respond with level to actually load */
 	private long allowLoadingLevelsAfter = 0;
-	private final ConcurrentMap<String, Boolean> levelInitRequestDebounce = CacheBuilder.newBuilder()
-		.expireAfterAccess(FIRST_LEVEL_LOAD_DELAY_IN_MS, TimeUnit.MILLISECONDS)
-		.<String, Boolean>build()
-		.asMap();
+	private final Set</* ClientLevel */ Object> levelInitRequestedClientLevels = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>()));
 	
 	
 	//==============//
@@ -171,35 +165,40 @@ public class DhClientWorld extends AbstractDhWorld implements IDhClientWorld
 			LOGGER.debug("Client levels in this connection are managed by the server, skipping auto-load of: ["+clientLevelWrapper+"]");
 			
 			// Instead of attempting to load themselves, send the config and wait for a server provided level key
-			// Debounce is to prevent request spam caused by code trying to load the level every frame
-			levelInitRequestDebounce.computeIfAbsent(clientLevelWrapper.getDimensionName(), dimensionName -> {
-				this.networkState.sendLevelInitRequest(dimensionName);
-				return true;
-			});
+			this.sendLevelInitRequestIfNeed(clientLevelWrapper);
 			return false;
+		}
+		
+		if (clientLevelWrapper instanceof IServerKeyedClientLevel)
+		{
+			this.sendLevelInitRequestIfNeed(clientLevelWrapper);
 		}
 		
 		// Make non-keyed levels wait some delay since first attempt to load anything,
 		// so the server can reply to the level key request
 		if (!(clientLevelWrapper instanceof IServerKeyedClientLevel))
 		{
+			this.sendLevelInitRequestIfNeed(clientLevelWrapper);
+			
 			if (this.allowLoadingLevelsAfter == 0)
 			{
-				// Debounce is to prevent request spam caused by code trying to load the level every frame
-				levelInitRequestDebounce.computeIfAbsent(clientLevelWrapper.getDimensionName(), dimensionName -> {
-					this.networkState.sendLevelInitRequest(dimensionName);
-					return true;
-				});
 				this.allowLoadingLevelsAfter = System.currentTimeMillis() + FIRST_LEVEL_LOAD_DELAY_IN_MS;
 			}
 			
-			if (System.currentTimeMillis() < this.allowLoadingLevelsAfter)
-			{
-				return false;
-			}
+			return System.currentTimeMillis() >= this.allowLoadingLevelsAfter;
 		}
 		
 		return true;
+	}
+	
+	private void sendLevelInitRequestIfNeed(@NotNull IClientLevelWrapper clientLevelWrapper)
+	{
+		Object clientLevelObject = clientLevelWrapper.getWrappedMcObject();
+		if (clientLevelObject != null
+			&& this.levelInitRequestedClientLevels.add(clientLevelObject))
+		{
+			this.networkState.sendLevelInitRequest(clientLevelWrapper.getDimensionName());
+		}
 	}
 	
 	@Override
@@ -290,6 +289,7 @@ public class DhClientWorld extends AbstractDhWorld implements IDhClientWorld
 		
 		this.clientLevelByDhId.clear();
 		this.clientLevelWrapperSetByDhId.clear();
+		this.levelInitRequestedClientLevels.clear();
 		this.clientTickTimer.cancel();
 		LOGGER.info("Closed DhWorld of type [" + this.environment + "].");
 	}
