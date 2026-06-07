@@ -57,12 +57,12 @@ public class SelfUpdater
 	private static final DhLogger LOGGER = new DhLoggerBuilder().build();
 	
 	private static final IMinecraftClientWrapper MC_CLIENT = SingletonInjector.INSTANCE.get(IMinecraftClientWrapper.class);
+	private static final IVersionConstants VERSION_CONSTANTS = SingletonInjector.INSTANCE.get(IVersionConstants.class);
+	
+	private static final String MC_VERSION = VERSION_CONSTANTS.getMinecraftVersion();
 	
 	/** As we cannot delete(or replace) the jar while the mod is running, we just have this to delete it once the game closes */
 	public static boolean deleteOldJarOnJvmShutdown = false;
-	
-	private static String currentJarSha = "";
-	private static String mcVersion = SingletonInjector.INSTANCE.get(IVersionConstants.class).getMinecraftVersion();
 	
 	public static File newFileLocation;
 	
@@ -75,29 +75,33 @@ public class SelfUpdater
 	 */
 	public static boolean onStart()
 	{
-		LOGGER.info("Checking for Distant Horizons update");
-		
-		try
+		if (!Config.Client.Advanced.AutoUpdater.enableAutoUpdater.get())
 		{
-			currentJarSha = JarUtils.getFileChecksum(MessageDigest.getInstance("SHA"), JarUtils.jarFile);
-		}
-		catch (Exception e)
-		{
-			LOGGER.error("Unable to get existing jar checksum, error: ["+e.getMessage()+"].", e);
+			LOGGER.info("Distant Horizons auto update disabled.");
 			return false;
 		}
 		
-		boolean returnValue = false;
+		
 		try
 		{
 			EDhApiUpdateBranch updateBranch = EDhApiUpdateBranch.convertAutoToStableOrNightly(Config.Client.Advanced.AutoUpdater.updateBranch.get());
-			returnValue = (updateBranch == EDhApiUpdateBranch.STABLE) ? onStableStart() : onNightlyStart();
+			
+			LOGGER.info("Checking for Distant Horizons ["+updateBranch+"] update for MC ["+MC_VERSION+"]...");
+			
+			if (updateBranch == EDhApiUpdateBranch.STABLE)
+			{
+				return onStableStart();
+			}
+			else
+			{
+				return onNightlyStart();
+			}
 		}
 		catch (Exception e) // Shouldn't be needed, but just in case
 		{
 			LOGGER.warn("Unexpected updater startup error: ["+e.getMessage()+"].", e);
+			return false;
 		}
-		return returnValue;
 	}
 	private static boolean onStableStart()
 	{
@@ -108,15 +112,19 @@ public class SelfUpdater
 			LOGGER.warn("Unable to find any nightly build pipelines, auto update will be unavailable.");
 			return false;
 		}
-		if (!ModrinthGetter.mcVersions.contains(mcVersion))
+		if (!ModrinthGetter.mcVersions.contains(MC_VERSION))
 		{
-			LOGGER.warn("Minecraft version ["+ mcVersion +"] is not findable on Modrinth, only findable versions are ["+ StringUtil.join(", ", ModrinthGetter.mcVersions) +"]");
+			LOGGER.warn("Minecraft version ["+ MC_VERSION +"] is not findable on Modrinth, only findable versions are ["+ StringUtil.join(", ", ModrinthGetter.mcVersions) +"]");
 			return false;
 		}
 		
 		try
 		{
-			newFileLocation = JarUtils.jarFile.getParentFile().toPath().resolve("update").resolve(ModInfo.NAME + "-" + ModrinthGetter.getLatestNameForVersion(mcVersion) + "-" + mcVersion + ".jar").toFile();
+			newFileLocation = JarUtils.jarFile
+				.getParentFile().toPath()
+				.resolve("update")
+				.resolve(ModInfo.NAME + "-" + ModrinthGetter.getLatestNameForVersion(MC_VERSION) + "-" + MC_VERSION + ".jar")
+				.toFile();
 		}
 		catch (Exception e)
 		{
@@ -124,8 +132,19 @@ public class SelfUpdater
 			return false;
 		}
 		
+		String currentJarSha;
+		try
+		{
+			currentJarSha = JarUtils.getFileChecksum(MessageDigest.getInstance("SHA"), JarUtils.jarFile);
+		}
+		catch (Exception e)
+		{
+			LOGGER.error("Unable to get existing jar checksum, error: ["+e.getMessage()+"].", e);
+			return false;
+		}
+		
 		// Check the sha's of both our stuff
-		if (currentJarSha.equals(ModrinthGetter.getLatestShaForVersion(mcVersion)))
+		if (currentJarSha.equals(ModrinthGetter.getLatestShaForVersion(MC_VERSION)))
 		{
 			LOGGER.info("Distant Horizons already up to date.");
 			return false;
@@ -137,21 +156,23 @@ public class SelfUpdater
 		}
 		
 		
-		LOGGER.info("New version (" + ModrinthGetter.getLatestNameForVersion(mcVersion) + ") of Distant Horizons is available");
+		LOGGER.info("New version (" + ModrinthGetter.getLatestNameForVersion(MC_VERSION) + ") of Distant Horizons is available");
 		if (Config.Client.Advanced.AutoUpdater.enableSilentUpdates.get())
 		{
 			// Auto-update mod
-			updateMod(mcVersion, newFileLocation);
+			updateMod(MC_VERSION, newFileLocation);
 			return false;
 		}
 		else
 		{
-			LOGGER.info("Download link: " + ModrinthGetter.getLatestDownloadForVersion(mcVersion));
+			LOGGER.info("Download link: " + ModrinthGetter.getLatestDownloadForVersion(MC_VERSION));
 		}
 		return true;
 	}
 	private static boolean onNightlyStart()
 	{
+		LOGGER.info("Checking for Distant Horizons Nightly update...");
+		
 		if (GitlabGetter.INSTANCE.projectPipelines.size() == 0)
 		{
 			LOGGER.info("Unable to find any nightly build pipelines, auto update will be unavailable.");
@@ -171,9 +192,9 @@ public class SelfUpdater
 			return false;
 		}
 		
-		if (!GitlabGetter.INSTANCE.getDownloads(pipeline.get("id")).containsKey(mcVersion))
+		if (!GitlabGetter.INSTANCE.getDownloads(pipeline.get("id")).containsKey(MC_VERSION))
 		{
-			LOGGER.warn("Minecraft version ["+ mcVersion +"] is not findable on Gitlab, findable versions are ["+ StringUtil.join(", ", GitlabGetter.INSTANCE.getDownloads(pipeline.get("id")).keySet().toArray()) +"].");
+			LOGGER.warn("Minecraft version ["+ MC_VERSION +"] is not findable on Gitlab, findable versions are ["+ StringUtil.join(", ", GitlabGetter.INSTANCE.getDownloads(pipeline.get("id")).keySet().toArray()) +"].");
 			return false;
 		}
 		
@@ -200,12 +221,12 @@ public class SelfUpdater
 		if (Config.Client.Advanced.AutoUpdater.enableSilentUpdates.get())
 		{
 			// Auto-update mod
-			updateMod(mcVersion, newFileLocation);
+			updateMod(MC_VERSION, newFileLocation);
 			return false;
 		}
 		else
 		{
-			LOGGER.info("Download link: " + GitlabGetter.getLatestForVersion(mcVersion));
+			LOGGER.info("Download link: " + GitlabGetter.getLatestForVersion(MC_VERSION));
 		}
 		return true;
 	}
