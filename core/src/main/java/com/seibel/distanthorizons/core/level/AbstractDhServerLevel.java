@@ -28,6 +28,7 @@ import com.seibel.distanthorizons.core.wrapperInterfaces.world.IServerLevelWrapp
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -70,9 +71,11 @@ public abstract class AbstractDhServerLevel extends AbstractDhLevel implements I
 			boolean runRepoReliantSetup
 		) throws SQLException, IOException
 	{
-		if (saveStructure.getSaveFolder(serverLevelWrapper).mkdirs())
+		File saveFolder = saveStructure.getSaveFolder(serverLevelWrapper);
+		saveFolder.mkdirs();
+		if (!saveFolder.exists())
 		{
-			LOGGER.warn("unable to create data folder.");
+			throw new IOException("unable to create save folder at ["+saveFolder.getPath()+"]. If you're on Windows you may need to enable long file paths.");
 		}
 		this.serverLevelWrapper = serverLevelWrapper;
 		this.serverside = new ServerLevelModule(this, saveStructure);

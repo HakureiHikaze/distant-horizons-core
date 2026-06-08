@@ -115,16 +115,19 @@ public class DhClientLevel extends AbstractDhLevel implements IDhClientLevel
 		File saveFolder = saveStructure.getSaveFolder(clientLevelWrapper);
 		File pre23Folder = saveStructure.getPre23SaveFolder(clientLevelWrapper);
 		
+		saveFolder.mkdirs();
+		
 		if (pre23Folder.exists())
 		{
 			if (!pre23Folder.renameTo(saveFolder))
 			{
-				throw new RuntimeException("Could not move old save data folder: " + pre23Folder.getAbsolutePath() + " to " + saveFolder.getAbsolutePath());
+				throw new RuntimeException("Could not move old save data folder: [" + pre23Folder.getAbsolutePath() + "] to [" + saveFolder.getAbsolutePath() + "].");
 			}
 		}
-		else if (saveStructure.getSaveFolder(clientLevelWrapper).mkdirs())
+		
+		if (!saveFolder.exists())
 		{
-			LOGGER.warn("unable to create data folder.");
+			throw new IOException("unable to create save folder at ["+saveFolder.getPath()+"]. If you're on Windows you may need to enable long file paths.");
 		}
 		
 		this.levelWrapper = clientLevelWrapper;

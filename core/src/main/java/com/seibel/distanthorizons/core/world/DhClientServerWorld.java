@@ -104,7 +104,8 @@ public class DhClientServerWorld extends AbstractDhServerWorld<DhClientServerLev
 					
 					ClientApi.INSTANCE.showChatMessageNextFrame(// red text		
 						r + "Distant Horizons: ClientServer level loading failed." + cf + "\n" +
-						"Unable to load level ["+y+levelWrapper.getDhIdentifier()+cf+"], LODs may not appear. See log for more information.");
+						"Unable to load level ["+y+levelWrapper.getDhIdentifier()+cf+"], LODs may not appear. See log for more information.\n" +
+						"");
 					
 					return null;
 				}
