@@ -203,6 +203,9 @@ public class RenderUtil
 		int chunkRenderDistance = MC_RENDER.getRenderDistance();
 		int vanillaBlockRenderedDistance = chunkRenderDistance * LodUtil.CHUNK_WIDTH;
 		
+		// Note: setting this to a number lower than 1.0 (ie 1 block)
+		// can cause distant clouds to flash due to depth buffer precision loss.
+		// This is not an issue when using Reverse Z depth.
 		float nearClipPlane;
 		if (Config.Client.Advanced.Debugging.lodOnlyMode.get())
 		{
