@@ -109,7 +109,7 @@ public class SelfUpdater
 		// We use sha1 to check the version as our versioning system is different to the one on modrinth
 		if (!ModrinthGetter.init())
 		{
-			LOGGER.warn("Unable to find any nightly build pipelines, auto update will be unavailable.");
+			LOGGER.warn("Unable to find any stable builds, auto update will be unavailable.");
 			return false;
 		}
 		if (!ModrinthGetter.mcVersions.contains(MC_VERSION))
