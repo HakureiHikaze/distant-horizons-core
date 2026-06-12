@@ -252,7 +252,7 @@ public class ClientApi
 			if (levelWrapper.equals(level))
 			{
 				IChunkWrapper chunkWrapper = this.waitingChunkByClientLevelAndPos.get(levelChunkPair);
-				SharedApi.INSTANCE.applyChunkUpdate(chunkWrapper, levelWrapper);
+				SharedApi.INSTANCE.applyChunkUpdate(chunkWrapper, levelWrapper, false);
 				keysToRemove.add(levelChunkPair);
 			}
 		}
