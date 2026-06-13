@@ -63,6 +63,17 @@ public class Initializer
 		
 		LOGGER.info("Running library validation...");
 		
+		// check the LWJGL version
+		try
+		{
+			// tinyfd (and a bunch of other stuff we need) isn't present in LWGJL 2, we need LWJGL 3
+			Class<?> tinyFd = org.lwjgl.util.tinyfd.TinyFileDialogs.class;
+		}
+		catch (Throwable e)
+		{
+			MC_CLIENT.crashMinecraft("Distant Horizons critical setup error: LWJGL 3 or newer required. Error: [" + e.getMessage() + "].", e);
+		}
+		
 		// confirm that all referenced libraries are available to use
 		try
 		{
