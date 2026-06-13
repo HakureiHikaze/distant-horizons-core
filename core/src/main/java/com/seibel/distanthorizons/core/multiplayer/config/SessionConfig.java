@@ -1,6 +1,6 @@
 package com.seibel.distanthorizons.core.multiplayer.config;
 
-import com.google.common.base.MoreObjects;
+import com.seibel.distanthorizons.core.util.MoreObjects;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.config.listeners.ConfigChangeListener;
 import com.seibel.distanthorizons.core.config.types.ConfigEntry;

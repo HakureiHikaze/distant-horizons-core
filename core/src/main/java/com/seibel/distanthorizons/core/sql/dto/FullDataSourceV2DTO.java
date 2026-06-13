@@ -19,7 +19,7 @@
 
 package com.seibel.distanthorizons.core.sql.dto;
 
-import com.google.common.base.MoreObjects;
+import com.seibel.distanthorizons.core.util.MoreObjects;
 import com.seibel.distanthorizons.api.enums.config.EDhApiDataCompressionMode;
 import com.seibel.distanthorizons.api.enums.config.EDhApiWorldCompressionMode;
 import com.seibel.distanthorizons.api.enums.worldGeneration.EDhApiWorldGenerationStep;
