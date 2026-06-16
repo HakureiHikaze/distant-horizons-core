@@ -40,6 +40,7 @@ import com.seibel.distanthorizons.core.util.math.DhVec3d;
 import com.seibel.distanthorizons.core.util.objects.Pair;
 import com.seibel.distanthorizons.core.util.objects.RollingAverage;
 import com.seibel.distanthorizons.core.util.threading.ThreadPoolUtil;
+import com.seibel.distanthorizons.core.world.IDhClientWorld;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IImmersivePortalsAccessor;
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IIrisAccessor;
@@ -291,11 +292,24 @@ public class ClientApi
 		{
 			executor.execute(() ->
 			{
-				DhClientWorld world = (DhClientWorld) Objects.requireNonNull(SharedApi.tryGetDhClientWorld());
-				NetworkSession networkSession = world.pluginChannelApi.networkSession;
-				if (networkSession != null)
+				try
 				{
-					networkSession.tryHandleMessage(message);
+					IDhClientWorld clientWorld = SharedApi.tryGetDhClientWorld();
+					if (!(clientWorld instanceof DhClientWorld))
+					{
+						return;
+					}
+					
+					DhClientWorld world = (DhClientWorld) clientWorld;
+					NetworkSession networkSession = world.pluginChannelApi.networkSession;
+					if (networkSession != null)
+					{
+						networkSession.tryHandleMessage(message);
+					}
+				}
+				catch (Exception e)
+				{
+					LOGGER.warn("pluginMessageReceived unexpected error: ["+e.getMessage()+"]", e);
 				}
 			});
 		}
