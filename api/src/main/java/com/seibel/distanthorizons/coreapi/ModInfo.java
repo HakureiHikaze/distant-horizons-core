@@ -52,7 +52,7 @@ public final class ModInfo
 	/** This version should be updated whenever new methods are added to the DH API */
 	public static final int API_MINOR_VERSION = 0;
 	/** This version should be updated whenever non-breaking fixes are added to the DH API */
-	public static final int API_PATCH_VERSION = 0;
+	public static final int API_PATCH_VERSION = 1;
 	
 	/** If the config file has an older version it'll be re-created from scratch. */
 	public static final int CONFIG_FILE_VERSION = 4;
