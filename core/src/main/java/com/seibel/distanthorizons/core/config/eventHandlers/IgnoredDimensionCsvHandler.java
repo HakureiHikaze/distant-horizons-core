@@ -109,6 +109,12 @@ public class IgnoredDimensionCsvHandler extends DhApiBeforeRenderEvent implement
 			return false;
 		}
 		
+		int atIndex = dimName.indexOf('@');
+		if (atIndex >= 0)
+		{
+			dimName = dimName.substring(atIndex + 1);
+		}
+		
 		for (int i = 0; i < this.dimensionNames.length; i++)
 		{
 			String dimNameToIgnore = this.dimensionNames[i];

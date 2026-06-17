@@ -393,7 +393,7 @@
   "distanthorizons.config.client.advanced.graphics.experimental.ignoredDimensionCsv":
     "Ignored Dimension CSV",
   "distanthorizons.config.client.advanced.graphics.experimental.ignoredDimensionCsv.@tooltip":
-    "A comma separated list of dimension resource locations where DH won't render. Example: \"minecraft:the_nether,minecraft:the_end\" \n\nFor Minecraft 1.12.2 and older:\nOpen the F3 screen and copy the dimension name shown in yellow.\n\nNote: \nSome DH settings will be disabled and/or changed to improve \nvisuals when DH rendering is disabled.",
+    "A comma separated list of dimension resource locations where DH won't render. Example: \"minecraft:the_nether,minecraft:the_end\" \n\nFor Minecraft 1.12.2 and older:\nOpen the F3 screen and copy the dimension_name:ID shown in yellow. Example: \"overworld:0\" \n\nNote: \nSome DH settings will be disabled and/or changed to improve \nvisuals when DH rendering is disabled.",
   "distanthorizons.config.client.advanced.graphics.experimental.renderingEngine":
     "Rendering Engine",
   "distanthorizons.config.client.advanced.graphics.experimental.renderingEngine.@tooltip":
