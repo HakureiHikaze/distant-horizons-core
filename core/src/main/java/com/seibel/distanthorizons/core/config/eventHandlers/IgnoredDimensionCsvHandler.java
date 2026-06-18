@@ -109,6 +109,7 @@ public class IgnoredDimensionCsvHandler extends DhApiBeforeRenderEvent implement
 			return false;
 		}
 		
+		// remove the server hash if present so we can just compare the dimension name
 		int atIndex = dimName.indexOf('@');
 		if (atIndex >= 0)
 		{
