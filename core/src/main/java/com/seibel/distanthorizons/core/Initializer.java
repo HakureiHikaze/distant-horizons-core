@@ -36,6 +36,7 @@ import com.seibel.distanthorizons.core.api.external.methods.data.DhApiTerrainDat
 import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.core.render.DhApiRenderProxy;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftClientWrapper;
+import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftSharedWrapper;
 import net.jpountz.lz4.LZ4FrameOutputStream;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import org.sqlite.SQLiteJDBCLoader;
@@ -51,6 +52,7 @@ public class Initializer
 	private static final DhLogger LOGGER = new DhLoggerBuilder().build();
 	
 	private static final IMinecraftClientWrapper MC_CLIENT = SingletonInjector.INSTANCE.get(IMinecraftClientWrapper.class);
+	private static final IMinecraftSharedWrapper MC_SHARED = SingletonInjector.INSTANCE.get(IMinecraftSharedWrapper.class);
 	
 	
 	
@@ -63,15 +65,18 @@ public class Initializer
 		
 		LOGGER.info("Running library validation...");
 		
-		// check the LWJGL version
-		try
+		// check the LWJGL version for UI/GL methods
+		if (!MC_SHARED.isDedicatedServer()) // the dedicated server doesn't care what LWJGL version we're running
 		{
-			// tinyfd (and a bunch of other stuff we need) isn't present in LWGJL 2, we need LWJGL 3
-			Class<?> tinyFd = org.lwjgl.util.tinyfd.TinyFileDialogs.class;
-		}
-		catch (Throwable e)
-		{
-			MC_CLIENT.crashMinecraft("Distant Horizons critical setup error: LWJGL 3 or newer required. Error: [" + e.getMessage() + "].", e);
+			try
+			{
+				// tinyfd (and a bunch of other stuff we need) isn't present in LWGJL 2, we need LWJGL 3
+				Class<?> tinyFd = org.lwjgl.util.tinyfd.TinyFileDialogs.class;
+			}
+			catch (Throwable e)
+			{
+				MC_CLIENT.crashMinecraft("Distant Horizons critical setup error: LWJGL 3 or newer required. Error: [" + e.getMessage() + "].", e);
+			}
 		}
 		
 		// confirm that all referenced libraries are available to use
