@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Set;
@@ -160,6 +161,7 @@ public abstract class AbstractDelayedSaveCache<TSaveObj, TSaveContainer extends 
 	public void cleanUp(boolean flushAll)
 	{
 		Enumeration<Long> keyIterator = this.saveContainerByPosition.keys();
+		ArrayList<TSaveContainer> removedContainers = null;
 		
 		while (keyIterator.hasMoreElements())
 		{
@@ -175,14 +177,35 @@ public abstract class AbstractDelayedSaveCache<TSaveObj, TSaveContainer extends 
 					if (flushAll
 						|| savedContainer.hasTimedOut(this.saveDelayInMs))
 					{
-						this.handleDataSourceRemoval(savedContainer);
 						this.saveContainerByPosition.remove(pos);
+						
+						// delayed initialization so we know when a save needs to be handled
+						// and reduce GC load slightly
+						if (removedContainers == null)
+						{
+							removedContainers = new ArrayList<>();
+						}
+						removedContainers.add(savedContainer);
 					}
 				}
 			}
 			finally
 			{
 				posLock.unlock();
+			}
+		}
+		
+		
+		
+		if (removedContainers != null)
+		{
+			// Brief sleep to prevent a rare race condition where a container may still be in use after being removed.
+			// Not the cleanest fix, but it should work.
+			try { Thread.sleep(100); } catch (InterruptedException ignore) { }
+			
+			for (TSaveContainer container : removedContainers)
+			{
+				this.handleDataSourceRemoval(container);
 			}
 		}
 	}

@@ -10,6 +10,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DelayedBeaconSaveCache extends AbstractDelayedSaveCache<BeaconBeamDTO, DelayedBeaconSaveCache.BeaconSaveObjContainer>
 {
@@ -49,8 +51,19 @@ public class DelayedBeaconSaveCache extends AbstractDelayedSaveCache<BeaconBeamD
 	 */
 	public void queueBeaconBeamUpdatesForChunkPos(@NotNull DhChunkPos chunkPos, @NotNull List<BeaconBeamDTO> activeBeamList)
 	{
-		BeaconSaveObjContainer container = super.writeToMemoryAndQueueSave(DhSectionPos.encodeContaining((byte)6, chunkPos), null);
-		container.addBeaconsAtChunkPos(chunkPos, activeBeamList);
+		long pos = DhSectionPos.encodeContaining((byte)6, chunkPos);
+		BeaconSaveObjContainer container = super.writeToMemoryAndQueueSave(pos, null);
+		
+		ReentrantLock lockForPos = this.saveLockContainer.getLockForPos(pos);
+		try
+		{
+			lockForPos.lock();
+			container.addBeaconsAtChunkPos(chunkPos, activeBeamList);
+		}
+		finally
+		{
+			lockForPos.unlock();
+		}
 	}
 	
 	/** 
@@ -78,6 +91,13 @@ public class DelayedBeaconSaveCache extends AbstractDelayedSaveCache<BeaconBeamD
 	{
 		for (DhChunkPos chunkPos : saveContainer.beaconsByBlockPosByChunkPos.keySet())
 		{
+			// shouldn't happen, but just in case
+			// (should only happen in a rare race condition where the beacon container exists, but not the chunk pos)
+			if (chunkPos == null)
+			{
+				continue;
+			}
+			
 			HashMap<DhBlockPos, BeaconBeamDTO> beaconsByBlockPos = saveContainer.beaconsByBlockPosByChunkPos.get(chunkPos);
 			ArrayList<BeaconBeamDTO> beaconList = new ArrayList<>(beaconsByBlockPos.values()); 
 			
