@@ -4,9 +4,17 @@
 in vec3 vPos;
 in vec4 vertexColor;
 in vec3 vertexWorldPos;
+in vec3 vBlockPos;
+flat in uint vNormalIndex;
+flat in uint vTextureTileId;
 in vec4 gl_FragCoord;
 
 out vec4 fragColor;
+
+// Block texture atlas, tiles are color ratios relative to the LOD's flat color (128/255 = 1.0, IE unchanged).
+// Tiles are packed in a 2D grid, 256 tiles per row,
+// see BlazeBlockTextureAtlas.TILES_PER_ROW
+uniform sampler2D uBlockAtlas;
 
 layout (std140) uniform fragUniformBlock
 {
@@ -87,9 +95,44 @@ float bayerMatrix4x4(vec2 st)
 
 
 
+/**
+ * Returns the texture coordinate for this fragment,
+ * matching the orientation block textures are baked with.
+ * The normal index is the same order as EDhDirection:
+ * 0 down, 1 up, 2 north, 3 south, 4 west, 5 east
+ */
+vec2 blockFaceUv()
+{
+    vec3 pos = fract(vBlockPos);
+    switch (vNormalIndex)
+    {
+        case 0u: return vec2(pos.x, 1.0 - pos.z); // down
+        case 1u: return vec2(pos.x, pos.z); // up
+        case 2u: return vec2(1.0 - pos.x, 1.0 - pos.y); // north
+        case 3u: return vec2(pos.x, 1.0 - pos.y); // south
+        case 4u: return vec2(pos.z, 1.0 - pos.y); // west
+        default: return vec2(1.0 - pos.z, 1.0 - pos.y); // east
+    }
+}
+
 void main()
 {
     fragColor = vertexColor;
+    
+    if (vTextureTileId != 0u)
+    {
+        // tile id -> grid cell -> exact texel.
+        // texelFetch keeps the texture appear correctly regardless of the bound sampler's filtering
+        // TODO: May not need texelFetch anymore since the underlying sampler filtering issue was resolved
+        ivec2 tileOrigin = ivec2(int(vTextureTileId % 256u), int(vTextureTileId / 256u)) * 16;
+        ivec2 texelPos = tileOrigin + ivec2(clamp(blockFaceUv() * 16.0, 0.0, 15.0));
+        vec4 tile = texelFetch(uBlockAtlas, texelPos, 0);
+        
+        // Cutout texels (IE leaf gaps) blend toward the LOD's flat color
+        // We cannot discard them as then it would show the void rather than more terrain.
+        // Ratio encode the tiles so it preserves the LOD's tint and shading
+        fragColor.rgb = mix(fragColor.rgb, clamp(fragColor.rgb * (tile.rgb * 2.0), 0.0, 1.0), tile.a);
+    }
     
     float viewDist = length(vertexWorldPos);
     

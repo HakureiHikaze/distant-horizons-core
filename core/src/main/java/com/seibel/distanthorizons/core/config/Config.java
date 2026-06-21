@@ -235,6 +235,55 @@ public class Config
 							+ "")
 						.build();
 					
+					public static ConfigEntry<Boolean> increaseQualityWhenZoomedIn = new ConfigEntry.Builder<Boolean>()
+						.set(true)
+						.comment(""
+							+ "If true LOD quality will increase when the camera is zoomed in, \n"
+							+ "IE when using a spyglass or zoom mod. \n"
+							+ " \n"
+							+ "Only LODs visible through the zoomed camera are affected. \n"
+							+ "They're given the detail they'd have if the player was as close \n"
+							+ "as the zoom makes them appear. \n"
+							+ "")
+						.build();
+					
+					public static ConfigEntry<Integer> maxZoomQualityIncrease = new ConfigEntry.Builder<Integer>()
+						.setMinDefaultMax(1, 4, 6)
+						.comment(""
+							+ "How many detail levels zooming in can increase LOD quality by. \n"
+							+ "Higher numbers allow stronger zooms to render crisper terrain, \n"
+							+ "but will increase memory and GPU usage while zoomed in. \n"
+							+ " \n"
+							+ "A vanilla spyglass needs 4 detail levels to reach its full quality. \n"
+							+ "")
+						.build();
+					
+					public static ConfigEntry<Boolean> enableTexturedLods = new ConfigEntry.Builder<Boolean>()
+						.set(true)
+						.comment(""
+							+ "If true nearby and zoomed-in LODs will render with their block's \n"
+							+ "actual texture instead of a single flat color. \n"
+							+ " \n"
+							+ "Only applies to high detail LODs where the texture is actually visible, \n"
+							+ "distant LODs always use flat colors. \n"
+							+ "Some shader packs nay not have an affect. \n"
+							+ "")
+						.addListener(ReloadLodsConfigEventHandler.DELAYED_INSTANCE)
+						.build();
+					
+					public static ConfigEntry<Integer> maxTexturedLodDetailLevel = new ConfigEntry.Builder<Integer>()
+						.setMinDefaultMax(0, 2, 4)
+						.comment(""
+							+ "The highest detail level number that can render with block textures. \n"
+							+ "At higher detail levels each LOD covers multiple blocks, \n"
+							+ "which can essentially make textures smaller than a pixel and therefore invisible. \n"
+							+ " \n"
+							+ "Larger numbers texture more distant LODs \n"
+							+ "but increase memory usage. \n"
+							+ "")
+						.addListener(ReloadLodsConfigEventHandler.DELAYED_INSTANCE)
+						.build();
+					
 					public static ConfigUISpacer qualitySpacer = new ConfigUISpacer.Builder().build();
 					
 					public static ConfigEntry<EDhApiTransparency> transparency = new ConfigEntry.Builder<EDhApiTransparency>()

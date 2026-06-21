@@ -26,7 +26,10 @@ import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListPool
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.dataObjects.render.columnViews.ColumnRenderView;
 import com.seibel.distanthorizons.core.util.RenderDataPointUtil;
+import com.seibel.distanthorizons.core.config.Config;
+import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 
 /**
@@ -55,6 +58,21 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	
 	public final LongArrayList renderDataContainer;
 	
+	/**
+	 * Parallel to {@link ColumnRenderSource#renderDataContainer},
+	 * each byte is an index into {@link ColumnRenderSource#texturePalette}. <br>
+	 * Empty when textured LODs are disabled or this section's
+	 * detail level is too low to show textures.
+	 *
+	 * @see ColumnRenderSource#texturedLodsEnabledAtDetailLevel(byte)
+	 */
+	public final ByteArrayList textureSetPaletteIndices;
+	/**
+	 * Palette index -> {@link com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureRegistry} set id. <br>
+	 * Index {@link ColumnRenderSource#FLAT_PALETTE_INDEX} is always the flat "no texture" set.
+	 */
+	public final ShortArrayList texturePalette = new ShortArrayList();
+	
 	private boolean isEmpty = true;
 	
 	
@@ -74,7 +92,7 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	 */
 	private ColumnRenderSource(long pos, int maxVertSliceCount, int yOffset)
 	{
-		super(ARRAY_LIST_POOL, 0, 0, 1, 0);
+		super(ARRAY_LIST_POOL, 1, 0, 1, 0);
 		
 		this.pos = pos;
 		this.yOffset = yOffset;
@@ -82,6 +100,12 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 		this.maxVerticalSliceCount = maxVertSliceCount;
 		
 		this.renderDataContainer = this.pooledArraysCheckout.getLongArray(0, WIDTH * WIDTH * this.maxVerticalSliceCount);
+		
+		// texture ids are only stored for high detail sections where textures are visible,
+		// for everything else the empty list should keep the memory overhead at zero
+		int textureIndexCount = texturedLodsEnabledAtDetailLevel(this.getDataDetailLevel()) ? WIDTH * WIDTH * this.maxVerticalSliceCount : 0;
+		this.textureSetPaletteIndices = this.pooledArraysCheckout.getByteArray(0, textureIndexCount);
+		this.texturePalette.add((short) 0); // FLAT_PALETTE_INDEX, see BlockTextureRegistry.FLAT_SET_ID
 	}
 	
 	//endregion
@@ -93,7 +117,76 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	//========================//
 	//region
 	
+	/** palette index of the reserved "no texture" entry */
+	public static final byte FLAT_PALETTE_INDEX = 0;
+	/** texture palettes are indexed by unsigned bytes */
+	public static final int MAX_PALETTE_SIZE = 256;
+	
 	public long getDataPoint(int posX, int posZ, int verticalIndex) { return this.renderDataContainer.getLong(posX * WIDTH * this.maxVerticalSliceCount + posZ * this.maxVerticalSliceCount + verticalIndex); }
+	
+	public static boolean texturedLodsEnabledAtDetailLevel(byte dataDetailLevel)
+	{
+		return Config.Client.Advanced.Graphics.Quality.enableTexturedLods.get()
+			&& dataDetailLevel <= Config.Client.Advanced.Graphics.Quality.maxTexturedLodDetailLevel.get();
+	}
+	
+	/** @return whether this section is storing texture ids */
+	public boolean hasTextureSetIds() { return !this.textureSetPaletteIndices.isEmpty(); }
+	
+	/**
+	 * @return the {@link com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureRegistry}
+	 *          set id for the given data point, the flat set id if this section isn't storing textures
+	 */
+	public short getTextureSetId(int posX, int posZ, int verticalIndex)
+	{
+		if (!this.hasTextureSetIds())
+		{
+			return 0;
+		}
+		int paletteIndex = this.textureSetPaletteIndices.getByte(posX * WIDTH * this.maxVerticalSliceCount + posZ * this.maxVerticalSliceCount + verticalIndex) & 0xFF;
+		return this.texturePalette.getShort(paletteIndex);
+	}
+	
+	/**
+	 * Stores the texture set id for the given data point,
+	 * does nothing if this section isn't storing textures.
+	 */
+	public void setTextureSetId(int posX, int posZ, int verticalIndex, short textureSetId)
+	{
+		if (!this.hasTextureSetIds())
+		{
+			return;
+		}
+		this.textureSetPaletteIndices.set(
+			posX * WIDTH * this.maxVerticalSliceCount + posZ * this.maxVerticalSliceCount + verticalIndex,
+			this.getOrAddPaletteIndex(textureSetId));
+	}
+	
+	private byte getOrAddPaletteIndex(short textureSetId)
+	{
+		// linear search is fine, palettes hold the few dozen
+		// distinct block appearances of a single 64x64 section
+		// and most lookups hit the first few entries
+		// TODO: Still see if we can improve this
+		int paletteSize = this.texturePalette.size();
+		for (int i = 0; i < paletteSize; i++)
+		{
+			if (this.texturePalette.getShort(i) == textureSetId)
+			{
+				return (byte) i;
+			}
+		}
+		
+		if (paletteSize >= MAX_PALETTE_SIZE)
+		{
+			// pathological sections with too many distinct appearances
+			// gracefully lose textures rather than failing
+			return FLAT_PALETTE_INDEX;
+		}
+		
+		this.texturePalette.add(textureSetId);
+		return (byte) paletteSize;
+	}
 	
 	public void populateColumnView(ColumnRenderView view, int posX, int posZ) throws IllegalArgumentException
 	{

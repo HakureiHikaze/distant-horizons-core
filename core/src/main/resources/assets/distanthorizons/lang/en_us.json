@@ -131,6 +131,22 @@
     "Use Camera Pos for Quality Drop-Off",
   "distanthorizons.config.client.advanced.graphics.quality.useCameraPositionForQualityDropOff.@tooltip":
     "If true DH will try to use the camera position when \ndetermining LOD quality drop-off. \nIf false DH will use the player's position. \n\nEnabling helps free-cam mods render correctly. \nDisabling helps multi-camera mods render correctly (ie Immersive Portals or camera mods).",
+  "distanthorizons.config.client.advanced.graphics.quality.increaseQualityWhenZoomedIn":
+    "Increase Quality When Zoomed In",
+  "distanthorizons.config.client.advanced.graphics.quality.increaseQualityWhenZoomedIn.@tooltip":
+    "If true LOD quality will increase when the camera is zoomed in, \nIE when using a spyglass or zoom mod. \n\nOnly LODs visible through the zoomed camera are affected. \nThey're given the detail they'd have if the player was as close \nas the zoom makes them appear.",
+  "distanthorizons.config.client.advanced.graphics.quality.maxZoomQualityIncrease":
+    "Max Zoom Quality Increase",
+  "distanthorizons.config.client.advanced.graphics.quality.maxZoomQualityIncrease.@tooltip":
+    "How many detail levels zooming in can increase LOD quality by. \nHigher numbers allow stronger zooms to render crisper terrain, \nbut will increase memory and GPU usage while zoomed in. \n\nA vanilla spyglass needs 4 detail levels to reach its full quality.",
+  "distanthorizons.config.client.advanced.graphics.quality.enableTexturedLods":
+    "Textured LODs",
+  "distanthorizons.config.client.advanced.graphics.quality.enableTexturedLods.@tooltip":
+    "If true nearby and zoomed-in LODs will render with their block's \nactual texture and silhouette instead of a single flat color. \n\nOnly applies to high detail LODs where the texture is actually visible, \ndistant LODs always use flat colors. \nHas no effect while a shader pack is active, since shader packs \nrender LODs with their own programs.",
+  "distanthorizons.config.client.advanced.graphics.quality.maxTexturedLodDetailLevel":
+    "Max Textured Detail Level",
+  "distanthorizons.config.client.advanced.graphics.quality.maxTexturedLodDetailLevel.@tooltip":
+    "The highest detail level number that can render with block textures. \nAt higher detail levels each LOD covers multiple blocks, \nmaking textures smaller than a pixel and therefore invisible. \n\nLarger numbers texture more distant LODs \nbut increase memory usage.",
   "distanthorizons.config.client.advanced.graphics.quality.horizontalScale":
     "Horizontal Scale",
   "distanthorizons.config.client.advanced.graphics.quality.horizontalScale.@tooltip":

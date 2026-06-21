@@ -48,6 +48,13 @@ public class LodQuadBuilder implements AutoCloseable
 	/** ThreadLocal is the simplest way to allow each LOD loading thread to have their own builder */
 	private static final ThreadLocal<LodQuadBuilder> THREAD_LOCAL = ThreadLocal.withInitial(LodQuadBuilder::new);
 	
+	/**
+	 * The face tile ids for the data point currently being added, indexed by {@link EDhDirection#ordinal()}.
+	 * Null when the current data point should render flat.
+	 * @see com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureRegistry
+	 */
+	private short[] currentFaceTileIds = null;
+	
 	/** the number of bytes for a single vertex */
 	public static final int BYTES_PER_VERTEX = 16;
 	public static final int BYTES_PER_QUAD = BYTES_PER_VERTEX * 4;
@@ -168,6 +175,13 @@ public class LodQuadBuilder implements AutoCloseable
 	//===========//
 	//region
 	
+	/** Sets the texture tiles used by all quads added after this call, null renders flat. */
+	public void setCurrentFaceTileIds(short[] faceTileIdsByDirectionOrdinal)
+	{ this.currentFaceTileIds = faceTileIdsByDirectionOrdinal; }
+	
+	private short getCurrentFaceTileId(EDhDirection direction)
+	{ return (this.currentFaceTileIds != null) ? this.currentFaceTileIds[direction.ordinal()] : 0; }
+	
 	public void addQuadAdj(
 			EDhDirection dir, 
 			short x, short y, short z,
@@ -192,6 +206,7 @@ public class LodQuadBuilder implements AutoCloseable
 		
 		BufferQuad quad = this.getOrCreateBufferQuad();
 		quad.set(x, y, z, width, height, color, irisBlockMaterialId, skyLight, blockLight, dir);
+		quad.textureTileId = this.getCurrentFaceTileId(dir);
 		if (!quadList.isEmpty()
 			&& (
 				quadList.get(quadList.size() - 1).tryMerge(quad, BufferMergeDirectionEnum.EastWest)
@@ -215,6 +230,7 @@ public class LodQuadBuilder implements AutoCloseable
 		
 		BufferQuad quad = this.getOrCreateBufferQuad();
 		quad.set(minX, maxY, minZ, blockWidth, blockWidth, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.UP);
+		quad.textureTileId = this.getCurrentFaceTileId(EDhDirection.UP);
 		quadList.add(quad);
 	}
 	
@@ -226,6 +242,7 @@ public class LodQuadBuilder implements AutoCloseable
 		
 		BufferQuad quad = this.getOrCreateBufferQuad();
 		quad.set(x, y, z, blockWidth, blockWidth, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.DOWN);
+		quad.textureTileId = this.getCurrentFaceTileId(EDhDirection.DOWN);
 		quadArray.add(quad);
 	}
 	
@@ -435,10 +452,11 @@ public class LodQuadBuilder implements AutoCloseable
 					quad.hasError ? 0 : quad.irisBlockMaterialId,
 					quad.hasError ? 15 : quad.skyLight,
 					quad.hasError ? 15 : quad.blockLight,
+					quad.hasError ? 0 : quad.textureTileId,
 					mx, my, mz);
 		}
 	}
-	private void putVertex(ByteBuffer bb, short x, short y, short z, int color, byte normalIndex, byte irisBlockMaterialId, byte skylight, byte blocklight, int mx, int my, int mz)
+	private void putVertex(ByteBuffer bb, short x, short y, short z, int color, byte normalIndex, byte irisBlockMaterialId, byte skylight, byte blocklight, short textureTileId, int mx, int my, int mz)
 	{
 		bb.putShort(x);
 		bb.putShort(y);
@@ -475,7 +493,9 @@ public class LodQuadBuilder implements AutoCloseable
 		// Block ID and normal index are used by the Iris format
 		bb.put(irisBlockMaterialId);
 		bb.put(normalIndex);
-		bb.putShort((short) 0); // padding to make sure the vertex format as a whole is a multiple of 4
+		// These two bytes were originally padding to keep the vertex a multiple of 4
+		// and are treated as padding by Iris's mirror of this format, so the tile id is invisible to shader packs.
+		bb.putShort(textureTileId);
 	}
 	
 	//endregion

@@ -24,6 +24,7 @@ import com.seibel.distanthorizons.api.enums.rendering.EDhApiDebugRendering;
 import com.seibel.distanthorizons.core.enums.EDhDirection;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dataObjects.render.ColumnRenderSource;
+import com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureRegistry;
 import com.seibel.distanthorizons.core.level.IDhClientLevel;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
@@ -264,6 +265,14 @@ public class ColumnRenderBufferBuilder
 						
 						long topDataPoint = (i - 1) >= 0 ? columnRenderData.get(i - 1) : RenderDataPointUtil.EMPTY_DATA;
 						long bottomDataPoint = (i + 1) < columnRenderData.size ? columnRenderData.get(i + 1) : RenderDataPointUtil.EMPTY_DATA;
+						
+						// resolve which textures this data point's quads should use
+						short[] faceTileIds = null;
+						if (renderSource.hasTextureSetIds())
+						{
+							faceTileIds = BlockTextureRegistry.INSTANCE.getFaceTileIds(renderSource.getTextureSetId(relX, relZ, i));
+						}
+						quadBuilder.setCurrentFaceTileIds(faceTileIds);
 						
 						addRenderDataPointToBuilder(
 							clientLevel, phantomArrayCheckout,
