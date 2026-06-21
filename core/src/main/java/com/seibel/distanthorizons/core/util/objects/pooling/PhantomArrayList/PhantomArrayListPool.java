@@ -443,10 +443,23 @@ public class PhantomArrayListPool
 	{
 		String a  = MinecraftTextFormat.AQUA;
 		String y  = MinecraftTextFormat.YELLOW;
+		String o  = MinecraftTextFormat.ORANGE;
 		String cf = MinecraftTextFormat.CLEAR_FORMATTING;
 		
-		messageList.add(a + name + cf + " - Pools:");
 		
+		// total pool
+		long totalByteSize = 0L;
+		for (int i = 0; i < POOL_STAT_TYPE_NAMES.length; i++)
+		{
+			totalByteSize += poolSizesBytes[i];
+		}
+		String totalByteSizeStr = StringUtil.convertBytesToHumanReadable(totalByteSize);
+		
+		
+		// header
+		messageList.add(a + name + cf + " - Pools: " + o + totalByteSizeStr + cf);
+		
+		// individual pools
 		for (int i = 0; i < POOL_STAT_TYPE_NAMES.length; i++)
 		{
 			if (totalCounts[i] == 0)
@@ -460,10 +473,10 @@ public class PhantomArrayListPool
 			String sizeStr = "";
 			if (poolSizesBytes[i] != -1)
 			{
-				sizeStr = " ~" + StringUtil.convertBytesToHumanReadable(poolSizesBytes[i]);
+				sizeStr = StringUtil.convertBytesToHumanReadable(poolSizesBytes[i]);
 			}
 			
-			messageList.add(POOL_STAT_TYPE_NAMES[i] + ": " + pooledFormatted + "/" + totalFormatted + y + sizeStr + cf);
+			messageList.add(POOL_STAT_TYPE_NAMES[i] + ": " + pooledFormatted + "/" + totalFormatted + " " + y + sizeStr + cf);
 		}
 	}
 	
