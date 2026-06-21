@@ -71,7 +71,7 @@ public class SharedApi
 	//=============//
 	// constructor //
 	//=============//
-	//region
+	//region constructor
 	
 	private SharedApi() { }
 	
@@ -82,7 +82,7 @@ public class SharedApi
 	//===============//
 	// world methods //
 	//===============//
-	//region
+	//region world methods
 	
 	public static EWorldEnvironment getEnvironment() { return (currentWorld == null) ? null : currentWorld.environment; }
 	
@@ -154,7 +154,7 @@ public class SharedApi
 	//==============//
 	// chunk update //
 	//==============//
-	//region
+	//region chunk update
 	
 	/** 
 	 * Used to prevent getting a full chunk from MC if it isn't necessary. <br>
@@ -313,11 +313,11 @@ public class SharedApi
 	//=========//
 	// F3 Menu //
 	//=========//
-	//region
+	//region F3 Menu
 	
 	public ArrayList<String> getDebugMenuString() { return WORLD_CHUNK_UPDATE_MANAGER.getDebugMenuString(); }
 	
-	//endregion
+	//endregion 
 	
 	
 	
