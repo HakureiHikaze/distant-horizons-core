@@ -1,4 +1,4 @@
-package com.seibel.distanthorizons.core.util.objects.pooling;
+package com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList;
 
 import com.seibel.distanthorizons.core.util.ListUtil;
 import com.seibel.distanthorizons.coreapi.util.StringUtil;
@@ -47,6 +47,7 @@ public class PhantomArrayListCheckout implements AutoCloseable
 	//=============//
 	// constructor //
 	//=============//
+	//region
 	
 	public PhantomArrayListCheckout(@NotNull PhantomArrayListPool owningPool)
 	{
@@ -64,22 +65,28 @@ public class PhantomArrayListCheckout implements AutoCloseable
 		}
 	}
 	
+	//endregion
+	
 	
 	
 	//=========//
 	// setters //
 	//=========//
+	//region
 	
 	public void addByteArrayList(ByteArrayList list) { this.byteArrayLists.add(list); }
 	public void addShortArrayList(ShortArrayList list) { this.shortArrayLists.add(list); }
-	public void addLongArrayListRef(LongArrayList list) { this.longArrayLists.add(list); }
-	public void addCharArrayListRef(CharArrayList list) { this.charArrayLists.add(list); }
+	public void addLongArrayList(LongArrayList list) { this.longArrayLists.add(list); }
+	public void addCharArrayList(CharArrayList list) { this.charArrayLists.add(list); }
+	
+	//endregion
 	
 	
 	
 	//=========//
 	// getters //
 	//=========//
+	//region
 	
 	public int getByteArrayCount() { return this.byteArrayLists.size(); }
 	public int getShortArrayCount() { return this.shortArrayLists.size(); }
@@ -118,14 +125,19 @@ public class PhantomArrayListCheckout implements AutoCloseable
 	public ArrayList<LongArrayList> getAllLongArrays() { return this.longArrayLists; }
 	public ArrayList<CharArrayList> getAllCharArrays() { return this.charArrayLists; }
 	
+	//endregion
+	
 	
 	
 	//================//
 	// base overrides //
 	//================//
+	//region
 	
 	@Override 
 	public void close() { this.owningPool.returnCheckout(this); }
+	
+	//endregion
 	
 	
 	

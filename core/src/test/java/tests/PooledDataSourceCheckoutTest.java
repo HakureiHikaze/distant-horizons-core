@@ -20,10 +20,9 @@
 package tests;
 
 import com.seibel.distanthorizons.core.dataObjects.fullData.sources.FullDataSourceV2;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListCheckout;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * Note: this test will have issues if {@link DelayedSaveCacheTest} is also enabled.

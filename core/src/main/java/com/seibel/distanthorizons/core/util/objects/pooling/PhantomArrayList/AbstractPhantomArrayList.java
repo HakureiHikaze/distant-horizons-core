@@ -1,4 +1,4 @@
-package com.seibel.distanthorizons.core.util.objects.pooling;
+package com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList;
 
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.logging.DhLogger;
