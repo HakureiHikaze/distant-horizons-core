@@ -308,7 +308,6 @@ public class LodBufferContainer implements AutoCloseable
 			uploadFutureList.add(vertexUploadFuture);
 			
 			
-			final StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
 			RenderThreadTaskHandler.INSTANCE.queueRunningOnRenderThread("LodBufferContainer VBO Upload", () ->
 			{
 				try
