@@ -139,7 +139,7 @@ public class FullDataSourceV2DTO
 	public static FullDataSourceV2DTO CreateEmptyDataSourceForDecoding() { return new FullDataSourceV2DTO(); }
 	private FullDataSourceV2DTO() 
 	{
-		super(ARRAY_LIST_POOL, 8, 0, 0, 0);
+		super(ARRAY_LIST_POOL, 8, 0, 0, 0, 0);
 		
 		// Expected sizes here are 0 since we don't know how big these arrays need to be,
 		// they depend on compression settings and world complexity.

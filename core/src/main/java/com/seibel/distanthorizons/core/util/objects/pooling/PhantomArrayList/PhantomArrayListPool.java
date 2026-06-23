@@ -101,20 +101,19 @@ public class PhantomArrayListPool
 	 */
 	private boolean clearLastPoolSizes = false;
 	
-	/** how many different types our pool supports */
-	public static final int TYPE_COUNT = 4;
-	
 	public final PhantomArrayListPoolStatTracker<ByteArrayList> bytePoolStatTracker = new PhantomArrayListPoolStatTracker<>("byte[]",    Byte.BYTES,      () -> new ByteArrayList(0));
 	public final PhantomArrayListPoolStatTracker<ShortArrayList> shortPoolStatTracker = new PhantomArrayListPoolStatTracker<>("short[]", Short.BYTES,     () -> new ShortArrayList(0));
 	public final PhantomArrayListPoolStatTracker<LongArrayList> longPoolStatTracker = new PhantomArrayListPoolStatTracker<>("long[]",    Long.BYTES,      () -> new LongArrayList(0));
 	public final PhantomArrayListPoolStatTracker<CharArrayList> charPoolStatTracker = new PhantomArrayListPoolStatTracker<>("char[]",    Character.BYTES, () -> new CharArrayList(0));
+	public final PhantomArrayListPoolStatTracker<ByteBufferCheckoutWrapper> byteBufferPoolStatTracker = new PhantomArrayListPoolStatTracker<>("ByteBuffer",    Byte.BYTES, () -> new ByteBufferCheckoutWrapper());
 	
 	public final PhantomArrayListPoolStatTracker<?>[] poolStatTrackers = new PhantomArrayListPoolStatTracker[]
 	{
 		this.bytePoolStatTracker,
 		this.shortPoolStatTracker,
 		this.longPoolStatTracker,
-		this.charPoolStatTracker
+		this.charPoolStatTracker,
+		this.byteBufferPoolStatTracker,
 	};
 	public static final String[] POOL_STAT_TYPE_NAMES = new String[]
 	{
@@ -122,7 +121,10 @@ public class PhantomArrayListPool
 		"short[]",
 		"long[]",
 		"char[]",
+		"ByteBuffer",
 	};
+	/** how many different types our pool supports */
+	public static final int TYPE_COUNT = POOL_STAT_TYPE_NAMES.length;
 	
 	//endregion
 	
@@ -133,10 +135,7 @@ public class PhantomArrayListPool
 	//==============//
 	
 	// shared setup used by all pools
-	static
-	{
-		RECYCLER_THREAD.execute(() -> runPhantomReferenceCleanupLoop());
-	}
+	static { RECYCLER_THREAD.execute(() -> runPhantomReferenceCleanupLoop()); }
 	
 	
 	public PhantomArrayListPool(String name) { this(name, false); }
@@ -153,17 +152,20 @@ public class PhantomArrayListPool
 	// get checkout //
 	//==============//
 	
-	public PhantomArrayListCheckout checkoutByteArrays(int count) { return this.checkoutArrays(count, 0, 0, 0); }
-	public PhantomArrayListCheckout checkoutShortArrays(int count) { return this.checkoutArrays(0, count, 0, 0); }
-	public PhantomArrayListCheckout checkoutLongArrays(int count) { return this.checkoutArrays(0, 0, count, 0); }
-	public PhantomArrayListCheckout checkoutCharArrays(int count) { return this.checkoutArrays(0, 0, 0, count); }
+	public PhantomArrayListCheckout checkoutByteArrays(int count) { return this.checkoutArrays(count, 0, 0, 0, 0); }
+	public PhantomArrayListCheckout checkoutShortArrays(int count) { return this.checkoutArrays(0, count, 0, 0, 0); }
+	public PhantomArrayListCheckout checkoutLongArrays(int count) { return this.checkoutArrays(0, 0, count, 0, 0); }
+	public PhantomArrayListCheckout checkoutCharArrays(int count) { return this.checkoutArrays(0, 0, 0, count, 0); }
+	public PhantomArrayListCheckout checkoutByteBuffers(int count) { return this.checkoutArrays(0, 0, 0, 0, count); }
 	
 	/** 
 	 * If possible all checkouts for a given pool should be the same size,
 	 * since {@link PhantomArrayListCheckout}'s are shared, returning the same size
 	 * prevents accidentally returning a larger checkout than necessary, which wastes memory.
 	 */
-	public PhantomArrayListCheckout checkoutArrays(int byteArrayCount, int shortArrayCount, int longArrayCount, int charArrayCount)
+	public PhantomArrayListCheckout checkoutArrays(
+		int byteArrayCount, int shortArrayCount, int longArrayCount, 
+		int charArrayCount, int byteBufferCount)
 	{
 		PhantomArrayListCheckout checkout = null;
 		while (checkout == null)
@@ -228,6 +230,7 @@ public class PhantomArrayListPool
 		this.shortPoolStatTracker.fillCheckout(shortArrayCount, checkout::getShortArrayCount, checkout::addShortArrayList);
 		this.longPoolStatTracker.fillCheckout(longArrayCount, checkout::getLongArrayCount, checkout::addLongArrayList);
 		this.charPoolStatTracker.fillCheckout(charArrayCount, checkout::getCharArrayCount, checkout::addCharArrayList);
+		this.byteBufferPoolStatTracker.fillCheckout(byteBufferCount, checkout::getByteBufferWrapperCount, checkout::addByteBufferWrapper);
 		
 		return checkout;
 	}
@@ -499,6 +502,7 @@ public class PhantomArrayListPool
 			shortPoolStatTracker.debugAddPoolByteSize(pooledCheckout.getAllShortArrays());
 			longPoolStatTracker.debugAddPoolByteSize(pooledCheckout.getAllLongArrays());
 			charPoolStatTracker.debugAddPoolByteSize(pooledCheckout.getAllCharArrays());
+			byteBufferPoolStatTracker.debugAddPoolByteSize(pooledCheckout.getAllByteBufferWrappers());
 		}
 		
 		
@@ -514,6 +518,7 @@ public class PhantomArrayListPool
 		shortPoolStatTracker.updateDebugValues(clearLastPoolSize);
 		longPoolStatTracker.updateDebugValues(clearLastPoolSize);
 		charPoolStatTracker.updateDebugValues(clearLastPoolSize);
+		byteBufferPoolStatTracker.updateDebugValues(clearLastPoolSize);
 	}
 	
 	//endregion

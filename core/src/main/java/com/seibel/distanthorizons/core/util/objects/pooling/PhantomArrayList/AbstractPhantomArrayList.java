@@ -37,19 +37,24 @@ public abstract class AbstractPhantomArrayList implements AutoCloseable
 	//=============//
 	
 	/** The Array counts can be 0 or greater. */
-	public AbstractPhantomArrayList(PhantomArrayListPool phantomArrayListPool, int byteArrayCount, int shortArrayCount, int longArrayCount, int charArrayCount) 
+	public AbstractPhantomArrayList(
+		PhantomArrayListPool phantomArrayListPool, 
+		// having a builder or more specific constructor would be nice, but we want this method to be fast
+		// and near-zero allocations, so having a constructor with all possible options works best for now
+		int byteArrayCount, int shortArrayCount, int longArrayCount, int charArrayCount, int byteBufferCount)
 	{
 		if (byteArrayCount < 0 
 			|| shortArrayCount < 0 
 			|| longArrayCount < 0
-			|| charArrayCount < 0)
+			|| charArrayCount < 0
+			|| byteBufferCount < 0)
 		{
 			throw new IllegalArgumentException("Can't get a negative number of pooled arrays.");
 		}
 		
 		this.phantomArrayListPool = phantomArrayListPool;
 		this.phantomReference = new PhantomReference<>(this, this.phantomArrayListPool.phantomRefQueue);
-		this.pooledArraysCheckout = this.phantomArrayListPool.checkoutArrays(byteArrayCount, shortArrayCount, longArrayCount, charArrayCount);
+		this.pooledArraysCheckout = this.phantomArrayListPool.checkoutArrays(byteArrayCount, shortArrayCount, longArrayCount, charArrayCount, byteBufferCount);
 		this.phantomArrayListPool.phantomRefToCheckout.put(this.phantomReference, this.pooledArraysCheckout);
 	}
 	

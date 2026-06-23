@@ -74,7 +74,7 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	 */
 	private ColumnRenderSource(long pos, int maxVertSliceCount, int yOffset)
 	{
-		super(ARRAY_LIST_POOL, 0, 0, 1, 0);
+		super(ARRAY_LIST_POOL, 0, 0, 1, 0, 0);
 		
 		this.pos = pos;
 		this.yOffset = yOffset;

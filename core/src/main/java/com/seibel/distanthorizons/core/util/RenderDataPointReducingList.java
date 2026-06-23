@@ -122,7 +122,7 @@ public class RenderDataPointReducingList extends AbstractPhantomArrayList
 	
 	public RenderDataPointReducingList()
 	{
-		super(ARRAY_LIST_POOL, 0, 1, 2, 0);
+		super(ARRAY_LIST_POOL, 0, 1, 2, 0, 0);
 	}
 	
 	/** 

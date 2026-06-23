@@ -280,7 +280,7 @@ public class FullDataPointIdMap
 		// only used when debugging
 		HashMap<String, BlockBiomeWrapperPair> dataPointEntryBySerialization = new HashMap<>();
 		
-		try(PhantomArrayListCheckout checkout = ARRAY_LIST_POOL.checkoutArrays(0, 0, 0, 3))
+		try(PhantomArrayListCheckout checkout = ARRAY_LIST_POOL.checkoutCharArrays(3))
 		{
 			for (int i = 0; i < entityCount; i++)
 			{

@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -72,7 +73,6 @@ public final class PhantomArrayListPoolStatTracker<T>
 		int alreadyCreatedArrayCount = getCheckoutExistingArrayCountFunc.getAsInt();
 		for (int i = alreadyCreatedArrayCount; i < requestedArrayCount; i++)
 		{
-			this.totalArrayCountRef.getAndIncrement();
 			T newList = this.emptyListCreatorFunc.get();
 			addArrayToCheckoutFunc.accept(newList);
 		}
@@ -102,6 +102,7 @@ public final class PhantomArrayListPoolStatTracker<T>
 		else if (list instanceof ShortArrayList) return ((ShortArrayList) list).elements().length;
 		else if (list instanceof LongArrayList) return ((LongArrayList) list).elements().length;
 		else if (list instanceof CharArrayList) return ((CharArrayList) list).elements().length;
+		else if (list instanceof ByteBufferCheckoutWrapper) return ((ByteBufferCheckoutWrapper) list).size;
 		
 		else throw new UnsupportedOperationException("getBackingElementCount not implemented for type [" + list.getClass().getSimpleName() + "].");
 	}

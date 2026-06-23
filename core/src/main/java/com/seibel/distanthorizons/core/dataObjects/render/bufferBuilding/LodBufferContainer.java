@@ -27,6 +27,7 @@ import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos;
 import com.seibel.distanthorizons.core.render.RenderThreadTaskHandler;
 import com.seibel.distanthorizons.core.util.ExceptionUtil;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
 import com.seibel.distanthorizons.core.wrapperInterfaces.IWrapperFactory;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.AbstractDhRenderApiDefinition;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.objects.ILodContainerUniformBufferWrapper;
@@ -250,7 +251,9 @@ public class LodBufferContainer implements AutoCloseable
 		return newVbos;
 	}
 	
-	private static void createBufferWrappers(IVertexBufferWrapper[] vboWrappers, ArrayList<ByteBuffer> vertexBuffers)
+	private static void createBufferWrappers(
+		IVertexBufferWrapper[] vboWrappers, 
+		ArrayList<ByteBuffer> vertexBuffers)
 	{
 		for (int i = 0; i < vertexBuffers.size(); i++)
 		{
