@@ -39,6 +39,7 @@ import com.seibel.distanthorizons.core.render.renderer.IDebugRenderable;
 import com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding.LodBufferContainer;
 import com.seibel.distanthorizons.core.util.ExceptionUtil;
 import com.seibel.distanthorizons.core.util.LodUtil;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
 import com.seibel.distanthorizons.core.util.threading.PriorityTaskPicker;
 import com.seibel.distanthorizons.core.util.threading.ThreadPoolUtil;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftClientWrapper;
@@ -181,17 +182,31 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 							return;
 						}
 						
+						// 3 because that's generally the max needed
+						PhantomArrayListCheckout opaqueCheckout = LodQuadBuilder.ARRAY_LIST_POOL.checkoutByteBuffers(3);
+						PhantomArrayListCheckout transparentCheckout = LodQuadBuilder.ARRAY_LIST_POOL.checkoutByteBuffers(3);
+						
 						// create CPU vertex buffers
-						ArrayList<ByteBuffer> opaqueBuffers = lodQuadBuilder.makeOpaqueVertexBuffers();
-						ArrayList<ByteBuffer> transparentBuffers = lodQuadBuilder.makeTransparentVertexBuffers();
+						ArrayList<ByteBuffer> opaqueBuffers = lodQuadBuilder.makeOpaqueVertexBuffers(opaqueCheckout);
+						ArrayList<ByteBuffer> transparentBuffers = lodQuadBuilder.makeTransparentVertexBuffers(transparentCheckout);
 						
 						// uploading will primarily happen on the render thread
 						this.uploadToGpuAsync(future, opaqueBuffers, transparentBuffers)
-							.thenRun(() ->
-							{
-								// the future is passed in separately (IE not using the local var) to prevent any possible race condition null pointers
-								future.complete(null);
-							});
+							// Join is used to prevent queuing up potentially thousands of
+							// upload tasks (each requiring their own staging buffer)
+							// causing an explosion of pooled memory use.
+							// This may slow down loading times slightly,
+							// but in James' testing CPU usage was still quite high
+							// so it shouldn't be a big speed loss for the lower memory cost.
+							.join();
+						{
+							opaqueCheckout.close();
+							transparentCheckout.close();
+							
+							// the future is passed in separately (IE not using the local var) 
+							// to prevent any possible race condition null pointers
+							future.complete(null);
+						}
 					}
 				}
 				catch (Exception e)
@@ -315,7 +330,10 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 		ArrayList<ByteBuffer> opaqueBuffers,
 		ArrayList<ByteBuffer> transparentBuffers)
 	{
-		CompletableFuture<LodBufferContainer> uploadFuture = LodBufferContainer.tryMakeAndUploadBuffersAsync(this.pos, this.clientLevel, opaqueBuffers, transparentBuffers);
+		CompletableFuture<LodBufferContainer> uploadFuture = LodBufferContainer.tryMakeAndUploadBuffersAsync(
+			this.pos, this.clientLevel, 
+			opaqueBuffers, 
+			transparentBuffers);
 		uploadFuture.whenComplete((bufferContainer, e) ->
 		{
 			try
