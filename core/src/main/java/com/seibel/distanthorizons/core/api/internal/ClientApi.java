@@ -255,7 +255,12 @@ public class ClientApi
 				|| levelWrapper.getDimensionName().equals(levelDimensionName))
 			{
 				IChunkWrapper chunkWrapper = this.waitingChunkByClientLevelAndPos.get(levelChunkPair);
-				SharedApi.INSTANCE.applyChunkUpdate(chunkWrapper.copyWithLevel(level), level, false);
+				SharedApi.INSTANCE.applyChunkUpdate(
+					// the level reference is changed since it may not match the level
+					// we're attempting to load now
+					chunkWrapper.copyWithLevel(level), 
+					level, 
+					false);
 				keysToRemove.add(levelChunkPair);
 			}
 		}

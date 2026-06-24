@@ -408,6 +408,7 @@ public interface IChunkWrapper extends IBindable
 	}
 	
 	IChunkWrapper copy();
+	/** creates a copy with a different level wrapper reference */
 	IChunkWrapper copyWithLevel(ILevelWrapper levelWrapper);
 	
 	
