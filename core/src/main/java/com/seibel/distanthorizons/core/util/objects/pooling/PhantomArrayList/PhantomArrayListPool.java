@@ -460,9 +460,10 @@ public class PhantomArrayListPool
 		
 		
 		// header
-		messageList.add(a + name + cf + " - Pools: " + o + totalByteSizeStr + cf);
+		messageList.add(a + name + cf + " - Pools");
 		
 		// individual pools
+		int nonEmptyPools = 0;
 		for (int i = 0; i < POOL_STAT_TYPE_NAMES.length; i++)
 		{
 			if (totalCounts[i] == 0)
@@ -472,6 +473,7 @@ public class PhantomArrayListPool
 			
 			String pooledFormatted = F3Screen.NUMBER_FORMAT.format(pooledCounts[i]);
 			String totalFormatted  = F3Screen.NUMBER_FORMAT.format(totalCounts[i]);
+			nonEmptyPools++;
 			
 			String sizeStr = "";
 			if (poolSizesBytes[i] != -1)
@@ -480,6 +482,12 @@ public class PhantomArrayListPool
 			}
 			
 			messageList.add(POOL_STAT_TYPE_NAMES[i] + ": " + pooledFormatted + "/" + totalFormatted + " " + y + sizeStr + cf);
+		}
+		
+		// only include a total if there's more than 1 item to sum up
+		if (nonEmptyPools > 1)
+		{
+			messageList.add("Total: " + o + totalByteSizeStr + cf);
 		}
 	}
 	
