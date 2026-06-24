@@ -246,14 +246,16 @@ public class ClientApi
 	public void loadWaitingChunksForLevel(IClientLevelWrapper level)
 	{
 		HashSet<Pair<IClientLevelWrapper, DhChunkPos>> keysToRemove = new HashSet<>();
+		String levelDimensionName = level.getDimensionName();
 		for (Pair<IClientLevelWrapper, DhChunkPos> levelChunkPair : this.waitingChunkByClientLevelAndPos.keySet())
 		{
 			// only load chunks that came from this level
 			IClientLevelWrapper levelWrapper = levelChunkPair.first;
-			if (levelWrapper.equals(level))
+			if (levelWrapper.equals(level)
+				|| levelWrapper.getDimensionName().equals(levelDimensionName))
 			{
 				IChunkWrapper chunkWrapper = this.waitingChunkByClientLevelAndPos.get(levelChunkPair);
-				SharedApi.INSTANCE.applyChunkUpdate(chunkWrapper, levelWrapper, false);
+				SharedApi.INSTANCE.applyChunkUpdate(chunkWrapper.copyWithLevel(level), level, false);
 				keysToRemove.add(levelChunkPair);
 			}
 		}
