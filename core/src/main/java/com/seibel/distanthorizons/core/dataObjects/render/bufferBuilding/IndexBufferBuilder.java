@@ -1,5 +1,7 @@
 package com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding;
 
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -12,11 +14,13 @@ public class IndexBufferBuilder
 	//==========//
 	//region
 	
-	public static ByteBuffer createBuffer(int quadCount)
+	public static ByteBuffer populateBuffer(PhantomArrayListCheckout checkout, int checkoutIndex, int quadCount)
 	{
 		int indexCount = quadCount * 6; // 2 triangles per quad
-		ByteBuffer buffer = ByteBuffer.allocateDirect(indexCount * Integer.BYTES);
-		buffer.order(ByteOrder.nativeOrder());
+		int byteSize = indexCount * Integer.BYTES;
+		
+		ByteBuffer buffer = checkout.getByteBuffer(checkoutIndex, byteSize);
+		buffer.limit(byteSize);
 		buildBufferInt(quadCount, buffer);
 		
 		return buffer;
