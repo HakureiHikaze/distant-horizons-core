@@ -22,8 +22,8 @@ package com.seibel.distanthorizons.core.dataObjects.fullData;
 import com.seibel.distanthorizons.core.dataObjects.BlockBiomeWrapperPair;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListCheckout;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListPool;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListPool;
 import com.seibel.distanthorizons.core.util.objects.pooling.StringPool;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.util.LodUtil;
@@ -280,7 +280,7 @@ public class FullDataPointIdMap
 		// only used when debugging
 		HashMap<String, BlockBiomeWrapperPair> dataPointEntryBySerialization = new HashMap<>();
 		
-		try(PhantomArrayListCheckout checkout = ARRAY_LIST_POOL.checkoutArrays(0, 0, 0, 3))
+		try(PhantomArrayListCheckout checkout = ARRAY_LIST_POOL.checkoutCharArrays(3))
 		{
 			for (int i = 0; i < entityCount; i++)
 			{

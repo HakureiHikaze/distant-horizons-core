@@ -29,8 +29,8 @@ import com.seibel.distanthorizons.core.dataObjects.render.columnViews.ColumnRend
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPosMutable;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListCheckout;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListPool;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListPool;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.util.*;
 import com.seibel.distanthorizons.core.wrapperInterfaces.IWrapperFactory;

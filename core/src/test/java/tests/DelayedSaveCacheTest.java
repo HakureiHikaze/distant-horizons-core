@@ -23,12 +23,11 @@ import com.seibel.distanthorizons.core.dataObjects.fullData.sources.FullDataSour
 import com.seibel.distanthorizons.core.util.delayedSaveCache.DelayedDataSourceSaveCache;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListCheckout;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Assert;
-import org.junit.Test;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;

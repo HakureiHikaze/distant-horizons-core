@@ -31,9 +31,9 @@ import com.seibel.distanthorizons.core.enums.EDhDirection;
 import com.seibel.distanthorizons.core.file.fullDatafile.V2.FullDataSourceProviderV2;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
-import com.seibel.distanthorizons.core.util.objects.pooling.AbstractPhantomArrayList;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListCheckout;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListPool;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.AbstractPhantomArrayList;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListPool;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos;
 import com.seibel.distanthorizons.core.sql.dto.util.FullDataMinMaxPosUtil;
@@ -225,7 +225,7 @@ public class FullDataSourceV2
 			byte @Nullable [] columnGenerationSteps, byte @Nullable [] columnWorldCompressionMode,
 			boolean empty)
 	{
-		super(ARRAY_LIST_POOL, 2, 0, WIDTH * WIDTH, 0);
+		super(ARRAY_LIST_POOL, 2, 0, WIDTH * WIDTH, 0, 0);
 		
 		LodUtil.assertTrue(data == null || data.length == WIDTH * WIDTH);
 		

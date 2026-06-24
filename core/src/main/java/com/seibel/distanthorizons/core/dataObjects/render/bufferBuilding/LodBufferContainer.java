@@ -27,6 +27,8 @@ import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos;
 import com.seibel.distanthorizons.core.render.RenderThreadTaskHandler;
 import com.seibel.distanthorizons.core.util.ExceptionUtil;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListPool;
 import com.seibel.distanthorizons.core.wrapperInterfaces.IWrapperFactory;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.AbstractDhRenderApiDefinition;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.objects.ILodContainerUniformBufferWrapper;
@@ -48,6 +50,8 @@ public class LodBufferContainer implements AutoCloseable
 	
 	private static final IWrapperFactory WRAPPER_FACTORY = SingletonInjector.INSTANCE.get(IWrapperFactory.class);
 	private static final AbstractDhRenderApiDefinition RENDER_DEF = SingletonInjector.INSTANCE.get(AbstractDhRenderApiDefinition.class);
+	
+	public static final PhantomArrayListPool ARRAY_LIST_POOL = new PhantomArrayListPool("LodBufferContainer");
 	
 	
 	/** the position closest to minimum X/Z infinity and the level's lowest Y */
@@ -112,12 +116,20 @@ public class LodBufferContainer implements AutoCloseable
 		bufferContainer.vboOpaqueWrappers = resizeWrapperArray(bufferContainer.vboOpaqueWrappers, opaqueBuffers.size());
 		bufferContainer.vboTransparentWrappers = resizeWrapperArray(bufferContainer.vboTransparentWrappers, transparentBuffers.size());
 		
+		PhantomArrayListCheckout opaqueIndexCheckout = ARRAY_LIST_POOL.checkoutByteBuffers(opaqueBuffers.size());
+		PhantomArrayListCheckout transparentIndexCheckout = ARRAY_LIST_POOL.checkoutByteBuffers(transparentBuffers.size());
+		future.thenRun(() -> 
+		{
+			opaqueIndexCheckout.close();
+			transparentIndexCheckout.close();
+		});
+		
 		// create CPU index buffers if needed.
 		// Mac requires separate IBO objects for each VBO when using OpenGL,
 		// all other OS's can share a single IBO for quicker loading times
 		boolean useSingleIbo = RENDER_DEF.useSingleIbo();
-		@Nullable ArrayList<ByteBuffer> opaqueIndexBuffers = useSingleIbo ? null : bufferContainer.createIndexBuffers(opaqueBuffers);
-		@Nullable ArrayList<ByteBuffer> transparentIndexBuffers = useSingleIbo ? null : bufferContainer.createIndexBuffers(transparentBuffers);
+		@Nullable ArrayList<ByteBuffer> opaqueIndexBuffers = useSingleIbo ? null : bufferContainer.createIndexBuffers(opaqueIndexCheckout, opaqueBuffers);
+		@Nullable ArrayList<ByteBuffer> transparentIndexBuffers = useSingleIbo ? null : bufferContainer.createIndexBuffers(transparentIndexCheckout, transparentBuffers);
 		
 		//endregion
 		
@@ -211,17 +223,18 @@ public class LodBufferContainer implements AutoCloseable
 	}
 	
 	
-	private ArrayList<ByteBuffer> createIndexBuffers(ArrayList<ByteBuffer> vertexBuffers)
+	private ArrayList<ByteBuffer> createIndexBuffers(PhantomArrayListCheckout checkout, ArrayList<ByteBuffer> vertexBuffers)
 	{
 		ArrayList<ByteBuffer> indexBuffers = new ArrayList<>();
 		
 		for (int i = 0; i < vertexBuffers.size(); i++)
 		{
-			ByteBuffer buffer = vertexBuffers.get(i);
-			int size = buffer.limit() - buffer.position();
+			ByteBuffer vertexBuffer = vertexBuffers.get(i);
+			int size = vertexBuffer.limit() - vertexBuffer.position();
 			int maxVertexCount = size / LodQuadBuilder.BYTES_PER_VERTEX;
 			int quadCount = (maxVertexCount / 4);
-			ByteBuffer indexBuffer = IndexBufferBuilder.createBuffer(quadCount);
+			
+			ByteBuffer indexBuffer = IndexBufferBuilder.populateBuffer(checkout, i, quadCount);
 			indexBuffers.add(indexBuffer);
 		}
 		
@@ -250,7 +263,9 @@ public class LodBufferContainer implements AutoCloseable
 		return newVbos;
 	}
 	
-	private static void createBufferWrappers(IVertexBufferWrapper[] vboWrappers, ArrayList<ByteBuffer> vertexBuffers)
+	private static void createBufferWrappers(
+		IVertexBufferWrapper[] vboWrappers, 
+		ArrayList<ByteBuffer> vertexBuffers)
 	{
 		for (int i = 0; i < vertexBuffers.size(); i++)
 		{
@@ -305,7 +320,6 @@ public class LodBufferContainer implements AutoCloseable
 			uploadFutureList.add(vertexUploadFuture);
 			
 			
-			final StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
 			RenderThreadTaskHandler.INSTANCE.queueRunningOnRenderThread("LodBufferContainer VBO Upload", () ->
 			{
 				try

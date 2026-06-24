@@ -531,7 +531,7 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 		
 		// this will throw a cast exception if the chunk object array isn't correct
 		IChunkWrapper chunk = SingletonInjector.INSTANCE.get(IWrapperFactory.class).createChunkWrapper(chunkObjectArray);
-		SharedApi.INSTANCE.applyChunkUpdate(chunk, dhLevel.getLevelWrapper());
+		SharedApi.INSTANCE.applyChunkUpdate(chunk, dhLevel.getLevelWrapper(), false);
 		
 		
 		return DhApiResult.createSuccess();

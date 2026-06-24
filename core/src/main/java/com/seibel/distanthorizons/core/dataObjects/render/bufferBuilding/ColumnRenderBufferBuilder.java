@@ -28,16 +28,13 @@ import com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureR
 import com.seibel.distanthorizons.core.level.IDhClientLevel;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListCheckout;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListPool;
-import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListPool;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.coreapi.util.ColorUtil;
 import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.RenderDataPointUtil;
 import com.seibel.distanthorizons.core.dataObjects.render.columnViews.ColumnRenderView;
-
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Used to populate the buffers in a {@link ColumnRenderSource} object.

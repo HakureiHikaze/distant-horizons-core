@@ -31,6 +31,10 @@ import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.enums.EDhDirection;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.AbstractPhantomArrayList;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.ByteBufferCheckoutWrapper;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListPool;
 import com.seibel.distanthorizons.coreapi.util.ColorUtil;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
@@ -48,12 +52,7 @@ public class LodQuadBuilder implements AutoCloseable
 	/** ThreadLocal is the simplest way to allow each LOD loading thread to have their own builder */
 	private static final ThreadLocal<LodQuadBuilder> THREAD_LOCAL = ThreadLocal.withInitial(LodQuadBuilder::new);
 	
-	/**
-	 * The face tile ids for the data point currently being added, indexed by {@link EDhDirection#ordinal()}.
-	 * Null when the current data point should render flat.
-	 * @see com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureRegistry
-	 */
-	private short[] currentFaceTileIds = null;
+	public static final PhantomArrayListPool ARRAY_LIST_POOL = new PhantomArrayListPool("LodQuadBuilder");
 	
 	/** the number of bytes for a single vertex */
 	public static final int BYTES_PER_VERTEX = 16;
@@ -116,6 +115,13 @@ public class LodQuadBuilder implements AutoCloseable
 	private final ArrayList<BufferQuad>[] opaqueQuads = (ArrayList<BufferQuad>[]) new ArrayList[6];
 	@SuppressWarnings("unchecked")
 	private final ArrayList<BufferQuad>[] transparentQuads = (ArrayList<BufferQuad>[]) new ArrayList[6];
+	
+	/**
+	 * The face tile ids for the data point currently being added, indexed by {@link EDhDirection#ordinal()}.
+	 * Null when the current data point should render flat.
+	 * @see com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureRegistry
+	 */
+	private short[] currentFaceTileIds = null;
 	
 	/** 
 	 * Caching the BufferQuad objects reduces overhead slightly. <br>
@@ -331,11 +337,13 @@ public class LodQuadBuilder implements AutoCloseable
 	//==============//
 	//region
 	
-	public ArrayList<ByteBuffer> makeOpaqueVertexBuffers() { return this.makeVertexBuffers(this.opaqueQuads); }
-	public ArrayList<ByteBuffer> makeTransparentVertexBuffers() { return this.makeVertexBuffers(this.transparentQuads); }
-	private ArrayList<ByteBuffer> makeVertexBuffers(ArrayList<BufferQuad>[] quadList)
+	public ArrayList<ByteBuffer> makeOpaqueVertexBuffers(PhantomArrayListCheckout checkout) { return this.makeVertexBuffers(checkout, this.opaqueQuads); }
+	public ArrayList<ByteBuffer> makeTransparentVertexBuffers(PhantomArrayListCheckout checkout) { return this.makeVertexBuffers(checkout, this.transparentQuads); }
+	private ArrayList<ByteBuffer> makeVertexBuffers(PhantomArrayListCheckout checkout, ArrayList<BufferQuad>[] quadList)
 	{
 		ArrayList<ByteBuffer> byteBufferList = new ArrayList<>(3);
+		
+		int byteBufferSize = getMaxBufferByteSize();
 		
 		ByteBuffer buffer = null;
 		for (int directionIndex = 0; directionIndex < 6; directionIndex++)
@@ -354,8 +362,17 @@ public class LodQuadBuilder implements AutoCloseable
 				if (buffer == null 
 					|| buffer.remaining() < BYTES_PER_QUAD)
 				{
-					buffer = ByteBuffer.allocateDirect(getMaxBufferByteSize());
-					buffer.order(ByteOrder.nativeOrder());
+					if ((byteBufferList.size() + 1) > checkout.getByteBufferWrapperCount())
+					{
+						ByteBufferCheckoutWrapper wrapper = new ByteBufferCheckoutWrapper(byteBufferSize);
+						checkout.addByteBufferWrapper(wrapper);
+						buffer = wrapper.buffer;
+					}
+					else
+					{
+						buffer = checkout.getByteBuffer(byteBufferList.size(), byteBufferSize);
+					}
+					
 					byteBufferList.add(buffer);
 				}
 				

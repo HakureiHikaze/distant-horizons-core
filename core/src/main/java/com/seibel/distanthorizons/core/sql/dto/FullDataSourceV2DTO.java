@@ -26,9 +26,9 @@ import com.seibel.distanthorizons.api.enums.worldGeneration.EDhApiWorldGeneratio
 import com.seibel.distanthorizons.core.dataObjects.fullData.FullDataPointIdMap;
 import com.seibel.distanthorizons.core.dataObjects.fullData.sources.FullDataSourceV2;
 import com.seibel.distanthorizons.core.enums.EDhDirection;
-import com.seibel.distanthorizons.core.util.objects.pooling.AbstractPhantomArrayList;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListCheckout;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListPool;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.AbstractPhantomArrayList;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListPool;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.network.INetworkObject;
 import com.seibel.distanthorizons.core.sql.dto.util.FullDataMinMaxPosUtil;
@@ -139,7 +139,7 @@ public class FullDataSourceV2DTO
 	public static FullDataSourceV2DTO CreateEmptyDataSourceForDecoding() { return new FullDataSourceV2DTO(); }
 	private FullDataSourceV2DTO() 
 	{
-		super(ARRAY_LIST_POOL, 8, 0, 0, 0);
+		super(ARRAY_LIST_POOL, 8, 0, 0, 0, 0);
 		
 		// Expected sizes here are 0 since we don't know how big these arrays need to be,
 		// they depend on compression settings and world complexity.

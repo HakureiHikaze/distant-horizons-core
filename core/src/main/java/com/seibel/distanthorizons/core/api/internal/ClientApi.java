@@ -40,6 +40,7 @@ import com.seibel.distanthorizons.core.util.math.DhVec3d;
 import com.seibel.distanthorizons.core.util.objects.Pair;
 import com.seibel.distanthorizons.core.util.objects.RollingAverage;
 import com.seibel.distanthorizons.core.util.threading.ThreadPoolUtil;
+import com.seibel.distanthorizons.core.world.IDhClientWorld;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IImmersivePortalsAccessor;
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IIrisAccessor;
@@ -245,14 +246,21 @@ public class ClientApi
 	public void loadWaitingChunksForLevel(IClientLevelWrapper level)
 	{
 		HashSet<Pair<IClientLevelWrapper, DhChunkPos>> keysToRemove = new HashSet<>();
+		String levelDimensionName = level.getDimensionName();
 		for (Pair<IClientLevelWrapper, DhChunkPos> levelChunkPair : this.waitingChunkByClientLevelAndPos.keySet())
 		{
 			// only load chunks that came from this level
 			IClientLevelWrapper levelWrapper = levelChunkPair.first;
-			if (levelWrapper.equals(level))
+			if (levelWrapper.equals(level)
+				|| levelWrapper.getDimensionName().equals(levelDimensionName))
 			{
 				IChunkWrapper chunkWrapper = this.waitingChunkByClientLevelAndPos.get(levelChunkPair);
-				SharedApi.INSTANCE.applyChunkUpdate(chunkWrapper, levelWrapper);
+				SharedApi.INSTANCE.applyChunkUpdate(
+					// the level reference is changed since it may not match the level
+					// we're attempting to load now
+					chunkWrapper.copyWithLevel(level), 
+					level, 
+					false);
 				keysToRemove.add(levelChunkPair);
 			}
 		}
@@ -291,11 +299,24 @@ public class ClientApi
 		{
 			executor.execute(() ->
 			{
-				DhClientWorld world = (DhClientWorld) Objects.requireNonNull(SharedApi.tryGetDhClientWorld());
-				NetworkSession networkSession = world.pluginChannelApi.networkSession;
-				if (networkSession != null)
+				try
 				{
-					networkSession.tryHandleMessage(message);
+					IDhClientWorld clientWorld = SharedApi.tryGetDhClientWorld();
+					if (!(clientWorld instanceof DhClientWorld))
+					{
+						return;
+					}
+					
+					DhClientWorld world = (DhClientWorld) clientWorld;
+					NetworkSession networkSession = world.pluginChannelApi.networkSession;
+					if (networkSession != null)
+					{
+						networkSession.tryHandleMessage(message);
+					}
+				}
+				catch (Exception e)
+				{
+					LOGGER.warn("pluginMessageReceived unexpected error: ["+e.getMessage()+"]", e);
 				}
 			});
 		}

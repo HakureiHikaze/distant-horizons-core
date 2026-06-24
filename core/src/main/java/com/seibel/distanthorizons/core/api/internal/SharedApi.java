@@ -71,7 +71,7 @@ public class SharedApi
 	//=============//
 	// constructor //
 	//=============//
-	//region
+	//region constructor
 	
 	private SharedApi() { }
 	
@@ -82,7 +82,7 @@ public class SharedApi
 	//===============//
 	// world methods //
 	//===============//
-	//region
+	//region world methods
 	
 	public static EWorldEnvironment getEnvironment() { return (currentWorld == null) ? null : currentWorld.environment; }
 	
@@ -154,7 +154,7 @@ public class SharedApi
 	//==============//
 	// chunk update //
 	//==============//
-	//region
+	//region chunk update
 	
 	/** 
 	 * Used to prevent getting a full chunk from MC if it isn't necessary. <br>
@@ -184,7 +184,7 @@ public class SharedApi
 	
 	
 	
-	public void applyChunkUpdate(IChunkWrapper chunkWrapper, ILevelWrapper levelWrapper)
+	public void applyChunkUpdate(IChunkWrapper chunkWrapper, ILevelWrapper levelWrapper, boolean waitForLoadedWorld)
 	{
 		//===================//
 		// validation checks //
@@ -216,18 +216,36 @@ public class SharedApi
 			return;
 		}
 		
-		// only continue if the level is loaded
-		IDhLevel dhLevel = dhWorld.getLevel(levelWrapper);
-		if (dhLevel == null)
+		
+		IDhLevel dhLevel;
+		if (waitForLoadedWorld)
 		{
-			if (levelWrapper instanceof IClientLevelWrapper)
+			// only continue if the level is loaded
+			dhLevel = dhWorld.getLevel(levelWrapper);
+			if (dhLevel == null)
 			{
-				// the client level isn't loaded yet
-				IClientLevelWrapper clientLevel = (IClientLevelWrapper) levelWrapper;
-				ClientApi.INSTANCE.waitingChunkByClientLevelAndPos.put(new Pair<>(clientLevel, chunkWrapper.getChunkPos()), chunkWrapper);
+				if (levelWrapper instanceof IClientLevelWrapper)
+				{
+					// the client level isn't loaded yet
+					IClientLevelWrapper clientLevel = (IClientLevelWrapper) levelWrapper;
+					ClientApi.INSTANCE.waitingChunkByClientLevelAndPos.put(new Pair<>(clientLevel, chunkWrapper.getChunkPos()), chunkWrapper);
+				}
+				
+				return;
 			}
-			
-			return;
+		}
+		else
+		{
+			// we want to apply the chunk to this level regardless of if the world/level is loaded, 
+			// this path may happen (and is needed) if the chunk is applied during level loading 
+			// before the world has access to it
+			dhLevel = levelWrapper.getDhLevel();
+			if (dhLevel == null)
+			{
+				// shouldn't happen, but just in case
+				LOGGER.warn("No DH level provided by the ["+levelWrapper.getClass()+"], some chunks may not update properly.");
+				return;
+			}
 		}
 		
 		// ignore chunk updates if the network should handle them
@@ -295,11 +313,11 @@ public class SharedApi
 	//=========//
 	// F3 Menu //
 	//=========//
-	//region
+	//region F3 Menu
 	
 	public ArrayList<String> getDebugMenuString() { return WORLD_CHUNK_UPDATE_MANAGER.getDebugMenuString(); }
 	
-	//endregion
+	//endregion 
 	
 	
 	

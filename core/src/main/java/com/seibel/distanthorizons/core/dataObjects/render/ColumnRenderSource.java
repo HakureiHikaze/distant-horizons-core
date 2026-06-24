@@ -21,8 +21,8 @@ package com.seibel.distanthorizons.core.dataObjects.render;
 
 import com.seibel.distanthorizons.api.enums.config.EDhApiVerticalQuality;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
-import com.seibel.distanthorizons.core.util.objects.pooling.AbstractPhantomArrayList;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayListPool;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.AbstractPhantomArrayList;
+import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListPool;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.dataObjects.render.columnViews.ColumnRenderView;
 import com.seibel.distanthorizons.core.util.RenderDataPointUtil;
@@ -92,7 +92,11 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	 */
 	private ColumnRenderSource(long pos, int maxVertSliceCount, int yOffset)
 	{
+<<<<<<< HEAD
 		super(ARRAY_LIST_POOL, 1, 0, 1, 0);
+=======
+		super(ARRAY_LIST_POOL, 0, 0, 1, 0, 0);
+>>>>>>> main
 		
 		this.pos = pos;
 		this.yOffset = yOffset;

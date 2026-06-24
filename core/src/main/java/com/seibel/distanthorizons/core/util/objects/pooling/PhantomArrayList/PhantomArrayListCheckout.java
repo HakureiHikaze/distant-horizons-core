@@ -1,4 +1,4 @@
-package com.seibel.distanthorizons.core.util.objects.pooling;
+package com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList;
 
 import com.seibel.distanthorizons.core.util.ListUtil;
 import com.seibel.distanthorizons.coreapi.util.StringUtil;
@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.SoftReference;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -41,12 +42,14 @@ public class PhantomArrayListCheckout implements AutoCloseable
 	private final ArrayList<ShortArrayList> shortArrayLists = new ArrayList<>();
 	private final ArrayList<LongArrayList> longArrayLists = new ArrayList<>();
 	private final ArrayList<CharArrayList> charArrayLists = new ArrayList<>();
+	private final ArrayList<ByteBufferCheckoutWrapper> byteBufferWrapperList = new ArrayList<>();
 	
 	
 	
 	//=============//
 	// constructor //
 	//=============//
+	//region
 	
 	public PhantomArrayListCheckout(@NotNull PhantomArrayListPool owningPool)
 	{
@@ -64,27 +67,55 @@ public class PhantomArrayListCheckout implements AutoCloseable
 		}
 	}
 	
+	//endregion
+	
 	
 	
 	//=========//
 	// setters //
 	//=========//
+	//region
 	
-	public void addByteArrayList(ByteArrayList list) { this.byteArrayLists.add(list); }
-	public void addShortArrayList(ShortArrayList list) { this.shortArrayLists.add(list); }
-	public void addLongArrayListRef(LongArrayList list) { this.longArrayLists.add(list); }
-	public void addCharArrayListRef(CharArrayList list) { this.charArrayLists.add(list); }
+	public void addByteArrayList(ByteArrayList list) 
+	{
+		this.owningPool.bytePoolStatTracker.totalArrayCountRef.getAndIncrement();
+		this.byteArrayLists.add(list); 
+	}
+	public void addShortArrayList(ShortArrayList list) 
+	{
+		this.owningPool.shortPoolStatTracker.totalArrayCountRef.getAndIncrement();
+		this.shortArrayLists.add(list); 
+	}
+	public void addLongArrayList(LongArrayList list) 
+	{
+		this.owningPool.longPoolStatTracker.totalArrayCountRef.getAndIncrement();
+		this.longArrayLists.add(list); 
+	}
+	public void addCharArrayList(CharArrayList list) 
+	{
+		this.owningPool.charPoolStatTracker.totalArrayCountRef.getAndIncrement();
+		this.charArrayLists.add(list); 
+	}
+	public void addByteBufferWrapper(ByteBufferCheckoutWrapper wrapper) 
+	{
+		this.owningPool.byteBufferPoolStatTracker.totalArrayCountRef.getAndIncrement();
+		this.byteBufferWrapperList.add(wrapper); 
+	}
+	
+	//endregion
 	
 	
 	
 	//=========//
 	// getters //
 	//=========//
+	//region
 	
 	public int getByteArrayCount() { return this.byteArrayLists.size(); }
 	public int getShortArrayCount() { return this.shortArrayLists.size(); }
 	public int getLongArrayCount() { return this.longArrayLists.size(); }
 	public int getCharArrayCount() { return this.charArrayLists.size(); }
+	public int getByteBufferWrapperCount() { return this.byteBufferWrapperList.size(); }
 	
 	
 	
@@ -112,20 +143,32 @@ public class PhantomArrayListCheckout implements AutoCloseable
 		ListUtil.clearAndSetSize(list, size);
 		return list;
 	}
+	public ByteBuffer getByteBuffer(int index, int size)
+	{
+		ByteBufferCheckoutWrapper wrapper = this.byteBufferWrapperList.get(index);
+		wrapper.clearAndSetSize(size);
+		return wrapper.buffer;
+	}
 	
 	public ArrayList<ByteArrayList> getAllByteArrays() { return this.byteArrayLists; }
 	public ArrayList<ShortArrayList> getAllShortArrays() { return this.shortArrayLists; }
 	public ArrayList<LongArrayList> getAllLongArrays() { return this.longArrayLists; }
 	public ArrayList<CharArrayList> getAllCharArrays() { return this.charArrayLists; }
+	public ArrayList<ByteBufferCheckoutWrapper> getAllByteBufferWrappers() { return this.byteBufferWrapperList; }
+	
+	//endregion
 	
 	
 	
 	//================//
 	// base overrides //
 	//================//
+	//region
 	
 	@Override 
 	public void close() { this.owningPool.returnCheckout(this); }
+	
+	//endregion
 	
 	
 	
