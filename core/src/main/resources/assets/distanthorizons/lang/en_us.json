@@ -733,6 +733,10 @@
     "Log Garbage Collector Warning",
   "distanthorizons.config.common.logging.warning.showGarbageCollectorWarning":
     "Show Garbage Collector Warning",
+  "distanthorizons.config.common.logging.warning.logExplicitGcDisabledWarning":
+    "Log Explicit GC Disabled Warning",
+  "distanthorizons.config.common.logging.warning.showExplicitGcDisabledWarning":
+    "Show Explicit GC Disabled Warning",
 
 
 

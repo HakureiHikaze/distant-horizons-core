@@ -1711,9 +1711,29 @@ public class Config
 				public static ConfigEntry<Boolean> showGarbageCollectorWarning = new ConfigEntry.Builder<Boolean>()
 					.set(true)
 					.comment(""
-						+ "If enabled, a chat message will be displayed if the garbage \n"
+						+ "If enabled, a chat message will be displayed in chat if the garbage \n"
 						+ "collector Java is currently using is known \n"
 						+ "to cause frame stuttering and/or other issues. \n"
+						+ "")
+					.build();
+				
+				public static ConfigEntry<Boolean> logExplicitGcDisabledWarning = new ConfigEntry.Builder<Boolean>()
+					.set(true)
+					.comment(""
+						+ "If enabled, a message will be logged if explicit garbage collection \n"
+						+ "is disabled. \n"
+						+ "This is known to cause out-of-memory issues \n"
+						+ "and is better solved with a concurrent garbage collector. \n"
+						+ "")
+					.build();
+				
+				public static ConfigEntry<Boolean> showExplicitGcDisabledWarning = new ConfigEntry.Builder<Boolean>()
+					.set(true)
+					.comment(""
+						+ "If enabled, a message will be displayed in chat if explicit garbage collection \n"
+						+ "is disabled. \n"
+						+ "This is known to cause out-of-memory issues \n"
+						+ "and is better solved with a concurrent garbage collector. \n"
 						+ "")
 					.build();
 				
