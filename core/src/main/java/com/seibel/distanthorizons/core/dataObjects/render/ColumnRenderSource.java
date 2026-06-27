@@ -20,6 +20,7 @@
 package com.seibel.distanthorizons.core.dataObjects.render;
 
 import com.seibel.distanthorizons.api.enums.config.EDhApiVerticalQuality;
+import com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureRegistry;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.AbstractPhantomArrayList;
 import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListPool;
@@ -105,7 +106,7 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 		// for everything else the empty list should keep the memory overhead at zero
 		int textureIndexCount = texturedLodsEnabledAtDetailLevel(this.getDataDetailLevel()) ? WIDTH * WIDTH * this.maxVerticalSliceCount : 0;
 		this.textureSetPaletteIndices = this.pooledArraysCheckout.getByteArray(0, textureIndexCount);
-		this.texturePalette.add((short) 0); // FLAT_PALETTE_INDEX, see BlockTextureRegistry.FLAT_SET_ID
+		this.texturePalette.add(BlockTextureRegistry.FLAT_TILE_ID);
 	}
 	
 	//endregion
@@ -117,8 +118,6 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	//========================//
 	//region
 	
-	/** palette index of the reserved "no texture" entry */
-	public static final byte FLAT_PALETTE_INDEX = 0;
 	/** texture palettes are indexed by unsigned bytes */
 	public static final int MAX_PALETTE_SIZE = 256;
 	
@@ -141,9 +140,12 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	{
 		if (!this.hasTextureSetIds())
 		{
-			return 0;
+			return BlockTextureRegistry.FLAT_TILE_ID;
 		}
-		int paletteIndex = this.textureSetPaletteIndices.getByte(posX * WIDTH * this.maxVerticalSliceCount + posZ * this.maxVerticalSliceCount + verticalIndex) & 0xFF;
+		
+		int paletteIndex = this.textureSetPaletteIndices.getByte(
+			posX * WIDTH * this.maxVerticalSliceCount + posZ * this.maxVerticalSliceCount + verticalIndex) 
+			& 0xFF;
 		return this.texturePalette.getShort(paletteIndex);
 	}
 	
@@ -157,6 +159,7 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 		{
 			return;
 		}
+		
 		this.textureSetPaletteIndices.set(
 			posX * WIDTH * this.maxVerticalSliceCount + posZ * this.maxVerticalSliceCount + verticalIndex,
 			this.getOrAddPaletteIndex(textureSetId));
@@ -179,9 +182,9 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 		
 		if (paletteSize >= MAX_PALETTE_SIZE)
 		{
-			// pathological sections with too many distinct appearances
-			// gracefully lose textures rather than failing
-			return FLAT_PALETTE_INDEX;
+			// sections with too many distinct blocks
+			// gracefully lose textures so they can't take up every possible ID
+			return BlockTextureRegistry.FLAT_TILE_ID;
 		}
 		
 		this.texturePalette.add(textureSetId);

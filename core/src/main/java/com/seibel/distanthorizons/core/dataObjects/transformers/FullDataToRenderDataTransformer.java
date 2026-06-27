@@ -220,7 +220,7 @@ public class FullDataToRenderDataTransformer
 			
 			// find the full data point containing the render data point's top block,
 			// the full data column is sorted top down
-			short textureSetId = 0;
+			short textureId = 0;
 			for (int fullIndex = 0; fullIndex < fullDataColumn.size(); fullIndex++)
 			{
 				long fullData = fullDataColumn.getLong(fullIndex);
@@ -235,7 +235,7 @@ public class FullDataToRenderDataTransformer
 					try
 					{
 						IBlockStateWrapper block = fullDataSource.mapping.getBlockStateWrapper(FullDataPointUtil.getId(fullData));
-						textureSetId = BlockTextureRegistry.INSTANCE.getOrRegisterBlockStateSetId(block);
+						textureId = BlockTextureRegistry.INSTANCE.getOrRegisterBlockStateSetId(block);
 					}
 					catch (IndexOutOfBoundsException ignore)
 					{
@@ -247,7 +247,7 @@ public class FullDataToRenderDataTransformer
 				break;
 			}
 			
-			columnSource.setTextureSetId(sourceRelX, sourceRelZ, renderIndex, textureSetId);
+			columnSource.setTextureSetId(sourceRelX, sourceRelZ, renderIndex, textureId);
 		}
 	}
 	private static void setRenderColumnView(

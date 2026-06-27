@@ -77,8 +77,8 @@ public class BlockTextureRegistry
 	private int firstTileIdPendingUpload = 0;
 	
 	/** indexed by set id, holds the 6 face tile ids for one block state */
-	private final ArrayList<short[]> faceTileIdsBySetId = new ArrayList<>();
-	private final ConcurrentHashMap<IBlockStateWrapper, Short> setIdByBlockState = new ConcurrentHashMap<>();
+	private final ArrayList<short[]> faceTileIdsById = new ArrayList<>();
+	private final ConcurrentHashMap<IBlockStateWrapper, Short> idByBlockStateWrapper = new ConcurrentHashMap<>();
 	
 	
 	
@@ -100,7 +100,7 @@ public class BlockTextureRegistry
 		this.tilePixelsById.add(flatPixels);
 		
 		// reserve the all-flat face set so set id 0 always renders flat
-		this.faceTileIdsBySetId.add(new short[6]);
+		this.faceTileIdsById.add(new short[6]);
 	}
 	
 	
@@ -118,12 +118,12 @@ public class BlockTextureRegistry
 	 */
 	public short getOrRegisterBlockStateSetId(IBlockStateWrapper blockState)
 	{
-		Short setId = this.setIdByBlockState.get(blockState);
-		if (setId == null)
+		Short id = this.idByBlockStateWrapper.get(blockState);
+		if (id == null)
 		{
-			setId = this.registerBlockState(blockState);
+			id = this.registerBlockState(blockState);
 		}
-		return setId;
+		return id;
 	}
 	
 	/**
@@ -135,18 +135,18 @@ public class BlockTextureRegistry
 	 */
 	public synchronized short @Nullable [] getFaceTileIds(int setId)
 	{
-		if (setId <= FLAT_SET_ID || setId >= this.faceTileIdsBySetId.size())
+		if (setId <= FLAT_SET_ID || setId >= this.faceTileIdsById.size())
 		{
 			return null;
 		}
-		return this.faceTileIdsBySetId.get(setId);
+		return this.faceTileIdsById.get(setId);
 	}
 	
 	private short registerBlockState(IBlockStateWrapper blockState)
 	{
 		IBlockStateFaceTextureProvider textureProvider = SingletonInjector.INSTANCE.get(IBlockStateFaceTextureProvider.class);
 		
-		short[] faceTileIds = new short[6];
+		short[] faceTileIds = new short[6]; // 6 faces on a cube
 		boolean anyFaceTextured = false;
 		if (textureProvider != null)
 		{
@@ -172,19 +172,19 @@ public class BlockTextureRegistry
 		{
 			synchronized (this)
 			{
-				if (this.faceTileIdsBySetId.size() >= MAX_TILE_COUNT)
+				if (this.faceTileIdsById.size() >= MAX_TILE_COUNT)
 				{
 					setId = FLAT_SET_ID;
 				}
 				else
 				{
-					setId = (short) this.faceTileIdsBySetId.size();
-					this.faceTileIdsBySetId.add(faceTileIds);
+					setId = (short) this.faceTileIdsById.size();
+					this.faceTileIdsById.add(faceTileIds);
 				}
 			}
 		}
 		
-		Short existingSetId = this.setIdByBlockState.putIfAbsent(blockState, setId);
+		Short existingSetId = this.idByBlockStateWrapper.putIfAbsent(blockState, setId);
 		return (existingSetId != null) ? existingSetId : setId;
 	}
 	
@@ -328,10 +328,10 @@ public class BlockTextureRegistry
 	/** Should be called whenever MC's textures change, IE when resource packs are swapped. */
 	public synchronized void clear()
 	{
-		this.setIdByBlockState.clear();
-		short[] flatSet = this.faceTileIdsBySetId.get(FLAT_SET_ID);
-		this.faceTileIdsBySetId.clear();
-		this.faceTileIdsBySetId.add(flatSet);
+		this.idByBlockStateWrapper.clear();
+		short[] flatSet = this.faceTileIdsById.get(FLAT_SET_ID);
+		this.faceTileIdsById.clear();
+		this.faceTileIdsById.add(flatSet);
 		
 		this.tileIdByContent.clear();
 		byte[] flatTile = this.tilePixelsById.get(FLAT_TILE_ID);
@@ -346,23 +346,12 @@ public class BlockTextureRegistry
 		}
 	}
 	
-	public static class PendingTiles
-	{
-		public final int firstTileId;
-		public final byte[][] tilePixels;
-		
-		public PendingTiles(int firstTileId, byte[][] tilePixels)
-		{
-			this.firstTileId = firstTileId;
-			this.tilePixels = tilePixels;
-		}
-	}
 	
 	
-	
-	//==========//
-	// tile key //
-	//==========//
+	//================//
+	// helper classes //
+	//================//
+	//region
 	
 	/** wraps tile pixels so they can be used as a hash map key for deduplication */
 	private static class TileKey
@@ -388,5 +377,21 @@ public class BlockTextureRegistry
 		}
 	
 	}
-
+	
+	public static class PendingTiles
+	{
+		public final int firstTileId;
+		public final byte[][] tilePixels;
+		
+		public PendingTiles(int firstTileId, byte[][] tilePixels)
+		{
+			this.firstTileId = firstTileId;
+			this.tilePixels = tilePixels;
+		}
+	}
+	
+	//endregion
+	
+	
+	
 }
