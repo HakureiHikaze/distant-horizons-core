@@ -26,12 +26,14 @@ import com.seibel.distanthorizons.core.api.internal.chunkUpdating.ChunkUpdateDat
 import com.seibel.distanthorizons.core.api.internal.chunkUpdating.ChunkUpdateQueueManager;
 import com.seibel.distanthorizons.core.api.internal.chunkUpdating.WorldChunkUpdateManager;
 import com.seibel.distanthorizons.core.config.eventHandlers.IgnoredDimensionCsvHandler;
+import com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureRegistry;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.level.DhClientLevel;
 import com.seibel.distanthorizons.core.level.IDhLevel;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos2D;
 import com.seibel.distanthorizons.core.pos.DhChunkPos;
+import com.seibel.distanthorizons.core.render.DhApiRenderProxy;
 import com.seibel.distanthorizons.core.render.RenderThreadTaskHandler;
 import com.seibel.distanthorizons.core.render.renderer.AbstractDebugWireframeRenderer;
 import com.seibel.distanthorizons.core.sql.repo.AbstractDhRepo;
@@ -124,6 +126,7 @@ public class SharedApi
 				WORLD_CHUNK_UPDATE_MANAGER.clear();
 				
 				RenderThreadTaskHandler.INSTANCE.clearDebugStats();
+				BlockTextureRegistry.INSTANCE.clear();
 				
 				// recommend that the garbage collector cleans up any objects from the old world and thread pools
 				System.gc();
