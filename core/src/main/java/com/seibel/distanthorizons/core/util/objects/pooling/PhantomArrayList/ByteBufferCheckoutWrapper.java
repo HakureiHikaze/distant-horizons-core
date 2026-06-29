@@ -44,8 +44,8 @@ public class ByteBufferCheckoutWrapper
 			this.size = size;
 		}
 		
+		buffer.rewind();
 		buffer.limit(this.size);
-		buffer.position(0);
 	}
 	
 	//endregion

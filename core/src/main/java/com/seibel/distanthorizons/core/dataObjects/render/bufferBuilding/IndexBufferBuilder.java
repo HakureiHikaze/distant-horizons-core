@@ -20,7 +20,6 @@ public class IndexBufferBuilder
 		int byteSize = indexCount * Integer.BYTES;
 		
 		ByteBuffer buffer = checkout.getByteBuffer(checkoutIndex, byteSize);
-		buffer.limit(byteSize);
 		buildBufferInt(quadCount, buffer);
 		
 		return buffer;
