@@ -47,6 +47,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class BlockTextureRegistry
 {
+	private static final IBlockStateFaceTextureProvider TEXTURE_PROVIDER = SingletonInjector.INSTANCE.get(IBlockStateFaceTextureProvider.class);
+	
+	
 	public static final BlockTextureRegistry INSTANCE = new BlockTextureRegistry();
 	
 	/** renders as a constant 1.0 color multiplier (flat colors) */
@@ -65,7 +68,7 @@ public class BlockTextureRegistry
 	
 	
 	/** renders every face flat, also used when set registration overflows */
-	public static final short FLAT_SET_ID = 0;
+	public static final short UNTEXTURED_ID = 0;
 	
 	
 	
@@ -85,6 +88,7 @@ public class BlockTextureRegistry
 	//=============//
 	// constructor //
 	//=============//
+	//region
 	
 	private BlockTextureRegistry()
 	{
@@ -103,18 +107,21 @@ public class BlockTextureRegistry
 		this.faceTileIdsById.add(new short[6]);
 	}
 	
+	//endregion
+	
 	
 	
 	//==============//
 	// tile getters //
 	//==============//
+	//region
 	
 	/**
 	 * Returns the id of the given block state's face tile set,
 	 * baking and registering the face textures if necessary. <br>
 	 * Thread safe, although baking may block briefly.
 	 *
-	 * @return {@link BlockTextureRegistry#FLAT_SET_ID} if no textures are available
+	 * @return {@link BlockTextureRegistry#UNTEXTURED_ID} if no textures are available
 	 */
 	public short getOrRegisterBlockStateSetId(IBlockStateWrapper blockState)
 	{
@@ -135,7 +142,7 @@ public class BlockTextureRegistry
 	 */
 	public synchronized short @Nullable [] getFaceTileIds(int setId)
 	{
-		if (setId <= FLAT_SET_ID || setId >= this.faceTileIdsById.size())
+		if (setId <= UNTEXTURED_ID || setId >= this.faceTileIdsById.size())
 		{
 			return null;
 		}
@@ -144,58 +151,58 @@ public class BlockTextureRegistry
 	
 	private short registerBlockState(IBlockStateWrapper blockState)
 	{
-		IBlockStateFaceTextureProvider textureProvider = SingletonInjector.INSTANCE.get(IBlockStateFaceTextureProvider.class);
-		
 		short[] faceTileIds = new short[6]; // 6 faces on a cube
 		boolean anyFaceTextured = false;
-		if (textureProvider != null)
+		
+		for (EDhDirection direction : EDhDirection.ALL)
 		{
-			for (EDhDirection direction : EDhDirection.ALL)
-			{
-				BlockFaceTexture faceTexture = textureProvider.getFaceTexture(blockState, direction);
-				short tileId = (faceTexture != null)
-						? this.getOrCreateTileId(faceTexture)
-						: FLAT_TILE_ID;
-				faceTileIds[getFaceIndex(direction)] = tileId;
-				anyFaceTextured |= (tileId != FLAT_TILE_ID);
-			}
+			BlockFaceTexture faceTexture = TEXTURE_PROVIDER.getFaceTexture(blockState, direction);
+			short tileId = (faceTexture != null)
+					? this.getOrCreateTileId(faceTexture)
+					: FLAT_TILE_ID;
+			faceTileIds[getFaceIndex(direction)] = tileId;
+			anyFaceTextured |= (tileId != FLAT_TILE_ID);
 		}
 		
-		short setId;
+		short textureId;
 		if (!anyFaceTextured)
 		{
 			// blocks whose every face is flat (IE uniformly colored textures)
 			// share the reserved flat set
-			setId = FLAT_SET_ID;
+			textureId = UNTEXTURED_ID;
 		}
 		else
 		{
+			// synchronized to prevent concurrent array modifications
 			synchronized (this)
 			{
 				if (this.faceTileIdsById.size() >= MAX_TILE_COUNT)
 				{
-					setId = FLAT_SET_ID;
+					textureId = UNTEXTURED_ID;
 				}
 				else
 				{
-					setId = (short) this.faceTileIdsById.size();
+					textureId = (short) this.faceTileIdsById.size();
 					this.faceTileIdsById.add(faceTileIds);
 				}
 			}
 		}
 		
-		Short existingSetId = this.idByBlockStateWrapper.putIfAbsent(blockState, setId);
-		return (existingSetId != null) ? existingSetId : setId;
+		Short existingSetId = this.idByBlockStateWrapper.putIfAbsent(blockState, textureId);
+		return (existingSetId != null) ? existingSetId : textureId;
 	}
 	
 	/** faces are stored in {@link EDhDirection#ordinal()} order so consumers can index by direction directly */
 	private static int getFaceIndex(EDhDirection direction) { return direction.ordinal(); }
+	
+	//endregion
 	
 	
 	
 	//===================//
 	// tile registration //
 	//===================//
+	//region
 	
 	private synchronized short getOrCreateTileId(BlockFaceTexture faceTexture)
 	{
@@ -292,11 +299,14 @@ public class BlockTextureRegistry
 		return (byte) Math.min(encoded, 255);
 	}
 	
+	//endregion
+	
 	
 	
 	//============//
 	// GPU upload //
 	//============//
+	//region
 	
 	/**
 	 * Returns the tiles registered since the last call so they can
@@ -329,7 +339,7 @@ public class BlockTextureRegistry
 	public synchronized void clear()
 	{
 		this.idByBlockStateWrapper.clear();
-		short[] flatSet = this.faceTileIdsById.get(FLAT_SET_ID);
+		short[] flatSet = this.faceTileIdsById.get(UNTEXTURED_ID);
 		this.faceTileIdsById.clear();
 		this.faceTileIdsById.add(flatSet);
 		
@@ -345,6 +355,8 @@ public class BlockTextureRegistry
 			textureProvider.clearCache();
 		}
 	}
+	
+	//endregion
 	
 	
 	
