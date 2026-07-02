@@ -32,17 +32,17 @@ import com.seibel.distanthorizons.core.util.math.DhVec3i;
 public enum EDhDirection
 {
 	/** negative Y */
-	DOWN("down", EDhDirection.AxisDirection.NEGATIVE, EDhDirection.Axis.Y, new DhVec3i(0, -1, 0), -1),
+	DOWN("down", EDhDirection.AxisDirection.NEGATIVE, EDhDirection.Axis.Y, new DhVec3i(0, -1, 0), -1, 0),
 	/** positive Y */
-	UP("up", EDhDirection.AxisDirection.POSITIVE, EDhDirection.Axis.Y, new DhVec3i(0, 1, 0), -1),
+	UP("up", EDhDirection.AxisDirection.POSITIVE, EDhDirection.Axis.Y, new DhVec3i(0, 1, 0), -1, 1),
 	/** negative Z */
-	NORTH("north", EDhDirection.AxisDirection.NEGATIVE, EDhDirection.Axis.Z, new DhVec3i(0, 0, -1), 0),
+	NORTH("north", EDhDirection.AxisDirection.NEGATIVE, EDhDirection.Axis.Z, new DhVec3i(0, 0, -1), 0, 2),
 	/** positive Z */
-	SOUTH("south", EDhDirection.AxisDirection.POSITIVE, EDhDirection.Axis.Z, new DhVec3i(0, 0, 1), 1),
+	SOUTH("south", EDhDirection.AxisDirection.POSITIVE, EDhDirection.Axis.Z, new DhVec3i(0, 0, 1), 1, 3),
 	/** negative X */
-	WEST("west", EDhDirection.AxisDirection.NEGATIVE, EDhDirection.Axis.X, new DhVec3i(-1, 0, 0), 2),
+	WEST("west", EDhDirection.AxisDirection.NEGATIVE, EDhDirection.Axis.X, new DhVec3i(-1, 0, 0), 2, 4),
 	/** positive X */
-	EAST("east", EDhDirection.AxisDirection.POSITIVE, EDhDirection.Axis.X, new DhVec3i(1, 0, 0), 3);
+	EAST("east", EDhDirection.AxisDirection.POSITIVE, EDhDirection.Axis.X, new DhVec3i(1, 0, 0), 3, 5);
 	
 	
 	/** Up, Down, West, East, North, South */
@@ -71,6 +71,8 @@ public enum EDhDirection
 	public final DhVec3i normal;
 	/** -1 if not a {@link EDhDirection#CARDINAL_COMPASS} direction */
 	public final int compassIndex;
+	/** used for textures and LOD geometry faces */
+	public final int faceIndex;
 	
 	
 	
@@ -78,13 +80,14 @@ public enum EDhDirection
 	// constructor //
 	//=============//
 		
-	EDhDirection(String name, EDhDirection.AxisDirection axisDirection, EDhDirection.Axis axis, DhVec3i normal, int compassIndex)
+	EDhDirection(String name, EDhDirection.AxisDirection axisDirection, EDhDirection.Axis axis, DhVec3i normal, int compassIndex, int faceIndex)
 	{
 		this.name = name;
 		this.axis = axis;
 		this.axisDirection = axisDirection;
 		this.normal = normal;
 		this.compassIndex = compassIndex;
+		this.faceIndex = faceIndex;
 	}
 	
 	

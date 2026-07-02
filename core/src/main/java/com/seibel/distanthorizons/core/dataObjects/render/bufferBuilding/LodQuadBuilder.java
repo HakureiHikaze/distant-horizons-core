@@ -20,7 +20,6 @@
 package com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.*;
 
 import com.seibel.distanthorizons.api.enums.config.EDhApiGrassSideRendering;
@@ -31,7 +30,6 @@ import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.enums.EDhDirection;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
-import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.AbstractPhantomArrayList;
 import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.ByteBufferCheckoutWrapper;
 import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
 import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListPool;
@@ -117,7 +115,7 @@ public class LodQuadBuilder implements AutoCloseable
 	private final ArrayList<BufferQuad>[] transparentQuads = (ArrayList<BufferQuad>[]) new ArrayList[6];
 	
 	/**
-	 * The face tile ids for the data point currently being added, indexed by {@link EDhDirection#ordinal()}.
+	 * The face tile ids for the data point currently being added, indexed by {@link EDhDirection#faceIndex}.
 	 * Null when the current data point should render flat.
 	 * @see com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureRegistry
 	 */
@@ -186,7 +184,7 @@ public class LodQuadBuilder implements AutoCloseable
 	{ this.currentFaceTileIds = faceTileIdsByDirectionOrdinal; }
 	
 	private short getCurrentFaceTileId(EDhDirection direction)
-	{ return (this.currentFaceTileIds != null) ? this.currentFaceTileIds[direction.ordinal()] : 0; }
+	{ return (this.currentFaceTileIds != null) ? this.currentFaceTileIds[direction.faceIndex] : 0; }
 	
 	public void addQuadAdj(
 			EDhDirection dir, 
@@ -203,11 +201,11 @@ public class LodQuadBuilder implements AutoCloseable
 		ArrayList<BufferQuad> quadList;
 		if (this.doTransparency && ColorUtil.getAlpha(color) < 255)
 		{
-			quadList = this.transparentQuads[dir.ordinal()];
+			quadList = this.transparentQuads[dir.faceIndex];
 		}
 		else
 		{
-			quadList = this.opaqueQuads[dir.ordinal()]; 
+			quadList = this.opaqueQuads[dir.faceIndex]; 
 		}
 		
 		BufferQuad quad = this.getOrCreateBufferQuad();
@@ -231,8 +229,8 @@ public class LodQuadBuilder implements AutoCloseable
 	{
 		boolean isTransparent = (this.doTransparency && ColorUtil.getAlpha(color) < 255);
 		ArrayList<BufferQuad> quadList = isTransparent 
-				? this.transparentQuads[EDhDirection.UP.ordinal()] 
-				: this.opaqueQuads[EDhDirection.UP.ordinal()];
+				? this.transparentQuads[EDhDirection.UP.faceIndex] 
+				: this.opaqueQuads[EDhDirection.UP.faceIndex];
 		
 		BufferQuad quad = this.getOrCreateBufferQuad();
 		quad.set(minX, maxY, minZ, blockWidth, blockWidth, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.UP);
@@ -243,8 +241,8 @@ public class LodQuadBuilder implements AutoCloseable
 	public void addQuadDown(short x, short y, short z, short blockWidth, int color, byte irisBlockMaterialId, byte skylight, byte blocklight)
 	{
 		ArrayList<BufferQuad> quadArray = (this.doTransparency && ColorUtil.getAlpha(color) < 255)
-				? this.transparentQuads[EDhDirection.DOWN.ordinal()]
-				: this.opaqueQuads[EDhDirection.DOWN.ordinal()];
+				? this.transparentQuads[EDhDirection.DOWN.faceIndex]
+				: this.opaqueQuads[EDhDirection.DOWN.faceIndex];
 		
 		BufferQuad quad = this.getOrCreateBufferQuad();
 		quad.set(x, y, z, blockWidth, blockWidth, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.DOWN);
@@ -281,7 +279,8 @@ public class LodQuadBuilder implements AutoCloseable
 			
 			
 			// only run the second merge if the face is the top or bottom
-			if (directionIndex == EDhDirection.UP.ordinal() || directionIndex == EDhDirection.DOWN.ordinal())
+			if (directionIndex == EDhDirection.UP.faceIndex 
+				|| directionIndex == EDhDirection.DOWN.faceIndex)
 			{
 				mergeCount += mergeQuadsInternal(this.opaqueQuads, directionIndex, BufferMergeDirectionEnum.NorthSouthOrUpDown);
 				if (this.doTransparency)
@@ -392,10 +391,10 @@ public class LodQuadBuilder implements AutoCloseable
 	}
 	private void putQuad(ByteBuffer bb, BufferQuad quad)
 	{
-		int[][] quadBase = DIRECTION_VERTEX_IBO_QUAD[quad.direction.ordinal()];
+		int[][] quadBase = DIRECTION_VERTEX_IBO_QUAD[quad.direction.faceIndex];
 		short widthEastWest = quad.widthEastWest;
 		short widthNorthSouth = quad.widthNorthSouthOrHeight;
-		byte normalIndex = (byte) quad.direction.ordinal();
+		byte normalIndex = (byte) quad.direction.faceIndex;
 		EDhDirection.Axis axis = quad.direction.axis;
 		for (int i = 0; i < quadBase.length; i++)
 		{

@@ -135,7 +135,7 @@ public class BlockTextureRegistry
 	
 	/**
 	 * Returns the tile id for each face of the given set,
-	 * indexed by {@link EDhDirection#ordinal()}. <br>
+	 * indexed by {@link EDhDirection#faceIndex}. <br>
 	 * The returned array must not be modified.
 	 *
 	 * @return null if the set id is invalid or the flat set
@@ -160,7 +160,7 @@ public class BlockTextureRegistry
 			short tileId = (faceTexture != null)
 					? this.getOrCreateTileId(faceTexture)
 					: FLAT_TILE_ID;
-			faceTileIds[getFaceIndex(direction)] = tileId;
+			faceTileIds[direction.faceIndex] = tileId;
 			anyFaceTextured |= (tileId != FLAT_TILE_ID);
 		}
 		
@@ -191,9 +191,6 @@ public class BlockTextureRegistry
 		Short existingSetId = this.idByBlockStateWrapper.putIfAbsent(blockState, textureId);
 		return (existingSetId != null) ? existingSetId : textureId;
 	}
-	
-	/** faces are stored in {@link EDhDirection#ordinal()} order so consumers can index by direction directly */
-	private static int getFaceIndex(EDhDirection direction) { return direction.ordinal(); }
 	
 	//endregion
 	
