@@ -38,9 +38,6 @@ public class BlockFaceTexture
 	
 	/** true if these pixels should be multiplied by a position specific tint before rendering (IE grass or leaf colors) */
 	public final boolean tinted;
-	// TODO: Check if this is still needed (since I think I removed the silhouette thing due to being able to see through the world)
-	/** true if any pixel is fully transparent, meaning alpha discarding is needed when rendering */
-	public final boolean cutout;
 	/** true if any pixel is semi-transparent (IE glass or water), meaning the transparent render pass is needed */
 	public final boolean semiTransparent;
 	
@@ -49,6 +46,7 @@ public class BlockFaceTexture
 	//=============//
 	// constructor //
 	//=============//
+	//region
 	
 	public BlockFaceTexture(int width, int height, int[] argbPixels, boolean tinted)
 	{
@@ -57,27 +55,24 @@ public class BlockFaceTexture
 		this.argbPixels = argbPixels;
 		this.tinted = tinted;
 		
-		boolean cutoutFound = false;
 		boolean semiTransparentFound = false;
 		for (int i = 0; i < argbPixels.length; i++)
 		{
 			int alpha = ColorUtil.getAlpha(argbPixels[i]);
-			if (alpha == 0)
-			{
-				cutoutFound = true;
-			}
-			else if (alpha != 255)
+			if (alpha != 255)
 			{
 				semiTransparentFound = true;
+				break;
 			}
 		}
-		this.cutout = cutoutFound;
 		this.semiTransparent = semiTransparentFound;
 	}
 	
 	public static BlockFaceTexture createSolidColor(int argbColor, boolean tinted)
 	{ return new BlockFaceTexture(1, 1, new int[] { argbColor }, tinted); }
-
-
-
+	
+	//endregion
+	
+	
+	
 }
