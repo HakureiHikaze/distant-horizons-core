@@ -147,7 +147,7 @@ public class PhantomArrayListCheckout implements AutoCloseable
 	{
 		ByteBufferCheckoutWrapper wrapper = this.byteBufferWrapperList.get(index);
 		wrapper.clearAndSetSize(size);
-		return wrapper.buffer;
+		return wrapper.bufferSlice;
 	}
 	
 	public ArrayList<ByteArrayList> getAllByteArrays() { return this.byteArrayLists; }
