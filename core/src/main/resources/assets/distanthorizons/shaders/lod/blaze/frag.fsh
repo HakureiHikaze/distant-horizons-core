@@ -11,9 +11,10 @@ in vec4 gl_FragCoord;
 
 out vec4 fragColor;
 
-// Block texture atlas, tiles are color ratios relative to the LOD's flat color (128/255 = 1.0, IE unchanged).
+// Each tile stores the color ratio relative to the LOD's flat 
+// color where 128 means using the base LOD color.
 // Tiles are packed in a 2D grid, 256 tiles per row,
-// see BlazeBlockTextureAtlas.TILES_PER_ROW
+// see AbstractBlockTextureAtlas.TILES_PER_ROW
 uniform sampler2D uBlockAtlas;
 
 layout (std140) uniform fragUniformBlock
@@ -122,15 +123,16 @@ void main()
     if (vTextureTileId != 0u)
     {
         // tile id -> grid cell -> exact texel.
-        // texelFetch keeps the texture appear correctly regardless of the bound sampler's filtering
+        // texelFetch makes sure the texture renders correctly regardless of the bound sampler's filtering
         ivec2 tileOrigin = ivec2(int(vTextureTileId % 256u), int(vTextureTileId / 256u)) * 16;
         ivec2 texelPos = tileOrigin + ivec2(clamp(blockFaceUv() * 16.0, 0.0, 15.0));
         vec4 tile = texelFetch(uBlockAtlas, texelPos, 0);
-        
-        // Cutout texels (IE leaf gaps) blend toward the LOD's flat color
-        // We cannot discard them as then it would show the void rather than more terrain.
-        // Ratio encode the tiles so it preserves the LOD's tint and shading
-        fragColor.rgb = mix(fragColor.rgb, clamp(fragColor.rgb * (tile.rgb * 2.0), 0.0, 1.0), tile.a);
+
+        // The tile's color ratio preserves the LOD's original tint and shading.
+        // Tile color value of gray, 128 (half way between 0 and 255)
+        // means the LOD will use it's base color.
+        vec3 clampedColor = clamp(fragColor.rgb * (tile.rgb * 2.0), 0.0, 1.0);
+        fragColor.rgb = mix(fragColor.rgb, clampedColor, tile.a);
     }
     
     float viewDist = length(vertexWorldPos);
