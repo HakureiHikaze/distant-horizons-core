@@ -27,6 +27,7 @@ import com.seibel.distanthorizons.core.dependencyInjection.ModAccessorInjector;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
+import com.seibel.distanthorizons.core.render.CameraZoom;
 import com.seibel.distanthorizons.core.render.EDhRenderDepth;
 import com.seibel.distanthorizons.core.util.math.DhMat4f;
 import com.seibel.distanthorizons.core.util.math.DhVec3f;
@@ -339,18 +340,20 @@ public class RenderUtil
 	 *
 	 * @return {@link CameraZoom#NOT_ZOOMED} if the camera isn't zoomed in or zoomed quality increasing is disabled
 	 */
-	public static CameraZoom getCameraZoom()
+	public static void updateCameraZoom(CameraZoom cameraZoom)
 	{
 		if (!Config.Client.Advanced.Graphics.Quality.increaseQualityWhenZoomedIn.get())
 		{
-			return CameraZoom.NOT_ZOOMED;
+			cameraZoom.set(CameraZoom.NOT_ZOOMED);
+			return;
 		}
 		
 		// will be null before the first frame has rendered
 		DhApiMat4f projectionMatrix = ClientApi.RENDER_STATE.mcProjectionMatrix;
 		if (projectionMatrix == null)
 		{
-			return CameraZoom.NOT_ZOOMED;
+			cameraZoom.set(CameraZoom.NOT_ZOOMED);
+			return;
 		}
 		
 		if (projectionMatrix.equals(DhMat4f.IDENTITY))
@@ -360,7 +363,8 @@ public class RenderUtil
 			projectionMatrix = ClientApi.RENDER_STATE.mcModelViewMatrix;
 			if (projectionMatrix == null)
 			{
-				return CameraZoom.NOT_ZOOMED;
+				cameraZoom.set(CameraZoom.NOT_ZOOMED);
+				return;
 			}
 		}
 		
@@ -378,7 +382,8 @@ public class RenderUtil
 		if (magnification < MIN_ZOOM_MAGNIFICATION)
 		{
 			// ignores minor FOV reductions (IE vanilla FOV effects), FOV increases (IE sprinting), and non-perspective projections (IE shadow map rendering)
-			return CameraZoom.NOT_ZOOMED;
+			cameraZoom.set(CameraZoom.NOT_ZOOMED);
+			return;
 		}
 		
 		// limit how much additional detail a strong zoom (IE a spyglass) can request,
@@ -394,7 +399,8 @@ public class RenderUtil
 		{
 			// looking almost straight up or down,
 			// no horizontal direction is being zoomed at
-			return CameraZoom.NOT_ZOOMED;
+			cameraZoom.set(CameraZoom.NOT_ZOOMED);
+			return;
 		}
 		
 		// same as the vertical FOV above, just for the horizontal FOV
@@ -404,62 +410,10 @@ public class RenderUtil
 				+ MathUtil.pow2(projectionMatrix.m02));
 		double coneTanHalfAngle = (1.0 / projectionXScale) * ZOOM_CONE_PADDING_MULTIPLIER;
 		
-		return new CameraZoom(
-				magnification, coneTanHalfAngle,
-				lookAtVector.x / lookLengthXZ, lookAtVector.z / lookLengthXZ);
-	}
-	
-	/**
-	 * Describes how far the camera is currently zoomed in
-	 * and which area of the world is visible through it.
-	 */
-	public static class CameraZoom
-	{
-		public static final CameraZoom NOT_ZOOMED = new CameraZoom(1.0, 0.0, 0.0, 0.0);
 		
-		/** how many times larger objects appear on screen compared to the player's FOV setting */
-		public final double magnification;
-		/** 
-		 * The tangent of half the zoom cone's horizontal angle. <br>
-		 * The cone is slightly wider than the zoomed camera's FOV so LODs 
-		 * just off screen can start loading before the camera pans over them. 
-		 */
-		public final double coneTanHalfAngle;
-		/** the camera's look direction projected onto the XZ plane, normalized */
-		public final double lookDirectionX;
-		public final double lookDirectionZ;
-		
-		
-		
-		private CameraZoom(double magnification, double coneTanHalfAngle, double lookDirectionX, double lookDirectionZ)
-		{
-			this.magnification = magnification;
-			this.coneTanHalfAngle = coneTanHalfAngle;
-			this.lookDirectionX = lookDirectionX;
-			this.lookDirectionZ = lookDirectionZ;
-		}
-		
-		/**
-		 * Returns true if any part of the given circle is visible through the zoomed camera. <br>
-		 * The check is done in 2D on the XZ plane.
-		 */
-		public boolean coneIntersectsCircle(double coneOriginX, double coneOriginZ, double circleCenterX, double circleCenterZ, double circleRadius)
-		{
-			double offsetX = circleCenterX - coneOriginX;
-			double offsetZ = circleCenterZ - coneOriginZ;
-			
-			double distanceAlongLook = (offsetX * this.lookDirectionX) + (offsetZ * this.lookDirectionZ);
-			if (distanceAlongLook < -circleRadius)
-			{
-				// entirely behind the camera
-				return false;
-			}
-			
-			// 2D cross product, how far the circle's center is from the camera's look line
-			double distanceAcrossLook = Math.abs((offsetX * this.lookDirectionZ) - (offsetZ * this.lookDirectionX));
-			return distanceAcrossLook <= (distanceAlongLook * this.coneTanHalfAngle) + circleRadius;
-		}
-		
+		cameraZoom.set(
+			magnification, coneTanHalfAngle,
+			lookAtVector.x / lookLengthXZ, lookAtVector.z / lookLengthXZ);
 	}
 	
 	//endregion

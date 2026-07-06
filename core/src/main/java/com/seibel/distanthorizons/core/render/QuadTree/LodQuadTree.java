@@ -35,6 +35,7 @@ import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos2D;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
+import com.seibel.distanthorizons.core.render.CameraZoom;
 import com.seibel.distanthorizons.core.render.RenderBufferHandler;
 import com.seibel.distanthorizons.core.render.RenderThreadTaskHandler;
 import com.seibel.distanthorizons.core.render.renderer.AbstractDebugWireframeRenderer;
@@ -123,7 +124,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	/** used to calculate when a detail drop will occur */
 	private double detailDropOffLogBase;
 	/** used to increase the detail of LODs visible through a zoomed in camera */
-	private RenderUtil.CameraZoom cameraZoom = RenderUtil.CameraZoom.NOT_ZOOMED;
+	private final CameraZoom cameraZoom = CameraZoom.createNotZoomed();
 	
 	/** the {@link DhSectionPos} that need to be retrieved/generated */
 	private final Set<Long> missingGenerationPosSet = Collections.newSetFromMap(new ConcurrentHashMap<>()); // concurrency is annoying but required due to needing to add/remove items in the world gen future
@@ -585,7 +586,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 			// detail levels finer than their own distance alone would request.
 			// Rendering them at the finer level keeps the tree consistent and only
 			// affects a thin shell of sections around the zoom cone.
-			if (this.cameraZoom.magnification > 1.0)
+			if (this.cameraZoom.magnification > CameraZoom.NO_MAGNIFICATION)
 			{
 				return this.onDesiredDetailLevel(quadNode, parentNode);
 			}
@@ -1125,7 +1126,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		
 		// LODs visible through a zoomed in camera appear closer than they actually are,
 		// using the magnified distance gives them the detail they'd have if the player walked up to them
-		if (this.cameraZoom.magnification > 1.0
+		if (this.cameraZoom.magnification > CameraZoom.NO_MAGNIFICATION
 			&& this.cameraZoom.coneIntersectsCircle(playerPos.x, playerPos.z, targetBlockPosX, targetBlockPosZ, targetBlockRadius))
 		{
 			blockDistance /= this.cameraZoom.magnification;
@@ -1142,7 +1143,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		this.detailDropOffDistanceUnit = Config.Client.Advanced.Graphics.Quality.horizontalQuality.get().distanceUnitInBlocks * LodUtil.CHUNK_WIDTH;
 		this.detailDropOffLogBase = Math.log(Config.Client.Advanced.Graphics.Quality.horizontalQuality.get().quadraticBase);
 		
-		this.cameraZoom = RenderUtil.getCameraZoom();
+		RenderUtil.updateCameraZoom(this.cameraZoom);
 		
 		this.maxLeafRenderDetailLevel = Config.Client.Advanced.Graphics.Quality.maxHorizontalResolution.get().detailLevel;
 		
