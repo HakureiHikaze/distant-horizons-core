@@ -123,7 +123,6 @@ void main()
     {
         // tile id -> grid cell -> exact texel.
         // texelFetch keeps the texture appear correctly regardless of the bound sampler's filtering
-        // TODO: May not need texelFetch anymore since the underlying sampler filtering issue was resolved
         ivec2 tileOrigin = ivec2(int(vTextureTileId % 256u), int(vTextureTileId / 256u)) * 16;
         ivec2 texelPos = tileOrigin + ivec2(clamp(blockFaceUv() * 16.0, 0.0, 15.0));
         vec4 tile = texelFetch(uBlockAtlas, texelPos, 0);
@@ -162,7 +161,9 @@ void main()
         }
     }
     
-    if (uNoiseEnabled)
+    if (uNoiseEnabled
+        // only apply noise to untextured blocks, don't need the fake texturing
+        && vTextureTileId == 0u)
     {
         applyNoise(fragColor, viewDist);
     }

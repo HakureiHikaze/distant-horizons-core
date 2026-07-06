@@ -55,9 +55,10 @@ public class BlockTextureRegistry
 	/** renders as a constant 1.0 color multiplier (flat colors) */
 	public static final short FLAT_TILE_ID = 0;
 	
-	public static final int TILE_WIDTH = 16;
+	/** measured in pixels */
+	public static final int TILE_HEIGHT_AND_WIDTH = 16;
 	/** RGBA */
-	public static final int TILE_BYTE_COUNT = TILE_WIDTH * TILE_WIDTH * 4;
+	public static final int TILE_BYTE_COUNT = TILE_HEIGHT_AND_WIDTH * TILE_HEIGHT_AND_WIDTH * 4;
 	
 	/**
 	 * tile ids are stored in 16 vertex bits,
@@ -267,16 +268,16 @@ public class BlockTextureRegistry
 		
 		byte[] uploadPixels = new byte[TILE_BYTE_COUNT];
 		boolean anyPixelDiffersFromAverage = false;
-		for (int v = 0; v < TILE_WIDTH; v++)
+		for (int v = 0; v < TILE_HEIGHT_AND_WIDTH; v++)
 		{
-			for (int u = 0; u < TILE_WIDTH; u++)
+			for (int u = 0; u < TILE_HEIGHT_AND_WIDTH; u++)
 			{
 				// 1x1 fallback tiles repeat their single pixel
-				int sourceIndex = ((v * faceTexture.height / TILE_WIDTH) * faceTexture.width)
-						+ (u * faceTexture.width / TILE_WIDTH);
+				int sourceIndex = ((v * faceTexture.height / TILE_HEIGHT_AND_WIDTH) * faceTexture.width)
+						+ (u * faceTexture.width / TILE_HEIGHT_AND_WIDTH);
 				int argb = argbPixels[sourceIndex];
 				
-				int outIndex = ((v * TILE_WIDTH) + u) * 4;
+				int outIndex = ((v * TILE_HEIGHT_AND_WIDTH) + u) * 4;
 				
 				if (faceTexture.uploadAsColorRatio)
 				{

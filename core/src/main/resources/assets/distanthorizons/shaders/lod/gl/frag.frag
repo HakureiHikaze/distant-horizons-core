@@ -1,8 +1,8 @@
 #version 150
 
+in vec4 vPos;
 in vec4 vertexColor;
 in vec3 vertexWorldPos;
-in vec4 vPos;
 in vec3 vBlockPos;
 flat in uint vNormalIndex;
 flat in uint vTextureTileId;
@@ -10,10 +10,10 @@ in vec4 gl_FragCoord;
 
 out vec4 fragColor;
 
-// Block texture atlas, tiles are color ratios relative to the LOD's flat color (128/255 = 1.0, IE unchanged)
-uniform sampler2DArray uBlockAtlas;
-uniform bool uTexturedLodsEnabled;
-
+// Block texture atlas, tiles are color ratios relative to the LOD's flat color (128/255 = 1.0, IE unchanged).
+// Tiles are packed in a 2D grid, 256 tiles per row,
+// see BlazeBlockTextureAtlas.TILES_PER_ROW
+uniform sampler2D uBlockAtlas;
 
 // Fade/Clip Uniforms
 uniform float uClipDistance = 0.0;
@@ -35,12 +35,12 @@ float rand(vec3 co) { return rand(co.xy + rand(co.z)); }
 // EG. setting stepSize to 4 then this would be the result of this function
 // In:  0.0, 0.1, 0.2, 0.3,  0.4,  0.5, 0.6, ..., 1.1, 1.2, 1.3
 // Out: 0.0, 0.0, 0.0, 0.25, 0.25, 0.5, 0.5, ..., 1.0, 1.0, 1.25
-vec3 quantize(vec3 val, int stepSize) 
+vec3 quantize(vec3 val, int stepSize)
 {
     return floor(val * stepSize) / stepSize;
 }
 
-void applyNoise(inout vec4 fragColor, const in float viewDist) 
+void applyNoise(inout vec4 fragColor, const in float viewDist)
 {
     vec3 vertexNormal = normalize(cross(dFdy(vPos.xyz), dFdx(vPos.xyz)));
     // This bit of code is required to fix the vertex position problem cus of floats in the verted world position varuable
@@ -69,7 +69,7 @@ void applyNoise(inout vec4 fragColor, const in float viewDist)
 }
 
 /** returns a normalized value between 0.0 and 1.0 */
-float bayerMatrix4x4(vec2 st) 
+float bayerMatrix4x4(vec2 st)
 {
     int x = int(mod(st.x, 4.0));
     int y = int(mod(st.y, 4.0));
@@ -115,16 +115,17 @@ void main()
 {
     fragColor = vertexColor;
     
-    if (uTexturedLodsEnabled && vTextureTileId != 0u)
+    if (vTextureTileId != 0u)
     {
+        // tile id -> grid cell -> exact texel.
         // texelFetch keeps the texture appear correctly regardless of the bound sampler's filtering
-        // TODO: May not need texelFetch anymore since the underlying sampler filtering issue was resolved
-        ivec2 texelPos = ivec2(clamp(blockFaceUv() * 16.0, 0.0, 15.0));
-        vec4 tile = texelFetch(uBlockAtlas, ivec3(texelPos, int(vTextureTileId)), 0);
+        ivec2 tileOrigin = ivec2(int(vTextureTileId % 256u), int(vTextureTileId / 256u)) * 16;
+        ivec2 texelPos = tileOrigin + ivec2(clamp(blockFaceUv() * 16.0, 0.0, 15.0));
+        vec4 tile = texelFetch(uBlockAtlas, texelPos, 0);
         
         // Cutout texels (IE leaf gaps) blend toward the LOD's flat color
         // We cannot discard them as then it would show the void rather than more terrain.
-        // Ratio encode the tiles so so it preserves the LOD's tint and shading
+        // Ratio encode the tiles so it preserves the LOD's tint and shading
         fragColor.rgb = mix(fragColor.rgb, clamp(fragColor.rgb * (tile.rgb * 2.0), 0.0, 1.0), tile.a);
     }
     
@@ -156,7 +157,9 @@ void main()
         }
     }
     
-    if (uNoiseEnabled)
+    if (uNoiseEnabled
+        // only apply noise to untextured blocks, don't need the fake texturing
+        && vTextureTileId == 0u)
     {
         applyNoise(fragColor, viewDist);
     }
