@@ -240,10 +240,11 @@ public class Config
 						.comment(""
 							+ "If true LOD quality will increase when the camera is zoomed in, \n"
 							+ "IE when using a spyglass or zoom mod. \n"
-							+ " \n"
-							+ "Only LODs visible through the zoomed camera are affected. \n"
-							+ "They're given the detail they'd have if the player was as close \n"
-							+ "as the zoom makes them appear. \n"
+							+ "\n"
+							+ "Only LODs visible through the camera view are affected. \n"
+							+ "\n"
+							+ "When zoomed in LODs will load to the same detail level \n"
+							+ "they would have if you were close to them. \n"
 							+ "")
 						.build();
 					

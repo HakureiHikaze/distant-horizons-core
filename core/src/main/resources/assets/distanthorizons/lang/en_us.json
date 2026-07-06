@@ -134,7 +134,7 @@
   "distanthorizons.config.client.advanced.graphics.quality.increaseQualityWhenZoomedIn":
     "Increase Quality When Zoomed In",
   "distanthorizons.config.client.advanced.graphics.quality.increaseQualityWhenZoomedIn.@tooltip":
-    "If true LOD quality will increase when the camera is zoomed in, \nIE when using a spyglass or zoom mod. \n\nOnly LODs visible through the zoomed camera are affected. \nThey're given the detail they'd have if the player was as close \nas the zoom makes them appear.",
+    "If true LOD quality will increase when the camera is zoomed in, \nIE when using a spyglass or zoom mod. \n\nOnly LODs visible through the camera view are affected. \n\nWhen zoomed in LODs will load to the same detail level \nthey would have if you were close to them.",
   "distanthorizons.config.client.advanced.graphics.quality.maxZoomQualityIncrease":
     "Max Zoom Quality Increase",
   "distanthorizons.config.client.advanced.graphics.quality.maxZoomQualityIncrease.@tooltip":
