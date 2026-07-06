@@ -223,18 +223,18 @@ public class RenderUtil
 		float nearClipPlane;
 		if (Config.Client.Advanced.Debugging.lodOnlyMode.get())
 		{
-			nearClipPlane = 0.1f;
+			nearClipPlane = 0.5f;
 		}
 		else
 		{
 			nearClipPlane = vanillaBlockRenderedDistance;
 			nearClipPlane *= overdrawPreventionPercent; 
 			
-			// the near clip plane should never be closer than 1/10th of a block,
+			// the near clip plane should never be closer than 1 block,
 			// otherwise Z-fighting and other issues may occur
-			if (nearClipPlane < 0.1f)
+			if (nearClipPlane < 1.0f)
 			{
-				nearClipPlane = 0.1f;
+				nearClipPlane = 1.0f;
 			}
 		}
 		
