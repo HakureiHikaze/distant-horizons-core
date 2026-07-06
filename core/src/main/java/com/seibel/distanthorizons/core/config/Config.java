@@ -284,6 +284,51 @@ public class Config
 						.addListener(ReloadLodsConfigEventHandler.DELAYED_INSTANCE)
 						.build();
 					
+					public static ConfigEntry<String> blocksDontRenderTextureCsv = new ConfigEntry.Builder<String>()
+						.set("minecraft:bamboo")
+						.setAppearance(EConfigEntryAppearance.ALL)
+						.comment("" 
+							+ "A comma separated list of block resource locations \n"
+							+ "that DH won't render textures on. \n"
+							+ "Partial matches/incomplete resource locations will also match. \n"
+							+ "\n"
+							+ "Example: \"minecraft:grass_block,nylium\" \n"
+							+ "\n"
+							+ "Changes require a restart. \n"
+							+ "")
+						.build();
+					
+					public static ConfigEntry<String> blocksDontUseSideTextureCsv = new ConfigEntry.Builder<String>()
+						.set("grass_block," +
+							"mycelium," +
+							"nylium," +
+							"dirt_path")
+						.setAppearance(EConfigEntryAppearance.ALL)
+						.comment(""
+							+ "A comma separated list of block resource locations \n"
+							+ "that DH will render their sides using the bottom texture. \n"
+							+ "Partial matches/incomplete resource locations will also match. \n"
+							+ "\n"
+							+ "Example: \"minecraft:grass_block,nylium\" \n"
+							+ "\n"
+							+ "Changes require a restart. \n"
+							+ "")
+						.build();
+					
+					public static ConfigEntry<String> blockTagsDontUseSideTextureCsv = new ConfigEntry.Builder<String>()
+						.set("grass_blocks," +
+							"nylium")
+						.setAppearance(EConfigEntryAppearance.ALL)
+						.comment(""
+							+ "A comma separated list of tag names \n"
+							+ "that DH will render their sides using the bottom texture. \n"
+							+ "\n"
+							+ "Example: \"grass_blocks,nylium\" \n"
+							+ "\n"
+							+ "Changes require a restart. \n"
+							+ "")
+						.build();
+					
 					public static ConfigUISpacer qualitySpacer = new ConfigUISpacer.Builder().build();
 					
 					public static ConfigEntry<EDhApiTransparency> transparency = new ConfigEntry.Builder<EDhApiTransparency>()

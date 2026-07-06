@@ -161,6 +161,18 @@
     "Grass Side Rendering",
   "distanthorizons.config.client.advanced.graphics.quality.grassSideRendering.@tooltip":
     "How should the sides and bottom of grass block LODs render?",
+  "distanthorizons.config.client.advanced.graphics.quality.blocksDontRenderTextureCsv":
+    "Blocks Don't Render Texture",
+  "distanthorizons.config.client.advanced.graphics.quality.blocksDontRenderTextureCsv.@tooltip":
+    "A comma separated list of block resource locations\n that DH won't render textures on.\n Partial matches/incomplete resource locations will also match.\n\n Example: \"minecraft:grass_block,nylium\"\n\n Changes require a restart.",
+  "distanthorizons.config.client.advanced.graphics.quality.blocksDontUseSideTextureCsv":
+    "Blocks Don't Use Side Texture",
+  "distanthorizons.config.client.advanced.graphics.quality.blocksDontUseSideTextureCsv.@tooltip":
+    "A comma separated list of block resource locations\n that DH will render their sides using the bottom texture. \nPartial matches/incomplete resource locations will also match. \n\nExample: \"minecraft:grass_block,nylium\" \n\nChanges require a restart.",
+  "distanthorizons.config.client.advanced.graphics.quality.blockTagsDontUseSideTextureCsv":
+    "Block Tags Don't Use Side Texture",
+  "distanthorizons.config.client.advanced.graphics.quality.blockTagsDontUseSideTextureCsv.@tooltip":
+    "A comma separated list of tag names\n that DH will render their sides using the bottom texture. \n\nExample: \"grass_blocks,nylium\" \n\nChanges require a restart.",
   "distanthorizons.config.client.advanced.graphics.quality.ditherDhFade":
     "Fade Nearby DH LODs",
   "distanthorizons.config.client.advanced.graphics.quality.ditherDhFade.@tooltip":

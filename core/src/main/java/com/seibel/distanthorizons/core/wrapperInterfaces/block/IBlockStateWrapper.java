@@ -60,6 +60,18 @@ public interface IBlockStateWrapper extends IDhApiBlockStateWrapper
 	 * IE Iron, diamond, gold, etc. 
 	 */
 	boolean isBeaconBaseBlock();
+	
+	/**
+	 * Some blocks don't pull their texture properly (like bamboo).
+	 * In those cases it's best to just render their base color.
+	 */
+	boolean renderTexture();
+	/**
+	 * some blocks like grass blocks should use their bottom texture to 
+	 * prevent incorrectly repeating the side texture on tall LODs. 
+	 */
+	boolean useBottomTextureForSides();
+	
 	/**
 	 * if true this block can have its color overridden
 	 * by {@link DhApiBlockColorOverrideEvent}
