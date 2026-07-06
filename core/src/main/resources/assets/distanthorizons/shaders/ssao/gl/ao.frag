@@ -1,4 +1,4 @@
-#version 150 core
+#version 330 core
 #extension GL_ARB_derivative_control : enable
 
 #define SAMPLE_MAX 64

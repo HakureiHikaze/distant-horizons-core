@@ -1,4 +1,4 @@
-#version 150 core
+#version 330 core
 
 in vec3 vPosition;
 in vec4 aColor; // RGBA_FLOAT_COLOR

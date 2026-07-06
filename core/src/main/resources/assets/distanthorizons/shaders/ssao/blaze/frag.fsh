@@ -1,4 +1,4 @@
-#version 150 core
+#version 330 core
 
 #define SAMPLE_MAX 64
 

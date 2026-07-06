@@ -1,4 +1,4 @@
-#version 150 core
+#version 330 core
 
 in uvec4 vPosition;
 in vec4 color;

@@ -1,4 +1,4 @@
-#version 150
+#version 330
 
 // order matters, this must match the vertex shader's outputs
 in vec3 vPos;
