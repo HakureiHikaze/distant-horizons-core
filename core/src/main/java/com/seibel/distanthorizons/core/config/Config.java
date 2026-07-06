@@ -46,7 +46,7 @@ import java.util.List;
  * @author coolGi
  * @see ConfigHandler
  */
-@SuppressWarnings("ConcatenationWithEmptyString")
+@SuppressWarnings({"ConcatenationWithEmptyString","unused"})
 public class Config
 {
 	private static final DhLogger LOGGER = new DhLoggerBuilder().build();
@@ -1308,19 +1308,19 @@ public class Config
 						.build();
 					
 					public static ConfigEntry<List<String>> listTest = new ConfigEntry.Builder<List<String>>()
-						.set(new ArrayList<String>(Arrays.asList("option 1", "option 2", "option 3")))
+						.set(new ArrayList<>(Arrays.asList("option 1", "option 2", "option 3")))
 						.setAppearance(EConfigEntryAppearance.ONLY_IN_FILE) // no GUI renderer set up currently
 						.build();
 					
 					public static ConfigEntry<Map<String, String>> mapTest = new ConfigEntry.Builder<Map<String, String>>()
-						.set(new HashMap<String, String>())
+						.set(new HashMap<>())
 						.setAppearance(EConfigEntryAppearance.ONLY_IN_FILE) // no GUI renderer set up currently
 						.build();
 					
 					public static ConfigUIButton uiButtonTest = new ConfigUIButton(() ->
 					{
 						// running on a separate thread is necessary to prevent locking
-						new Thread(() -> onButtonPressed()).start();
+						new Thread(ExampleConfigScreen::onButtonPressed).start();
 					});
 					public static void onButtonPressed()
 					{
