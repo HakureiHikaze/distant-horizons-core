@@ -76,7 +76,7 @@ public final class BufferQuad
 	public BufferQuad() {}
 	
 	public void set(short x, short y, short z, short widthEastWest, short widthNorthSouthOrHeight,
-		int color, byte irisBlockMaterialId, byte skylight, byte blockLight,
+		int color, short textureTileId, byte irisBlockMaterialId, byte skylight, byte blockLight,
 		EDhDirection direction)
 	{
 		if (widthEastWest == 0 || widthNorthSouthOrHeight == 0)
@@ -93,13 +93,10 @@ public final class BufferQuad
 		this.y = y;
 		this.z = z;
 		
-		// quads are pooled so this must be reset here,
-		// the actual tile id is assigned by LodQuadBuilder after set() returns
-		this.textureTileId = 0;
-		
 		this.widthEastWest = widthEastWest;
 		this.widthNorthSouthOrHeight = widthNorthSouthOrHeight;
 		this.color = color;
+		this.textureTileId = textureTileId;
 		this.irisBlockMaterialId = irisBlockMaterialId;
 		this.skyLight = skylight;
 		this.blockLight = blockLight;

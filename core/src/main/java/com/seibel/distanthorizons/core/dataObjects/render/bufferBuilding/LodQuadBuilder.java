@@ -209,8 +209,7 @@ public class LodQuadBuilder implements AutoCloseable
 		}
 		
 		BufferQuad quad = this.getOrCreateBufferQuad();
-		quad.set(x, y, z, width, height, color, irisBlockMaterialId, skyLight, blockLight, dir);
-		quad.textureTileId = this.getCurrentFaceTileId(dir);
+		quad.set(x, y, z, width, height, color, this.getCurrentFaceTileId(dir), irisBlockMaterialId, skyLight, blockLight, dir);
 		if (!quadList.isEmpty()
 			&& (
 				quadList.get(quadList.size() - 1).tryMerge(quad, BufferMergeDirectionEnum.EastWest)
@@ -233,8 +232,7 @@ public class LodQuadBuilder implements AutoCloseable
 				: this.opaqueQuads[EDhDirection.UP.faceIndex];
 		
 		BufferQuad quad = this.getOrCreateBufferQuad();
-		quad.set(minX, maxY, minZ, blockWidth, blockWidth, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.UP);
-		quad.textureTileId = this.getCurrentFaceTileId(EDhDirection.UP);
+		quad.set(minX, maxY, minZ, blockWidth, blockWidth, color, this.getCurrentFaceTileId(EDhDirection.UP), irisBlockMaterialId, skylight, blocklight, EDhDirection.UP);
 		quadList.add(quad);
 	}
 	
@@ -245,8 +243,7 @@ public class LodQuadBuilder implements AutoCloseable
 				: this.opaqueQuads[EDhDirection.DOWN.faceIndex];
 		
 		BufferQuad quad = this.getOrCreateBufferQuad();
-		quad.set(x, y, z, blockWidth, blockWidth, color, irisBlockMaterialId, skylight, blocklight, EDhDirection.DOWN);
-		quad.textureTileId = this.getCurrentFaceTileId(EDhDirection.DOWN);
+		quad.set(x, y, z, blockWidth, blockWidth, color, this.getCurrentFaceTileId(EDhDirection.DOWN), irisBlockMaterialId, skylight, blocklight, EDhDirection.DOWN);
 		quadArray.add(quad);
 	}
 	
