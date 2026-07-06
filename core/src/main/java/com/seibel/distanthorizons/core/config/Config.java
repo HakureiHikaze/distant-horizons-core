@@ -140,6 +140,8 @@ public class Config
 				public static ConfigCategory fog = new ConfigCategory.Builder().set(Fog.class).build();
 				public static ConfigUISpacer fogSpacer = new ConfigUISpacer.Builder().build();
 				
+				public static ConfigUiLinkedEntry quickEnableTexturedLods = new ConfigUiLinkedEntry(Texture.enableTexturedLods);
+				public static ConfigCategory texture = new ConfigCategory.Builder().set(Texture.class).build();
 				public static ConfigUiLinkedEntry quickEnableNoiseTexture = new ConfigUiLinkedEntry(NoiseTexture.enableNoiseTexture);
 				public static ConfigCategory noiseTexture = new ConfigCategory.Builder().set(NoiseTexture.class).build();
 				public static ConfigUISpacer noiseTextureSpacer = new ConfigUISpacer.Builder().build();
@@ -223,6 +225,8 @@ public class Config
 						.addListener(ReloadLodsConfigEventHandler.DELAYED_INSTANCE)
 						.build();
 					
+					public static ConfigUISpacer cameraZoomSpacer = new ConfigUISpacer.Builder().build();
+					
 					public static ConfigEntry<Boolean> useCameraPositionForQualityDropOff = new ConfigEntry.Builder<Boolean>()
 						.set(true)
 						.comment(""
@@ -256,77 +260,6 @@ public class Config
 							+ "but will increase memory and GPU usage while zoomed in. \n"
 							+ " \n"
 							+ "A vanilla spyglass needs 4 detail levels to reach its full quality. \n"
-							+ "")
-						.build();
-					
-					public static ConfigEntry<Boolean> enableTexturedLods = new ConfigEntry.Builder<Boolean>()
-						.set(true)
-						.comment(""
-							+ "If true nearby and zoomed-in LODs will render with their block's \n"
-							+ "actual texture instead of a single flat color. \n"
-							+ " \n"
-							+ "Only applies to high detail LODs where the texture is actually visible, \n"
-							+ "distant LODs always use flat colors. \n"
-							+ "Some shader packs nay not have an affect. \n"
-							+ "")
-						.addListener(ReloadLodsConfigEventHandler.DELAYED_INSTANCE)
-						.build();
-					
-					public static ConfigEntry<Integer> maxTexturedLodDetailLevel = new ConfigEntry.Builder<Integer>()
-						.setMinDefaultMax(0, 2, 4)
-						.comment(""
-							+ "The highest detail level number that can render with block textures. \n"
-							+ "At higher detail levels each LOD covers multiple blocks, \n"
-							+ "which can essentially make textures smaller than a pixel and therefore invisible. \n"
-							+ " \n"
-							+ "Larger numbers texture more distant LODs \n"
-							+ "but increase memory usage. \n"
-							+ "")
-						.addListener(ReloadLodsConfigEventHandler.DELAYED_INSTANCE)
-						.build();
-					
-					public static ConfigEntry<String> blocksDontRenderTextureCsv = new ConfigEntry.Builder<String>()
-						.set("minecraft:bamboo")
-						.setAppearance(EConfigEntryAppearance.ALL)
-						.comment("" 
-							+ "A comma separated list of block resource locations \n"
-							+ "that DH won't render textures on. \n"
-							+ "Partial matches/incomplete resource locations will also match. \n"
-							+ "\n"
-							+ "Example: \"minecraft:grass_block,nylium\" \n"
-							+ "\n"
-							+ "Changes require a restart. \n"
-							+ "")
-						.build();
-					
-					public static ConfigEntry<String> blocksDontUseSideTextureCsv = new ConfigEntry.Builder<String>()
-						.set("grass_block," +
-							"mycelium," +
-							"nylium," +
-							"dirt_path")
-						.setAppearance(EConfigEntryAppearance.ALL)
-						.comment(""
-							+ "A comma separated list of block resource locations \n"
-							+ "that DH will render their sides using the bottom texture. \n"
-							+ "Partial matches/incomplete resource locations will also match. \n"
-							+ "\n"
-							+ "Example: \"minecraft:grass_block,nylium\" \n"
-							+ "\n"
-							+ "Changes require a restart. \n"
-							+ "")
-						.build();
-					
-					public static ConfigEntry<String> blockTagsDontUseSideTextureCsv = new ConfigEntry.Builder<String>()
-						.set("grass_blocks," +
-							"nylium")
-						.setAppearance(EConfigEntryAppearance.ALL)
-						.comment(""
-							+ "A comma separated list of tag names \n"
-							+ "that DH will render their sides using the bottom texture. \n"
-							+ "\n"
-							+ "Example: \"grass_blocks,nylium\" \n"
-							+ "\n"
-							+ "Changes require a restart. \n"
 							+ "")
 						.build();
 					
@@ -723,6 +656,81 @@ public class Config
 						.comment(""
 							+ "Defines how far should the noise texture render before it fades away. (in blocks) \n"
 							+ "Set to 0 to disable noise from fading away \n"
+							+ "")
+						.build();
+					
+				}
+				
+				public static class Texture
+				{
+					public static ConfigEntry<Boolean> enableTexturedLods = new ConfigEntry.Builder<Boolean>()
+						.set(true)
+						.comment(""
+							+ "If true nearby and zoomed-in LODs will render with their block's \n"
+							+ "actual texture instead of a single flat color. \n"
+							+ " \n"
+							+ "Only applies to high detail LODs where the texture is actually visible, \n"
+							+ "distant LODs always use flat colors. \n"
+							+ "Some shader packs nay not have an affect. \n"
+							+ "")
+						.addListener(ReloadLodsConfigEventHandler.DELAYED_INSTANCE)
+						.build();
+					
+					public static ConfigEntry<Integer> maxTexturedLodDetailLevel = new ConfigEntry.Builder<Integer>()
+						.setMinDefaultMax(0, 2, 4)
+						.comment(""
+							+ "The highest detail level number that can render with block textures. \n"
+							+ "At higher detail levels each LOD covers multiple blocks, \n"
+							+ "which can essentially make textures smaller than a pixel and therefore invisible. \n"
+							+ " \n"
+							+ "Larger numbers texture more distant LODs \n"
+							+ "but increase memory usage. \n"
+							+ "")
+						.addListener(ReloadLodsConfigEventHandler.DELAYED_INSTANCE)
+						.build();
+					
+					public static ConfigEntry<String> blocksDontRenderTextureCsv = new ConfigEntry.Builder<String>()
+						.set("minecraft:bamboo")
+						.setAppearance(EConfigEntryAppearance.ALL)
+						.comment(""
+							+ "A comma separated list of block resource locations \n"
+							+ "that DH won't render textures on. \n"
+							+ "Partial matches/incomplete resource locations will also match. \n"
+							+ "\n"
+							+ "Example: \"minecraft:grass_block,nylium\" \n"
+							+ "\n"
+							+ "Changes require a restart. \n"
+							+ "")
+						.build();
+					
+					public static ConfigEntry<String> blocksDontUseSideTextureCsv = new ConfigEntry.Builder<String>()
+						.set("grass_block," +
+							"mycelium," +
+							"nylium," +
+							"dirt_path")
+						.setAppearance(EConfigEntryAppearance.ALL)
+						.comment(""
+							+ "A comma separated list of block resource locations \n"
+							+ "that DH will render their sides using the bottom texture. \n"
+							+ "Partial matches/incomplete resource locations will also match. \n"
+							+ "\n"
+							+ "Example: \"minecraft:grass_block,nylium\" \n"
+							+ "\n"
+							+ "Changes require a restart. \n"
+							+ "")
+						.build();
+					
+					public static ConfigEntry<String> blockTagsDontUseSideTextureCsv = new ConfigEntry.Builder<String>()
+						.set("grass_blocks," +
+							"nylium")
+						.setAppearance(EConfigEntryAppearance.ALL)
+						.comment(""
+							+ "A comma separated list of tag names \n"
+							+ "that DH will render their sides using the bottom texture. \n"
+							+ "\n"
+							+ "Example: \"grass_blocks,nylium\" \n"
+							+ "\n"
+							+ "Changes require a restart. \n"
 							+ "")
 						.build();
 					

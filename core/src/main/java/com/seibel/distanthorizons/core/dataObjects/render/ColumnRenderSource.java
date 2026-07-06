@@ -69,8 +69,8 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	 */
 	public final ByteArrayList textureSetPaletteIndices;
 	/**
-	 * Palette index -> {@link com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureRegistry} set id. <br>
-	 * Index {@link ColumnRenderSource#FLAT_PALETTE_INDEX} is always the flat "no texture" set.
+	 * Palette index -> {@link BlockTextureRegistry} set id. <br>
+	 * Index {@link BlockTextureRegistry#FLAT_TILE_ID} is always the flat "no texture" set.
 	 */
 	public final ShortArrayList texturePalette = new ShortArrayList();
 	
@@ -125,8 +125,8 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	
 	public static boolean texturedLodsEnabledAtDetailLevel(byte dataDetailLevel)
 	{
-		return Config.Client.Advanced.Graphics.Quality.enableTexturedLods.get()
-			&& dataDetailLevel <= Config.Client.Advanced.Graphics.Quality.maxTexturedLodDetailLevel.get();
+		return Config.Client.Advanced.Graphics.Texture.enableTexturedLods.get()
+			&& dataDetailLevel <= Config.Client.Advanced.Graphics.Texture.maxTexturedLodDetailLevel.get();
 	}
 	
 	/** @return whether this section is storing texture ids */

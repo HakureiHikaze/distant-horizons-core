@@ -139,14 +139,6 @@
     "Max Zoom Quality Increase",
   "distanthorizons.config.client.advanced.graphics.quality.maxZoomQualityIncrease.@tooltip":
     "How many detail levels zooming in can increase LOD quality by. \nHigher numbers allow stronger zooms to render crisper terrain, \nbut will increase memory and GPU usage while zoomed in. \n\nA vanilla spyglass needs 4 detail levels to reach its full quality.",
-  "distanthorizons.config.client.advanced.graphics.quality.enableTexturedLods":
-    "Textured LODs",
-  "distanthorizons.config.client.advanced.graphics.quality.enableTexturedLods.@tooltip":
-    "If true nearby and zoomed-in LODs will render with their block's \nactual texture and silhouette instead of a single flat color. \n\nOnly applies to high detail LODs where the texture is actually visible, \ndistant LODs always use flat colors. \nHas no effect while a shader pack is active, since shader packs \nrender LODs with their own programs.",
-  "distanthorizons.config.client.advanced.graphics.quality.maxTexturedLodDetailLevel":
-    "Max Textured Detail Level",
-  "distanthorizons.config.client.advanced.graphics.quality.maxTexturedLodDetailLevel.@tooltip":
-    "The highest detail level number that can render with block textures. \nAt higher detail levels each LOD covers multiple blocks, \nmaking textures smaller than a pixel and therefore invisible. \n\nLarger numbers texture more distant LODs \nbut increase memory usage.",
   "distanthorizons.config.client.advanced.graphics.quality.horizontalScale":
     "Horizontal Scale",
   "distanthorizons.config.client.advanced.graphics.quality.horizontalScale.@tooltip":
@@ -161,18 +153,6 @@
     "Grass Side Rendering",
   "distanthorizons.config.client.advanced.graphics.quality.grassSideRendering.@tooltip":
     "How should the sides and bottom of grass block LODs render?",
-  "distanthorizons.config.client.advanced.graphics.quality.blocksDontRenderTextureCsv":
-    "Blocks Don't Render Texture",
-  "distanthorizons.config.client.advanced.graphics.quality.blocksDontRenderTextureCsv.@tooltip":
-    "A comma separated list of block resource locations\n that DH won't render textures on.\n Partial matches/incomplete resource locations will also match.\n\n Example: \"minecraft:grass_block,nylium\"\n\n Changes require a restart.",
-  "distanthorizons.config.client.advanced.graphics.quality.blocksDontUseSideTextureCsv":
-    "Blocks Don't Use Side Texture",
-  "distanthorizons.config.client.advanced.graphics.quality.blocksDontUseSideTextureCsv.@tooltip":
-    "A comma separated list of block resource locations\n that DH will render their sides using the bottom texture. \nPartial matches/incomplete resource locations will also match. \n\nExample: \"minecraft:grass_block,nylium\" \n\nChanges require a restart.",
-  "distanthorizons.config.client.advanced.graphics.quality.blockTagsDontUseSideTextureCsv":
-    "Block Tags Don't Use Side Texture",
-  "distanthorizons.config.client.advanced.graphics.quality.blockTagsDontUseSideTextureCsv.@tooltip":
-    "A comma separated list of tag names\n that DH will render their sides using the bottom texture. \n\nExample: \"grass_blocks,nylium\" \n\nChanges require a restart.",
   "distanthorizons.config.client.advanced.graphics.quality.ditherDhFade":
     "Fade Nearby DH LODs",
   "distanthorizons.config.client.advanced.graphics.quality.ditherDhFade.@tooltip":
@@ -323,6 +303,31 @@
     "Height Fog Density",
   "distanthorizons.config.client.advanced.graphics.fog.heightFog.heightFogDensity.@tooltip":
     "What is the height fog's density? ",
+    
+    
+  "distanthorizons.config.client.advanced.graphics.texture":
+    "LOD Textures",
+
+  "distanthorizons.config.client.advanced.graphics.texture.enableTexturedLods":
+    "Enable LOD Textures",
+  "distanthorizons.config.client.advanced.graphics.texture.enableTexturedLods.@tooltip":
+    "If true nearby and zoomed-in LODs will render with their block's \nactual texture and silhouette instead of a single flat color. \n\nOnly applies to high detail LODs where the texture is actually visible, \ndistant LODs always use flat colors. \nHas no effect while a shader pack is active, since shader packs \nrender LODs with their own programs.",
+  "distanthorizons.config.client.advanced.graphics.texture.maxTexturedLodDetailLevel":
+    "Max Textured Detail Level",
+  "distanthorizons.config.client.advanced.graphics.texture.maxTexturedLodDetailLevel.@tooltip":
+    "The highest detail level number that can render with block textures. \nAt higher detail levels each LOD covers multiple blocks, \nmaking textures smaller than a pixel and therefore invisible. \n\nLarger numbers texture more distant LODs \nbut increase memory usage.",
+  "distanthorizons.config.client.advanced.graphics.texture.blocksDontRenderTextureCsv":
+    "Blocks Don't Render Texture",
+  "distanthorizons.config.client.advanced.graphics.texture.blocksDontRenderTextureCsv.@tooltip":
+    "A comma separated list of block resource locations\n that DH won't render textures on.\n Partial matches/incomplete resource locations will also match.\n\n Example: \"minecraft:grass_block,nylium\"\n\n Changes require a restart.",
+  "distanthorizons.config.client.advanced.graphics.texture.blocksDontUseSideTextureCsv":
+    "Blocks Don't Use Side Texture",
+  "distanthorizons.config.client.advanced.graphics.texture.blocksDontUseSideTextureCsv.@tooltip":
+    "A comma separated list of block resource locations\n that DH will render their sides using the bottom texture. \nPartial matches/incomplete resource locations will also match. \n\nExample: \"minecraft:grass_block,nylium\" \n\nChanges require a restart.",
+  "distanthorizons.config.client.advanced.graphics.texture.blockTagsDontUseSideTextureCsv":
+    "Block Tags Don't Use Side Texture",
+  "distanthorizons.config.client.advanced.graphics.texture.blockTagsDontUseSideTextureCsv.@tooltip":
+    "A comma separated list of tag names\n that DH will render their sides using the bottom texture. \n\nExample: \"grass_blocks,nylium\" \n\nChanges require a restart.",
     
     
   
