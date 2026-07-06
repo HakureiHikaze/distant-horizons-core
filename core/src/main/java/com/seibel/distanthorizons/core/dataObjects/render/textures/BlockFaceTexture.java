@@ -36,40 +36,49 @@ public class BlockFaceTexture
 	 */
 	public final int[] argbPixels;
 	
-	/** true if these pixels should be multiplied by a position specific tint before rendering (IE grass or leaf colors) */
+	/** 
+	 * true if these pixels should be multiplied by a position specific tint before rendering (IE grass or leaf colors)
+	 * @deprecated currently all textures are treated as tinted = true
+	 */
+	@Deprecated
 	public final boolean tinted;
-	/** true if any pixel is semi-transparent (IE glass or water), meaning the transparent render pass is needed */
-	public final boolean semiTransparent;
+	public final boolean uploadAsColorRatio;
 	
 	
 	
-	//=============//
-	// constructor //
-	//=============//
+	//==============//
+	// constructors //
+	//==============//
 	//region
 	
-	public BlockFaceTexture(int width, int height, int[] argbPixels, boolean tinted)
+	public static BlockFaceTexture createSolidColor(int argbColor)
+	{ return new BlockFaceTexture(1, 1, new int[] { argbColor }, false, false); }
+	
+	public static BlockFaceTexture createErrorGridTexture()
+	{
+		// similar pink/black grid used by source engine games for missing textures
+		int[] argbPixels = new int[] 
+		{
+			ColorUtil.HOT_PINK, // top left
+			ColorUtil.BLACK, // top right
+			
+			ColorUtil.BLACK, // bottom left
+			ColorUtil.HOT_PINK, // bottom right
+		};
+		return new BlockFaceTexture(2, 2, argbPixels, false, false); 
+	}
+	
+	public static BlockFaceTexture createTexture(int width, int height, int[] argbPixels, boolean tinted)
+	{ return new BlockFaceTexture(width, height, argbPixels, tinted, true); }
+	
+	private BlockFaceTexture(int width, int height, int[] argbPixels, boolean tinted, boolean uploadAsColorRatio)
 	{
 		this.width = width;
 		this.height = height;
 		this.argbPixels = argbPixels;
 		this.tinted = tinted;
-		
-		boolean semiTransparentFound = false;
-		for (int i = 0; i < argbPixels.length; i++)
-		{
-			int alpha = ColorUtil.getAlpha(argbPixels[i]);
-			if (alpha != 255)
-			{
-				semiTransparentFound = true;
-				break;
-			}
-		}
-		this.semiTransparent = semiTransparentFound;
+		this.uploadAsColorRatio = uploadAsColorRatio;
 	}
-	
-	public static BlockFaceTexture createSolidColor(int argbColor, boolean tinted)
-	{ return new BlockFaceTexture(1, 1, new int[] { argbColor }, tinted); }
 	
 	//endregion
 	

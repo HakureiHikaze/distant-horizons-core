@@ -203,7 +203,7 @@ public class BlockTextureRegistry
 	
 	private synchronized short getOrCreateTileId(BlockFaceTexture faceTexture)
 	{
-		byte[] ratioPixels = ratioEncode(faceTexture);
+		byte[] ratioPixels = convertColorsToDifferenceRatios(faceTexture);
 		if (ratioPixels == null)
 		{
 			return FLAT_TILE_ID;
@@ -234,7 +234,7 @@ public class BlockTextureRegistry
 	 *
 	 * @return null if the texture is a single uniform color, IE flat shading is identical
 	 */
-	private static byte[] ratioEncode(BlockFaceTexture faceTexture)
+	private static byte[] convertColorsToDifferenceRatios(BlockFaceTexture faceTexture)
 	{
 		int[] argbPixels = faceTexture.argbPixels;
 		
@@ -263,7 +263,7 @@ public class BlockTextureRegistry
 		float averageGreen = Math.max(greenSum / (float) visibleCount, 1.0f);
 		float averageBlue = Math.max(blueSum / (float) visibleCount, 1.0f);
 		
-		byte[] ratioPixels = new byte[TILE_BYTE_COUNT];
+		byte[] uploadPixels = new byte[TILE_BYTE_COUNT];
 		boolean anyPixelDiffersFromAverage = false;
 		for (int v = 0; v < TILE_WIDTH; v++)
 		{
@@ -275,20 +275,35 @@ public class BlockTextureRegistry
 				int argb = argbPixels[sourceIndex];
 				
 				int outIndex = ((v * TILE_WIDTH) + u) * 4;
-				ratioPixels[outIndex] = encodeRatio(ColorUtil.getRed(argb), averageRed);
-				ratioPixels[outIndex + 1] = encodeRatio(ColorUtil.getGreen(argb), averageGreen);
-				ratioPixels[outIndex + 2] = encodeRatio(ColorUtil.getBlue(argb), averageBlue);
-				ratioPixels[outIndex + 3] = (byte) ColorUtil.getAlpha(argb);
+				
+				if (faceTexture.uploadAsColorRatio)
+				{
+					// upload as a ratio so the texture modifies the base DH defined color
+					uploadPixels[outIndex] = encodeRatio(ColorUtil.getRed(argb), averageRed);
+					uploadPixels[outIndex + 1] = encodeRatio(ColorUtil.getGreen(argb), averageGreen);
+					uploadPixels[outIndex + 2] = encodeRatio(ColorUtil.getBlue(argb), averageBlue);
+					uploadPixels[outIndex + 3] = (byte)ColorUtil.getAlpha(argb);
+				}
+				else
+				{
+					// upload as an absolute color
+					// (due to how rendering is done this will only partially work,
+					// but is helpful for the error texture to appear correctly)
+					uploadPixels[outIndex] = (byte) ColorUtil.getRed(argb);
+					uploadPixels[outIndex + 1] = (byte) ColorUtil.getGreen(argb);
+					uploadPixels[outIndex + 2] = (byte) ColorUtil.getBlue(argb);
+					uploadPixels[outIndex + 3] = (byte) ColorUtil.getAlpha(argb);
+				}
 				
 				anyPixelDiffersFromAverage |=
-						ratioPixels[outIndex] != (byte) 128
-						|| ratioPixels[outIndex + 1] != (byte) 128
-						|| ratioPixels[outIndex + 2] != (byte) 128
-						|| ratioPixels[outIndex + 3] != (byte) 0xFF;
+						uploadPixels[outIndex] != (byte) 128
+						|| uploadPixels[outIndex + 1] != (byte) 128
+						|| uploadPixels[outIndex + 2] != (byte) 128
+						|| uploadPixels[outIndex + 3] != (byte) 0xFF;
 			}
 		}
 		
-		return anyPixelDiffersFromAverage ? ratioPixels : null;
+		return anyPixelDiffersFromAverage ? uploadPixels : null;
 	}
 	private static byte encodeRatio(int channel, float average)
 	{
@@ -380,11 +395,19 @@ public class BlockTextureRegistry
 		@Override
 		public boolean equals(Object obj)
 		{
-			if (this == obj) { return true; }
-			if (!(obj instanceof TileKey)) { return false; }
+			if (this == obj) 
+			{
+				return true; 
+			}
+			
+			if (!(obj instanceof TileKey)) 
+			{
+				return false; 
+			}
+			
 			return Arrays.equals(this.pixels, ((TileKey) obj).pixels);
 		}
-	
+		
 	}
 	
 	public static class PendingTiles
