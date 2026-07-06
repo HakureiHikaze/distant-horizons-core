@@ -162,7 +162,8 @@ void main()
     }
     
     if (uNoiseEnabled
-        // only apply noise to untextured blocks, don't need the fake texturing
+        // only apply noise to untextured blocks, 
+        // textured blocks don't need the fake texturing
         && vTextureTileId == 0u)
     {
         applyNoise(fragColor, viewDist);
