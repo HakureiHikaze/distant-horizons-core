@@ -70,7 +70,7 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	public final ByteArrayList textureSetPaletteIndices;
 	/**
 	 * Palette index -> {@link BlockTextureRegistry} set id. <br>
-	 * Index {@link BlockTextureRegistry#FLAT_TILE_ID} is always the flat "no texture" set.
+	 * Index {@link BlockTextureRegistry#UNTEXTURED_ID} is always the flat "no texture" set.
 	 */
 	public final ShortArrayList texturePalette = new ShortArrayList();
 	
@@ -106,7 +106,7 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 		// for everything else the empty list should keep the memory overhead at zero
 		int textureIndexCount = texturedLodsEnabledAtDetailLevel(this.getDataDetailLevel()) ? WIDTH * WIDTH * this.maxVerticalSliceCount : 0;
 		this.textureSetPaletteIndices = this.pooledArraysCheckout.getByteArray(0, textureIndexCount);
-		this.texturePalette.add(BlockTextureRegistry.FLAT_TILE_ID);
+		this.texturePalette.add(BlockTextureRegistry.UNTEXTURED_ID);
 	}
 	
 	//endregion
@@ -140,7 +140,7 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	{
 		if (!this.hasTextureSetIds())
 		{
-			return BlockTextureRegistry.FLAT_TILE_ID;
+			return BlockTextureRegistry.UNTEXTURED_ID;
 		}
 		
 		int paletteIndex = this.textureSetPaletteIndices.getByte(
@@ -184,7 +184,7 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 		{
 			// sections with too many distinct blocks
 			// gracefully lose textures so they can't take up every possible ID
-			return BlockTextureRegistry.FLAT_TILE_ID;
+			return BlockTextureRegistry.UNTEXTURED_ID;
 		}
 		
 		this.texturePalette.add(textureSetId);

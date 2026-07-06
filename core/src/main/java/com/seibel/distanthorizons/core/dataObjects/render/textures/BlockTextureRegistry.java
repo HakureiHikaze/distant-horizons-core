@@ -42,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * vertex color, leaving the current tinting/shading pipeline
  * and the average color seen at a distance unchanged. <br><br>
  *
- * Tile id {@link BlockTextureRegistry#FLAT_TILE_ID} represents "no texture"
+ * Tile id {@link BlockTextureRegistry#UNTEXTURED_ID} represents "no texture"
  * and renders identically to a flat-colored LOD.
  */
 public class BlockTextureRegistry
@@ -51,9 +51,6 @@ public class BlockTextureRegistry
 	
 	
 	public static final BlockTextureRegistry INSTANCE = new BlockTextureRegistry();
-	
-	/** renders as a constant 1.0 color multiplier (flat colors) */
-	public static final short FLAT_TILE_ID = 0;
 	
 	/** measured in pixels */
 	public static final int TILE_HEIGHT_AND_WIDTH = 16;
@@ -162,9 +159,24 @@ public class BlockTextureRegistry
 			BlockFaceTexture faceTexture = TEXTURE_PROVIDER.getFaceTexture(blockState, direction);
 			short tileId = (faceTexture != null)
 					? this.getOrCreateTileId(faceTexture)
-					: FLAT_TILE_ID;
+					: UNTEXTURED_ID;
+			
+			// If no texture exists in the current north/sout/west/east direction,
+			// try using the top instead.
+			// This fixes fences, walls, anvils, etc.
+			// from having untextured sides, but textured tops
+			if (tileId == UNTEXTURED_ID
+				&& direction != EDhDirection.UP
+				&& direction != EDhDirection.DOWN)
+			{
+				faceTexture = TEXTURE_PROVIDER.getFaceTexture(blockState, EDhDirection.UP);
+				tileId = (faceTexture != null)
+					? this.getOrCreateTileId(faceTexture)
+					: UNTEXTURED_ID;
+			}
+			
 			faceTileIds[direction.faceIndex] = tileId;
-			anyFaceTextured |= (tileId != FLAT_TILE_ID);
+			anyFaceTextured |= (tileId != UNTEXTURED_ID);
 		}
 		
 		short textureId;
@@ -209,7 +221,7 @@ public class BlockTextureRegistry
 		byte[] ratioPixels = convertColorsToDifferenceRatios(faceTexture);
 		if (ratioPixels == null)
 		{
-			return FLAT_TILE_ID;
+			return UNTEXTURED_ID;
 		}
 		
 		TileKey key = new TileKey(ratioPixels);
@@ -221,7 +233,7 @@ public class BlockTextureRegistry
 		
 		if (this.tilePixelsById.size() >= MAX_TILE_COUNT)
 		{
-			return FLAT_TILE_ID;
+			return UNTEXTURED_ID;
 		}
 		
 		short newId = (short) this.tilePixelsById.size();
@@ -266,6 +278,7 @@ public class BlockTextureRegistry
 		float averageGreen = Math.max(greenSum / (float) visibleCount, 1.0f);
 		float averageBlue = Math.max(blueSum / (float) visibleCount, 1.0f);
 		
+		
 		byte[] uploadPixels = new byte[TILE_BYTE_COUNT];
 		boolean anyPixelDiffersFromAverage = false;
 		for (int v = 0; v < TILE_HEIGHT_AND_WIDTH; v++)
@@ -277,32 +290,46 @@ public class BlockTextureRegistry
 						+ (u * faceTexture.width / TILE_HEIGHT_AND_WIDTH);
 				int argb = argbPixels[sourceIndex];
 				
-				int outIndex = ((v * TILE_HEIGHT_AND_WIDTH) + u) * 4;
-				
+				byte red, green, blue, alpha;
 				if (faceTexture.uploadAsColorRatio)
 				{
 					// upload as a ratio so the texture modifies the base DH defined color
-					uploadPixels[outIndex] = encodeRatio(ColorUtil.getRed(argb), averageRed);
-					uploadPixels[outIndex + 1] = encodeRatio(ColorUtil.getGreen(argb), averageGreen);
-					uploadPixels[outIndex + 2] = encodeRatio(ColorUtil.getBlue(argb), averageBlue);
-					uploadPixels[outIndex + 3] = (byte)ColorUtil.getAlpha(argb);
+					red   = encodeRatio(ColorUtil.getRed(argb), averageRed);
+					green = encodeRatio(ColorUtil.getGreen(argb), averageGreen);
+					blue  = encodeRatio(ColorUtil.getBlue(argb), averageBlue);
+					alpha = (byte)ColorUtil.getAlpha(argb);
 				}
 				else
 				{
 					// upload as an absolute color
 					// (due to how rendering is done this will only partially work,
 					// but is helpful for the error texture to appear correctly)
-					uploadPixels[outIndex] = (byte) ColorUtil.getRed(argb);
-					uploadPixels[outIndex + 1] = (byte) ColorUtil.getGreen(argb);
-					uploadPixels[outIndex + 2] = (byte) ColorUtil.getBlue(argb);
-					uploadPixels[outIndex + 3] = (byte) ColorUtil.getAlpha(argb);
+					red   = (byte) ColorUtil.getRed(argb);
+					green = (byte) ColorUtil.getGreen(argb);
+					blue  = (byte) ColorUtil.getBlue(argb);
+					alpha = (byte) ColorUtil.getAlpha(argb);
 				}
 				
-				anyPixelDiffersFromAverage |=
-						uploadPixels[outIndex] != (byte) 128
-						|| uploadPixels[outIndex + 1] != (byte) 128
-						|| uploadPixels[outIndex + 2] != (byte) 128
-						|| uploadPixels[outIndex + 3] != (byte) 0xFF;
+				int outIndex = ((v * TILE_HEIGHT_AND_WIDTH) + u) * 4;
+				uploadPixels[outIndex] = red;
+				uploadPixels[outIndex + 1] = green;
+				uploadPixels[outIndex + 2] = blue;
+				uploadPixels[outIndex + 3] = alpha;
+				
+				
+				// only check if the pixel differs when the alpha is visible (non-zero)
+				if (alpha != 0)
+				{
+					// 128 is gray (half-way between 0 and 256)
+					byte averageGray = (byte) 128;
+					
+					// we only care about the texture if it differs from the average block color 
+					// (represented by gray in the uploaded texture)
+					anyPixelDiffersFromAverage |=
+						red != averageGray
+						|| green != averageGray
+						|| blue != averageGray;
+				}
 			}
 		}
 		
@@ -359,7 +386,7 @@ public class BlockTextureRegistry
 		this.faceTileIdsById.add(flatSet);
 		
 		this.tileIdByContent.clear();
-		byte[] flatTile = this.tilePixelsById.get(FLAT_TILE_ID);
+		byte[] flatTile = this.tilePixelsById.get(UNTEXTURED_ID);
 		this.tilePixelsById.clear();
 		this.tilePixelsById.add(flatTile);
 		this.firstTileIdPendingUpload = 0;
