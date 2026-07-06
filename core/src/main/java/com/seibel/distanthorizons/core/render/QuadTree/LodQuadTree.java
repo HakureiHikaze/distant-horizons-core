@@ -581,12 +581,13 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		}
 		else
 		{
-			// A zoomed in camera boosts detail directionally, so when a node intersects
-			// the zoom cone and descends, its out-of-cone children can end up several
+			// A zoomed in camera boosts detail directionally, 
+			// so when a node intersects the zoom cone and we recurse down,
+			// its out-of-cone children can end up several
 			// detail levels finer than their own distance alone would request.
 			// Rendering them at the finer level keeps the tree consistent and only
 			// affects a thin shell of sections around the zoom cone.
-			if (this.cameraZoom.magnification > CameraZoom.NO_MAGNIFICATION)
+			if (this.cameraZoom.magnification > RenderUtil.NOT_ZOOMED_MAGNIFICATION)
 			{
 				return this.onDesiredDetailLevel(quadNode, parentNode);
 			}
@@ -1114,25 +1115,28 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	 */
 	public byte calcExpectedDetailLevel(DhBlockPos2D playerPos, long sectionPos)
 	{
-		// the radius (half diagonal) is needed so the zoom cone check can't miss sections that only partially overlap the camera's view
+		// the radius (half diagonal) is needed so the zoom cone check doesn't
+		// miss sections that only partially overlap the camera's view
 		double sectionBlockRadius = DhSectionPos.getBlockWidth(sectionPos) * (Math.sqrt(2.0) / 2.0);
 		return this.calcExpectedDetailLevel(playerPos, DhSectionPos.getCenterBlockPosX(sectionPos), DhSectionPos.getCenterBlockPosZ(sectionPos), sectionBlockRadius);
 	}
+	
 	public byte calcExpectedDetailLevel(DhBlockPos2D playerPos, int targetBlockPosX, int targetBlockPosZ)
 	{ return this.calcExpectedDetailLevel(playerPos, targetBlockPosX, targetBlockPosZ, 0.0); }
+	
 	private byte calcExpectedDetailLevel(DhBlockPos2D playerPos, int targetBlockPosX, int targetBlockPosZ, double targetBlockRadius)
 	{
 		double blockDistance = playerPos.dist(targetBlockPosX, targetBlockPosZ);
 		
 		// LODs visible through a zoomed in camera appear closer than they actually are,
 		// using the magnified distance gives them the detail they'd have if the player walked up to them
-		if (this.cameraZoom.magnification > CameraZoom.NO_MAGNIFICATION
+		if (this.cameraZoom.magnification > RenderUtil.NOT_ZOOMED_MAGNIFICATION
 			&& this.cameraZoom.coneIntersectsCircle(playerPos.x, playerPos.z, targetBlockPosX, targetBlockPosZ, targetBlockRadius))
 		{
 			blockDistance /= this.cameraZoom.magnification;
 			
-			// The configured max resolution is ignored here since anything other than block detail level doesn't look right.
-			return this.calcDetailLevelFromDistance(blockDistance, EDhApiMaxHorizontalResolution.BLOCK.detailLevel);
+			EDhApiMaxHorizontalResolution maxHorizontalResolution = Config.Client.Advanced.Graphics.Quality.maxHorizontalResolution.get();
+			return this.calcDetailLevelFromDistance(blockDistance, maxHorizontalResolution.detailLevel);
 		}
 		
 		return this.calcDetailLevelFromDistance(blockDistance);

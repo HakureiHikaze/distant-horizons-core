@@ -94,12 +94,14 @@ public class BlockTextureRegistry
 	{
 		// reserve the flat tile so id 0 always renders as a 1.0 multiplier
 		byte[] flatPixels = new byte[TILE_BYTE_COUNT];
-		Arrays.fill(flatPixels, (byte) 0xFF);
+		
+		// fill everything with a gray pixel
 		for (int i = 0; i < TILE_BYTE_COUNT; i += 4)
 		{
-			flatPixels[i] = (byte) 128;
+			flatPixels[i] = (byte) 128; // half of an unsigned byte, ie gray
 			flatPixels[i + 1] = (byte) 128;
 			flatPixels[i + 2] = (byte) 128;
+			flatPixels[i + 3] = (byte) 0xFF; // max opacity (256)
 		}
 		this.tilePixelsById.add(flatPixels);
 		
@@ -364,7 +366,7 @@ public class BlockTextureRegistry
 		IBlockStateFaceTextureProvider textureProvider = SingletonInjector.INSTANCE.get(IBlockStateFaceTextureProvider.class);
 		if (textureProvider != null)
 		{
-			textureProvider.clearCache();
+			textureProvider.clear();
 		}
 	}
 	

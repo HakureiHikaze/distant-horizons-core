@@ -66,6 +66,8 @@ public class RenderUtil
 		public static final float MIN_OVERDRAW_RATIO = 0.2f;
 	}
 	
+	public static final double NOT_ZOOMED_MAGNIFICATION = 1.0;
+	
 	/** 
 	 * The smallest camera magnification that's considered an intentional zoom. <br>
 	 * Vanilla FOV effects (IE drawing a bow or swimming underwater) shrink the FOV 
@@ -334,16 +336,17 @@ public class RenderUtil
 	//region
 	
 	/**
-	 * Returns how far the camera is currently zoomed in
+	 * Updates the given zoom with how far the camera is currently zoomed in
 	 * (IE when using a spyglass or zoom mod)
-	 * and which direction the zoomed camera is looking.
+	 * and which direction the zoomed camera is looking. <br><br>
 	 *
-	 * @return {@link CameraZoom#NOT_ZOOMED} if the camera isn't zoomed in or zoomed quality increasing is disabled
+	 * Sets the input to {@link CameraZoom#NOT_ZOOMED} if the camera isn't zoomed in or zoomed quality increasing is disabled
 	 */
 	public static void updateCameraZoom(CameraZoom cameraZoom)
 	{
 		if (!Config.Client.Advanced.Graphics.Quality.increaseQualityWhenZoomedIn.get())
 		{
+			// zoom quality disabled
 			cameraZoom.set(CameraZoom.NOT_ZOOMED);
 			return;
 		}
@@ -368,6 +371,8 @@ public class RenderUtil
 			}
 		}
 		
+		
+		
 		// For a perspective projection this row's length is the cotangent of half the vertical FOV.
 		// The row's length is used instead of m11 alone so the FOV can also be read from
 		// pre-multiplied matrices, where the row is rotated by the model view's unit length rotation rows.
@@ -381,7 +386,9 @@ public class RenderUtil
 		double magnification = projectionYScale / fovSettingYScale;
 		if (magnification < MIN_ZOOM_MAGNIFICATION)
 		{
-			// ignores minor FOV reductions (IE vanilla FOV effects), FOV increases (IE sprinting), and non-perspective projections (IE shadow map rendering)
+			// ignores minor FOV reductions (IE vanilla FOV effects), 
+			// FOV increases (IE sprinting), 
+			// and non-perspective projections (IE shadow map rendering)
 			cameraZoom.set(CameraZoom.NOT_ZOOMED);
 			return;
 		}

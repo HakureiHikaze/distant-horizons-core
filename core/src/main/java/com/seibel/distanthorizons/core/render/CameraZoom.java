@@ -1,5 +1,7 @@
 package com.seibel.distanthorizons.core.render;
 
+import com.seibel.distanthorizons.core.util.RenderUtil;
+
 /**
  * Describes how far the camera is currently zoomed in
  * and which area of the world is visible through it.
@@ -7,8 +9,6 @@ package com.seibel.distanthorizons.core.render;
 public class CameraZoom
 {
 	public static final CameraZoom NOT_ZOOMED = CameraZoom.createNotZoomed();
-	
-	public static final double NO_MAGNIFICATION = 1.0;
 	
 	
 	
@@ -34,7 +34,7 @@ public class CameraZoom
 	//==============//
 	//region
 	
-	public static CameraZoom createNotZoomed() { return new CameraZoom(NO_MAGNIFICATION, 0.0, 0.0, 0.0); }
+	public static CameraZoom createNotZoomed() { return new CameraZoom(RenderUtil.NOT_ZOOMED_MAGNIFICATION, 0.0, 0.0, 0.0); }
 	
 	public CameraZoom(double magnification, double coneTanHalfAngle, double lookDirectionX, double lookDirectionZ)
 	{

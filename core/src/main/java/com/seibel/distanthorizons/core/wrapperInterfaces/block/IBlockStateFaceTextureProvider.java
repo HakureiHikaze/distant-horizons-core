@@ -42,6 +42,6 @@ public interface IBlockStateFaceTextureProvider extends IBindable
 	BlockFaceTexture getFaceTexture(IBlockStateWrapper blockState, EDhDirection direction);
 
 	/** Should be called whenever MC's textures change, IE when resource packs are swapped. */
-	void clearCache();
+	void clear();
 
 }
