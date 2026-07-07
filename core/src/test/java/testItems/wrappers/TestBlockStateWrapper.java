@@ -30,6 +30,7 @@ public class TestBlockStateWrapper implements IBlockStateWrapper
 	@Override public Color getBeaconTintColor() { return Color.MAGENTA; }
 	@Override public boolean renderTexture() { return true; }
 	@Override public boolean useBottomTextureForSides() { return false; }
+	@Override public boolean alwaysRasterizeTexture() { return false; }
 	
 	@Override public Object getWrappedMcObject() { return this; }
 	

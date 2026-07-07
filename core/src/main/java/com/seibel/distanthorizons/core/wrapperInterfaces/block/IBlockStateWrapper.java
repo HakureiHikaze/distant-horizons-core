@@ -71,6 +71,14 @@ public interface IBlockStateWrapper extends IDhApiBlockStateWrapper
 	 * prevent incorrectly repeating the side texture on tall LODs. 
 	 */
 	boolean useBottomTextureForSides();
+	/**
+	 * Some blocks should be fully rasterized. <br>
+	 * Specifically this is done to fix Beacons top face rendering
+	 * as a single obsidian block when Iris is present. <br>
+	 * (Iris appears to change how unculled faces
+	 * are handled with beacons).
+	 */
+	boolean alwaysRasterizeTexture();
 	
 	/**
 	 * if true this block can have its color overridden

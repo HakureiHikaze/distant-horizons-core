@@ -735,6 +735,23 @@ public class Config
 							+ "")
 						.build();
 					
+					public static ConfigEntry<String> blocksAlwaysRasterizeTextureCsv = new ConfigEntry.Builder<String>()
+						.set("minecraft:beacon")
+						.setAppearance(EConfigEntryAppearance.ALL)
+						.comment(""
+							+ "A comma separated list of block resource locations \n"
+							+ "that DH will use rasterization to determine \n"
+							+ "the face textures.\n"
+							+ "\n"
+							+ "Can be used to fix issues with mods/blocks where\n"
+							+ "a side uses just part of a modeled block's texture. \n"
+							+ "\n"
+							+ "Example: \"minecraft:beacon\" \n"
+							+ "\n"
+							+ "Changes require a restart. \n"
+							+ "")
+						.build();
+					
 				}
 				
 				public static class Culling
