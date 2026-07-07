@@ -66,6 +66,7 @@ public class FullDataToRenderDataTransformer
 	//==============================//
 	// public transformer interface //
 	//==============================//
+	//region
 	
 	@Nullable
 	public static ColumnRenderSource transformFullDataToRenderSource(
@@ -92,11 +93,14 @@ public class FullDataToRenderDataTransformer
 		}
 	}
 	
+	//endregion
+	
 	
 	
 	//==============//
 	// transformers //
 	//==============//
+	//region
 	
 	/**
 	 * Creates a LodNode for a chunk in the given world.
@@ -106,9 +110,9 @@ public class FullDataToRenderDataTransformer
 	 * Generally thrown if the method is running after the client leaves the current world.
 	 */
 	private static ColumnRenderSource transformCompleteFullDataToColumnData(
-			IClientLevelWrapper levelWrapper, FullDataSourceV2 fullDataSource) throws InterruptedException
+		IClientLevelWrapper levelWrapper, FullDataSourceV2 fullDataSource) throws InterruptedException
 	{
- 		final long pos = fullDataSource.getPos();
+		final long pos = fullDataSource.getPos();
 		final byte dataDetail = fullDataSource.getDataDetailLevel();
 		
 		final int maxVertSliceCount = Config.Client.Advanced.Graphics.Quality.verticalQuality.get().calculateMaxNumberOfVerticalSlicesAtDetailLevel(fullDataSource.getDataDetailLevel());
@@ -154,7 +158,7 @@ public class FullDataToRenderDataTransformer
 	}
 	
 	/** Updates the given {@link ColumnRenderView} to match the incoming Full data {@link LongArrayList} */
-	public static void updateOrReplaceRenderDataViewColumnWithFullDataColumn(
+	private static void updateOrReplaceRenderDataViewColumnWithFullDataColumn(
 			IClientLevelWrapper levelWrapper,
 			FullDataSourceV2 fullDataSource, int blockX, int blockZ, 
 			ColumnRenderView columnArrayView, 
@@ -188,7 +192,8 @@ public class FullDataToRenderDataTransformer
 			columnArrayView.changeVerticalSizeFrom(tempExpandingColumnView, reducingList);
 		}
 		
-		if (columnSource != null && columnSource.hasTextureSetIds())
+		if (columnSource != null 
+			&& columnSource.hasTextureSetIds())
 		{
 			applyTextureSetIds(fullDataSource, columnArrayView, fullDataColumn, columnSource, sourceRelX, sourceRelZ);
 		}
@@ -242,6 +247,7 @@ public class FullDataToRenderDataTransformer
 						// broken mappings are logged during color resolution, render flat here
 					}
 				}
+				
 				// when no data point contains the top block (IE merged across an air gap)
 				// the data point renders flat
 				break;
@@ -250,6 +256,7 @@ public class FullDataToRenderDataTransformer
 			columnSource.setTextureSetId(sourceRelX, sourceRelZ, renderIndex, textureId);
 		}
 	}
+	
 	private static void setRenderColumnView(
 			IClientLevelWrapper levelWrapper, FullDataSourceV2 fullDataSource,
 			int blockX, int blockZ,
@@ -566,6 +573,8 @@ public class FullDataToRenderDataTransformer
 			renderColumnData.set(0, RenderDataPointUtil.EMPTY_DATA);
 		}
 	}
+	
+	//endregion
 	
 	
 	

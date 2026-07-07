@@ -35,12 +35,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * Assigns each block state face a global atlas tile id
  * and holds the tile pixel data until it's uploaded to the GPU. <br><br>
  *
- * TODO: Improve this ratio explanation across the codebase, i yap too much, simplify it and just provide the exact detail of what we do.
- * Tile pixels are stored as color ratios relative to the tile's average color
- * (128 = 1.0, IE no change) instead of absolute colors.
- * This way the tile can be multiplied with the LOD's existing per-position
- * vertex color, leaving the current tinting/shading pipeline
- * and the average color seen at a distance unchanged. <br><br>
+ * Tile pixels are stored as color ratios relative to the LOD's average color
+ * instead of absolute colors (a gray value of 128 means the base color is used without modification).
+ * This way the current tinting/shading pipeline
+ * and the average color seen at a distance is unchanged. <br><br>
  *
  * Tile id {@link BlockTextureRegistry#UNTEXTURED_ID} represents "no texture"
  * and renders identically to a flat-colored LOD.
