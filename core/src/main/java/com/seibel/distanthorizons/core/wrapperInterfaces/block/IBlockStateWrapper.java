@@ -60,6 +60,26 @@ public interface IBlockStateWrapper extends IDhApiBlockStateWrapper
 	 * IE Iron, diamond, gold, etc. 
 	 */
 	boolean isBeaconBaseBlock();
+	
+	/**
+	 * Some blocks don't pull their texture properly (like bamboo).
+	 * In those cases it's best to just render their base color.
+	 */
+	boolean renderTexture();
+	/**
+	 * some blocks like grass blocks should use their bottom texture to 
+	 * prevent incorrectly repeating the side texture on tall LODs. 
+	 */
+	boolean useBottomTextureForSides();
+	/**
+	 * Some blocks should be fully rasterized. <br>
+	 * Specifically this is done to fix Beacons top face rendering
+	 * as a single obsidian block when Iris is present. <br>
+	 * (Iris appears to change how unculled faces
+	 * are handled with beacons).
+	 */
+	boolean alwaysRasterizeTexture();
+	
 	/**
 	 * if true this block can have its color overridden
 	 * by {@link DhApiBlockColorOverrideEvent}

@@ -3,7 +3,6 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     id "java"
     id "com.gradleup.shadow"
-    id "xyz.wagyourtail.jvmdowngrader"
 }
 
 repositories {
@@ -11,12 +10,9 @@ repositories {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.release = gradle.ext.java_version as Integer
+    options.release = rootProject.dh_core_java_version as Integer
     options.encoding = "UTF-8"
 }
-
-// The oldest MC version we support uses Java 8, so the published jar must target Java 8 regardless of the compile version above.
-jvmdg.downgradeTo = JavaVersion.VERSION_1_8
 
 configurations {
     testImplementation.extendsFrom compileOnly
@@ -34,11 +30,11 @@ java {
 task createReleaseApiJar(type: ShadowJar) {
 
     mustRunAfter sourcesJar
-    dependsOn shadeDowngradedApi
+    dependsOn jar
 
     // shadeDowngradedApi downgrades the shadow jar to our desired Java version
     // we package its output to ensure we can run on the oldest supported MC version.
-    def compiledJarFile = tasks.shadeDowngradedApi.archiveFile
+    def compiledJarFile = tasks.jar.archiveFile
 
     // doFirst is so these only run when the task is actually executed
     doFirst {

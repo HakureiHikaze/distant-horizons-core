@@ -2,11 +2,17 @@
 
 in uvec4 vPosition;
 in vec4 color;
+// x: iris material id, y: face normal index, zw: block texture tile id (little endian)
+in uvec4 irisData;
 
 out vec4 vPos;
 out vec4 vertexColor;
 out vec3 vertexWorldPos;
 out float vertexYPos;
+// block-grid position used to generate texture UVs, fract() of this repeats per block
+out vec3 vBlockPos;
+flat out uint vNormalIndex;
+flat out uint vTextureTileId;
 
 uniform bool uIsWhiteWorld;
 
@@ -32,6 +38,10 @@ uniform float uEarthRadius;
 void main()
 {
     vPos = vPosition; // This is so it can be passed to the fragment shader
+    
+    vBlockPos = vec3(vPosition.xyz);
+    vNormalIndex = irisData.y;
+    vTextureTileId = irisData.z | (irisData.w << 8u);
     
     vertexWorldPos = vPosition.xyz + uModelOffset;
     

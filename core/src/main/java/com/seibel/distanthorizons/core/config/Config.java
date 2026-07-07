@@ -46,7 +46,7 @@ import java.util.List;
  * @author coolGi
  * @see ConfigHandler
  */
-@SuppressWarnings("ConcatenationWithEmptyString")
+@SuppressWarnings({"ConcatenationWithEmptyString","unused"})
 public class Config
 {
 	private static final DhLogger LOGGER = new DhLoggerBuilder().build();
@@ -140,6 +140,8 @@ public class Config
 				public static ConfigCategory fog = new ConfigCategory.Builder().set(Fog.class).build();
 				public static ConfigUISpacer fogSpacer = new ConfigUISpacer.Builder().build();
 				
+				public static ConfigUiLinkedEntry quickEnableTexturedLods = new ConfigUiLinkedEntry(Texture.enableTexturedLods);
+				public static ConfigCategory texture = new ConfigCategory.Builder().set(Texture.class).build();
 				public static ConfigUiLinkedEntry quickEnableNoiseTexture = new ConfigUiLinkedEntry(NoiseTexture.enableNoiseTexture);
 				public static ConfigCategory noiseTexture = new ConfigCategory.Builder().set(NoiseTexture.class).build();
 				public static ConfigUISpacer noiseTextureSpacer = new ConfigUISpacer.Builder().build();
@@ -223,6 +225,8 @@ public class Config
 						.addListener(ReloadLodsConfigEventHandler.DELAYED_INSTANCE)
 						.build();
 					
+					public static ConfigUISpacer cameraZoomSpacer = new ConfigUISpacer.Builder().build();
+					
 					public static ConfigEntry<Boolean> useCameraPositionForQualityDropOff = new ConfigEntry.Builder<Boolean>()
 						.set(true)
 						.comment(""
@@ -232,6 +236,30 @@ public class Config
 							+ " \n"
 							+ "Enabling helps free-cam mods render correctly. \n"
 							+ "Disabling helps multi-camera mods render correctly (ie Immersive Portals or camera mods). \n"
+							+ "")
+						.build();
+					
+					public static ConfigEntry<Boolean> increaseQualityWhenZoomedIn = new ConfigEntry.Builder<Boolean>()
+						.set(true)
+						.comment(""
+							+ "If true LOD quality will increase when the camera is zoomed in, \n"
+							+ "IE when using a spyglass or zoom mod. \n"
+							+ "\n"
+							+ "Only LODs visible through the camera view are affected. \n"
+							+ "\n"
+							+ "When zoomed in LODs will load to the same detail level \n"
+							+ "they would have if you were close to them. \n"
+							+ "")
+						.build();
+					
+					public static ConfigEntry<Integer> maxZoomQualityIncrease = new ConfigEntry.Builder<Integer>()
+						.setMinDefaultMax(1, 4, 6)
+						.comment(""
+							+ "How many detail levels zooming in can increase LOD quality by. \n"
+							+ "Higher numbers allow stronger zooms to render crisper terrain, \n"
+							+ "but will increase memory and GPU usage while zoomed in. \n"
+							+ " \n"
+							+ "A vanilla spyglass needs 4 detail levels to reach its full quality. \n"
 							+ "")
 						.build();
 					
@@ -628,6 +656,99 @@ public class Config
 						.comment(""
 							+ "Defines how far should the noise texture render before it fades away. (in blocks) \n"
 							+ "Set to 0 to disable noise from fading away \n"
+							+ "")
+						.build();
+					
+				}
+				
+				public static class Texture
+				{
+					public static ConfigEntry<Boolean> enableTexturedLods = new ConfigEntry.Builder<Boolean>()
+						.set(true)
+						.comment(""
+							+ "If true nearby and zoomed-in LODs will render with their block's \n"
+							+ "actual texture instead of a single flat color. \n"
+							+ " \n"
+							+ "Only applies to high detail LODs where the texture is actually visible, \n"
+							+ "distant LODs always use flat colors. \n"
+							+ "Some shader packs nay not have an affect. \n"
+							+ "")
+						.addListener(ReloadLodsConfigEventHandler.DELAYED_INSTANCE)
+						.build();
+					
+					public static ConfigEntry<Integer> maxTexturedLodDetailLevel = new ConfigEntry.Builder<Integer>()
+						.setMinDefaultMax(0, 2, 4)
+						.comment(""
+							+ "The highest detail level number that can render with block textures. \n"
+							+ "At higher detail levels each LOD covers multiple blocks, \n"
+							+ "which can essentially make textures smaller than a pixel and therefore invisible. \n"
+							+ " \n"
+							+ "Larger numbers texture more distant LODs \n"
+							+ "but increase memory usage. \n"
+							+ "")
+						.addListener(ReloadLodsConfigEventHandler.DELAYED_INSTANCE)
+						.build();
+					
+					public static ConfigEntry<String> blocksDontRenderTextureCsv = new ConfigEntry.Builder<String>()
+						.set("minecraft:bamboo")
+						.setAppearance(EConfigEntryAppearance.ALL)
+						.comment(""
+							+ "A comma separated list of block resource locations \n"
+							+ "that DH won't render textures on. \n"
+							+ "Partial matches/incomplete resource locations will also match. \n"
+							+ "\n"
+							+ "Example: \"minecraft:grass_block,nylium\" \n"
+							+ "\n"
+							+ "Changes require a restart. \n"
+							+ "")
+						.build();
+					
+					public static ConfigEntry<String> blocksDontUseSideTextureCsv = new ConfigEntry.Builder<String>()
+						.set("grass_block," +
+							"mycelium," +
+							"nylium," +
+							"dirt_path" +
+							"")
+						.setAppearance(EConfigEntryAppearance.ALL)
+						.comment(""
+							+ "A comma separated list of block resource locations \n"
+							+ "that DH will render their sides using the bottom texture. \n"
+							+ "Partial matches/incomplete resource locations will also match. \n"
+							+ "\n"
+							+ "Example: \"minecraft:grass_block,nylium\" \n"
+							+ "\n"
+							+ "Changes require a restart. \n"
+							+ "")
+						.build();
+					
+					public static ConfigEntry<String> blockTagsDontUseSideTextureCsv = new ConfigEntry.Builder<String>()
+						.set("grass_blocks," +
+							"nylium")
+						.setAppearance(EConfigEntryAppearance.ALL)
+						.comment(""
+							+ "A comma separated list of tag names \n"
+							+ "that DH will render their sides using the bottom texture. \n"
+							+ "\n"
+							+ "Example: \"grass_blocks,nylium\" \n"
+							+ "\n"
+							+ "Changes require a restart. \n"
+							+ "")
+						.build();
+					
+					public static ConfigEntry<String> blocksAlwaysRasterizeTextureCsv = new ConfigEntry.Builder<String>()
+						.set("minecraft:beacon")
+						.setAppearance(EConfigEntryAppearance.ALL)
+						.comment(""
+							+ "A comma separated list of block resource locations \n"
+							+ "that DH will use rasterization to determine \n"
+							+ "the face textures.\n"
+							+ "\n"
+							+ "Can be used to fix issues with mods/blocks where\n"
+							+ "a side uses just part of a modeled block's texture. \n"
+							+ "\n"
+							+ "Example: \"minecraft:beacon\" \n"
+							+ "\n"
+							+ "Changes require a restart. \n"
 							+ "")
 						.build();
 					
@@ -1259,19 +1380,19 @@ public class Config
 						.build();
 					
 					public static ConfigEntry<List<String>> listTest = new ConfigEntry.Builder<List<String>>()
-						.set(new ArrayList<String>(Arrays.asList("option 1", "option 2", "option 3")))
+						.set(new ArrayList<>(Arrays.asList("option 1", "option 2", "option 3")))
 						.setAppearance(EConfigEntryAppearance.ONLY_IN_FILE) // no GUI renderer set up currently
 						.build();
 					
 					public static ConfigEntry<Map<String, String>> mapTest = new ConfigEntry.Builder<Map<String, String>>()
-						.set(new HashMap<String, String>())
+						.set(new HashMap<>())
 						.setAppearance(EConfigEntryAppearance.ONLY_IN_FILE) // no GUI renderer set up currently
 						.build();
 					
 					public static ConfigUIButton uiButtonTest = new ConfigUIButton(() ->
 					{
 						// running on a separate thread is necessary to prevent locking
-						new Thread(() -> onButtonPressed()).start();
+						new Thread(ExampleConfigScreen::onButtonPressed).start();
 					});
 					public static void onButtonPressed()
 					{

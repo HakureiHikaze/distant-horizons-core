@@ -50,6 +50,8 @@ public final class BufferQuad
 	public short widthNorthSouthOrHeight;
 	
 	public int color;
+	/** {@link com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureRegistry} tile id, 0 = flat color */
+	public short textureTileId;
 	/** used by the Iris shader mod to determine how each LOD should be rendered */
 	public byte irisBlockMaterialId;
 	
@@ -74,7 +76,7 @@ public final class BufferQuad
 	public BufferQuad() {}
 	
 	public void set(short x, short y, short z, short widthEastWest, short widthNorthSouthOrHeight,
-		int color, byte irisBlockMaterialId, byte skylight, byte blockLight,
+		int color, short textureTileId, byte irisBlockMaterialId, byte skylight, byte blockLight,
 		EDhDirection direction)
 	{
 		if (widthEastWest == 0 || widthNorthSouthOrHeight == 0)
@@ -90,9 +92,11 @@ public final class BufferQuad
 		this.x = x;
 		this.y = y;
 		this.z = z;
+		
 		this.widthEastWest = widthEastWest;
 		this.widthNorthSouthOrHeight = widthNorthSouthOrHeight;
 		this.color = color;
+		this.textureTileId = textureTileId;
 		this.irisBlockMaterialId = irisBlockMaterialId;
 		this.skyLight = skylight;
 		this.blockLight = blockLight;
@@ -310,7 +314,9 @@ public final class BufferQuad
 		}
 		
 		// do the quads' color, light, etc. match?
+		// (quads sharing a texture tile can merge since the texture repeats per block)
 		if (this.color != quad.color ||
+				this.textureTileId != quad.textureTileId ||
 				this.irisBlockMaterialId != quad.irisBlockMaterialId ||
 				this.skyLight != quad.skyLight ||
 				this.blockLight != quad.blockLight)

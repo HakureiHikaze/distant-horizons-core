@@ -24,6 +24,7 @@ import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dataObjects.fullData.FullDataPointIdMap;
 import com.seibel.distanthorizons.core.dataObjects.fullData.sources.FullDataSourceV2;
 import com.seibel.distanthorizons.core.dataObjects.render.ColumnRenderSource;
+import com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureRegistry;
 import com.seibel.distanthorizons.core.dataObjects.render.columnViews.ColumnRenderView;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
@@ -65,6 +66,7 @@ public class FullDataToRenderDataTransformer
 	//==============================//
 	// public transformer interface //
 	//==============================//
+	//region
 	
 	@Nullable
 	public static ColumnRenderSource transformFullDataToRenderSource(
@@ -91,11 +93,14 @@ public class FullDataToRenderDataTransformer
 		}
 	}
 	
+	//endregion
+	
 	
 	
 	//==============//
 	// transformers //
 	//==============//
+	//region
 	
 	/**
 	 * Creates a LodNode for a chunk in the given world.
@@ -105,9 +110,9 @@ public class FullDataToRenderDataTransformer
 	 * Generally thrown if the method is running after the client leaves the current world.
 	 */
 	private static ColumnRenderSource transformCompleteFullDataToColumnData(
-			IClientLevelWrapper levelWrapper, FullDataSourceV2 fullDataSource) throws InterruptedException
+		IClientLevelWrapper levelWrapper, FullDataSourceV2 fullDataSource) throws InterruptedException
 	{
- 		final long pos = fullDataSource.getPos();
+		final long pos = fullDataSource.getPos();
 		final byte dataDetail = fullDataSource.getDataDetailLevel();
 		
 		final int maxVertSliceCount = Config.Client.Advanced.Graphics.Quality.verticalQuality.get().calculateMaxNumberOfVerticalSlicesAtDetailLevel(fullDataSource.getDataDetailLevel());
@@ -142,6 +147,7 @@ public class FullDataToRenderDataTransformer
 						// bit shift is to account for LODs with a detail level greater than 0 so the block pos is correct
 						baseX + BitShiftUtil.pow(x, dataDetail), baseZ + BitShiftUtil.pow(z, dataDetail),
 						columnArrayView, dataColumn,
+						columnSource, x, z,
 						// pooled references so we don't need to re-allocate/get them 4000 times per render source
 						phantomCheckout, tempExpandingColumnView, reducingList, mutableBlockPos);
 				}
@@ -152,11 +158,13 @@ public class FullDataToRenderDataTransformer
 	}
 	
 	/** Updates the given {@link ColumnRenderView} to match the incoming Full data {@link LongArrayList} */
-	public static void updateOrReplaceRenderDataViewColumnWithFullDataColumn(
+	private static void updateOrReplaceRenderDataViewColumnWithFullDataColumn(
 			IClientLevelWrapper levelWrapper,
 			FullDataSourceV2 fullDataSource, int blockX, int blockZ, 
 			ColumnRenderView columnArrayView, 
 			LongArrayList fullDataColumn,
+			// only needed if the render source stores texture ids, see applyTextureSetIds
+			@Nullable ColumnRenderSource columnSource, int sourceRelX, int sourceRelZ,
 			// pooled references
 			PhantomArrayListCheckout phantomCheckout, ColumnRenderView tempExpandingColumnView, RenderDataPointReducingList reducingList, DhBlockPosMutable mutableBlockPos)
 	{
@@ -183,7 +191,72 @@ public class FullDataToRenderDataTransformer
 			
 			columnArrayView.changeVerticalSizeFrom(tempExpandingColumnView, reducingList);
 		}
+		
+		if (columnSource != null 
+			&& columnSource.hasTextureSetIds())
+		{
+			applyTextureSetIds(fullDataSource, columnArrayView, fullDataColumn, columnSource, sourceRelX, sourceRelZ);
+		}
 	}
+	
+	/**
+	 * Determines the texture for each finished render data point
+	 * by finding the full data block at the data point's top. <br>
+	 * The top block is used since merged data points keep their top block's color,
+	 * keeping the texture consistent with the color it multiplies. <br><br>
+	 *
+	 * This runs after any vertical size reduction so it doesn't matter
+	 * how the data points were merged along the way.
+	 */
+	private static void applyTextureSetIds(
+			FullDataSourceV2 fullDataSource, ColumnRenderView renderColumnData, LongArrayList fullDataColumn,
+			ColumnRenderSource columnSource, int sourceRelX, int sourceRelZ)
+	{
+		for (int renderIndex = 0; renderIndex < renderColumnData.size; renderIndex++)
+		{
+			long renderData = renderColumnData.get(renderIndex);
+			if (!RenderDataPointUtil.doesDataPointExist(renderData)
+				|| RenderDataPointUtil.hasZeroHeight(renderData))
+			{
+				break;
+			}
+			
+			int topBlockY = RenderDataPointUtil.getYMax(renderData) - 1;
+			
+			// find the full data point containing the render data point's top block,
+			// the full data column is sorted top down
+			short textureId = 0;
+			for (int fullIndex = 0; fullIndex < fullDataColumn.size(); fullIndex++)
+			{
+				long fullData = fullDataColumn.getLong(fullIndex);
+				int bottomY = FullDataPointUtil.getBottomY(fullData);
+				if (bottomY > topBlockY)
+				{
+					continue;
+				}
+				
+				if (topBlockY < bottomY + FullDataPointUtil.getHeight(fullData))
+				{
+					try
+					{
+						IBlockStateWrapper block = fullDataSource.mapping.getBlockStateWrapper(FullDataPointUtil.getId(fullData));
+						textureId = BlockTextureRegistry.INSTANCE.getOrRegisterBlockStateSetId(block);
+					}
+					catch (IndexOutOfBoundsException ignore)
+					{
+						// broken mappings are logged during color resolution, render flat here
+					}
+				}
+				
+				// when no data point contains the top block (IE merged across an air gap)
+				// the data point renders flat
+				break;
+			}
+			
+			columnSource.setTextureSetId(sourceRelX, sourceRelZ, renderIndex, textureId);
+		}
+	}
+	
 	private static void setRenderColumnView(
 			IClientLevelWrapper levelWrapper, FullDataSourceV2 fullDataSource,
 			int blockX, int blockZ,
@@ -500,6 +573,8 @@ public class FullDataToRenderDataTransformer
 			renderColumnData.set(0, RenderDataPointUtil.EMPTY_DATA);
 		}
 	}
+	
+	//endregion
 	
 	
 	

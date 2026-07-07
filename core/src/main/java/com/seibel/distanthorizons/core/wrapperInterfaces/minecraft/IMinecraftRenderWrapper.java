@@ -78,6 +78,12 @@ public interface IMinecraftRenderWrapper extends IBindable
 	/** Measured in chunks */
 	int getRenderDistance();
 	
+	/**
+	 * The player's FOV, measured in degrees. <br>
+	 * Doesn't include FOV effects or zoom modifiers.
+	 */
+	double getFovSetting();
+	
 	int getFrameLimit();
 	
 	boolean mcRendersToFrameBuffer();

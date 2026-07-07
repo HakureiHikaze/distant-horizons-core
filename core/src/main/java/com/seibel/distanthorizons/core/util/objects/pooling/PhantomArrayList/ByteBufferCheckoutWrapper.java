@@ -9,6 +9,12 @@ public class ByteBufferCheckoutWrapper
 	/** in bytes */
 	public int size = -1;
 	
+	/**
+	 * a buffer slice is used so the backing buffer
+	 * can be bigger than the requested size.
+	 */
+	public ByteBuffer bufferSlice = null;
+	
 	
 	
 	//=============//
@@ -32,20 +38,32 @@ public class ByteBufferCheckoutWrapper
 	//=========//
 	//region
 	
-	public void clearAndSetSize(int size)
+	public void clearAndSetSize(int newSize)
 	{
-		if (this.size < size)
+		if (this.size != newSize)
 		{
-			// the old buffer will automatically be garbage collected when no longer in use
-			// (hopefully at a relatively quick time to prevent too much native memory floating around)
-			this.buffer = ByteBuffer.allocateDirect(size);
-			this.buffer.order(ByteOrder.nativeOrder()); // we need native ordering for GL/Vulkan
+			if (this.size < newSize)
+			{
+				// the old buffer will automatically be garbage collected when no longer in use
+				// (hopefully at a relatively quick time to prevent too much native memory floating around)
+				this.buffer = ByteBuffer.allocateDirect(newSize);
+				this.buffer.order(ByteOrder.nativeOrder()); // we need native ordering for GL/Vulkan
+			}
 			
-			this.size = size;
+			this.bufferSlice = this.buffer.duplicate();
+			this.bufferSlice.limit(this.buffer.capacity());
+			this.bufferSlice.position(0);
+			this.bufferSlice.limit(newSize);
+			this.bufferSlice.order(ByteOrder.nativeOrder());
+			
+			this.size = newSize;
 		}
 		
+		buffer.rewind();
 		buffer.limit(this.size);
-		buffer.position(0);
+		
+		this.bufferSlice.rewind();
+		this.bufferSlice.limit(this.size);
 	}
 	
 	//endregion

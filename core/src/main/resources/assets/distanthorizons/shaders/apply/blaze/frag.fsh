@@ -12,7 +12,11 @@ layout (std140) uniform baseFragUniformBlock
 uniform sampler2D uSourceColorTexture;
 uniform sampler2D uSourceDepthTexture;
 
-// DH apply frag
+/** 
+ * LOD application shader
+ *
+ * This merges the rendered LODs into Minecraft's texture/FBO   
+ */
 void main()
 {
     fragColor = vec4(0.0);

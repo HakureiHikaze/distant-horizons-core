@@ -5,11 +5,16 @@ in uint meta; // contains light and micro-offset data
 in vec4 vColor;
 in int irisMaterial;
 in int irisNormal;
+in uint textureTile; // block texture tile id, 0 = flat color
 
 // order matters, this must match the fragment shader's inputs
 out vec3 vPos;
 out vec4 vertexColor;
 out vec3 vertexWorldPos;
+// block-grid position used to generate texture UVs, fract() of this repeats per block
+out vec3 vBlockPos;
+flat out uint vNormalIndex;
+flat out uint vTextureTileId;
 
 layout (std140) uniform vertUniqueUniformBlock
 {
@@ -36,6 +41,10 @@ uniform sampler2D uLightMap;
 void main()
 {
     vPos = vPosition; // This is so it can be passed to the fragment shader
+    
+    vBlockPos = vec3(vPosition.xyz);
+    vNormalIndex = uint(irisNormal);
+    vTextureTileId = textureTile;
     
     vertexWorldPos = vPosition.xyz + (uModelOffset - uCameraPos);
     

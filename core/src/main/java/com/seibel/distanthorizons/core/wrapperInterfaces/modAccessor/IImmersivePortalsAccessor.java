@@ -27,6 +27,9 @@ import org.jetbrains.annotations.Nullable;
 
 public interface IImmersivePortalsAccessor extends IModAccessor
 {
+	String CORE_MOD_ID = "imm_ptl_core";
+	String MOD_ID = "immersive_portals";
+	
 	/** 
 	 * Returns true if Immersive Portals is currently rendering a portal.
 	 * This can be used to determine if the level currently being rendered

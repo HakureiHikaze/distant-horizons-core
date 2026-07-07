@@ -19,6 +19,7 @@
 
 package com.seibel.distanthorizons.core.render.QuadTree;
 
+import com.seibel.distanthorizons.api.enums.config.EDhApiMaxHorizontalResolution;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.config.listeners.IConfigListener;
 import com.seibel.distanthorizons.core.dataObjects.fullData.sources.FullDataSourceV2;
@@ -34,6 +35,7 @@ import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos2D;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
+import com.seibel.distanthorizons.core.render.CameraZoom;
 import com.seibel.distanthorizons.core.render.RenderBufferHandler;
 import com.seibel.distanthorizons.core.render.RenderThreadTaskHandler;
 import com.seibel.distanthorizons.core.render.renderer.AbstractDebugWireframeRenderer;
@@ -42,6 +44,7 @@ import com.seibel.distanthorizons.core.render.renderer.IDebugRenderable;
 import com.seibel.distanthorizons.core.sql.dto.BeaconBeamDTO;
 import com.seibel.distanthorizons.core.sql.repo.BeaconBeamRepo;
 import com.seibel.distanthorizons.core.util.LodUtil;
+import com.seibel.distanthorizons.core.util.RenderUtil;
 import com.seibel.distanthorizons.core.util.ThreadUtil;
 import com.seibel.distanthorizons.core.util.WorldGenUtil;
 import com.seibel.distanthorizons.core.util.objects.quadTree.QuadNode;
@@ -120,6 +123,8 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	private double detailDropOffDistanceUnit;
 	/** used to calculate when a detail drop will occur */
 	private double detailDropOffLogBase;
+	/** used to increase the detail of LODs visible through a zoomed in camera */
+	private final CameraZoom cameraZoom = CameraZoom.createNotZoomed();
 	
 	/** the {@link DhSectionPos} that need to be retrieved/generated */
 	private final Set<Long> missingGenerationPosSet = Collections.newSetFromMap(new ConcurrentHashMap<>()); // concurrency is annoying but required due to needing to add/remove items in the world gen future
@@ -576,6 +581,17 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		}
 		else
 		{
+			// A zoomed in camera boosts detail directionally, 
+			// so when a node intersects the zoom cone and we recurse down,
+			// its out-of-cone children can end up several
+			// detail levels finer than their own distance alone would request.
+			// Rendering them at the finer level keeps the tree consistent and only
+			// affects a thin shell of sections around the zoom cone.
+			if (this.cameraZoom.magnification > RenderUtil.NOT_ZOOMED_MAGNIFICATION)
+			{
+				return this.onDesiredDetailLevel(quadNode, parentNode);
+			}
+			
 			throw new IllegalStateException("LodQuadTree shouldn't be updating renderSections below the expected detail level: [" + expectedDetailLevel + "].");
 		}
 		
@@ -1097,11 +1113,32 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	 * @param sectionPos section position
 	 * @return detail level of this section pos
 	 */
-	public byte calcExpectedDetailLevel(DhBlockPos2D playerPos, long sectionPos) 
-	{ return this.calcExpectedDetailLevel(playerPos, DhSectionPos.getCenterBlockPosX(sectionPos), DhSectionPos.getCenterBlockPosZ(sectionPos)); }
+	public byte calcExpectedDetailLevel(DhBlockPos2D playerPos, long sectionPos)
+	{
+		// the radius (half diagonal) is needed so the zoom cone check doesn't
+		// miss sections that only partially overlap the camera's view
+		double sectionBlockRadius = DhSectionPos.getBlockWidth(sectionPos) * (Math.sqrt(2.0) / 2.0);
+		return this.calcExpectedDetailLevel(playerPos, DhSectionPos.getCenterBlockPosX(sectionPos), DhSectionPos.getCenterBlockPosZ(sectionPos), sectionBlockRadius);
+	}
+	
 	public byte calcExpectedDetailLevel(DhBlockPos2D playerPos, int targetBlockPosX, int targetBlockPosZ)
+	{ return this.calcExpectedDetailLevel(playerPos, targetBlockPosX, targetBlockPosZ, 0.0); }
+	
+	private byte calcExpectedDetailLevel(DhBlockPos2D playerPos, int targetBlockPosX, int targetBlockPosZ, double targetBlockRadius)
 	{
 		double blockDistance = playerPos.dist(targetBlockPosX, targetBlockPosZ);
+		
+		// LODs visible through a zoomed in camera appear closer than they actually are,
+		// using the magnified distance gives them the detail they'd have if the player walked up to them
+		if (this.cameraZoom.magnification > RenderUtil.NOT_ZOOMED_MAGNIFICATION
+			&& this.cameraZoom.coneIntersectsCircle(playerPos.x, playerPos.z, targetBlockPosX, targetBlockPosZ, targetBlockRadius))
+		{
+			blockDistance /= this.cameraZoom.magnification;
+			
+			EDhApiMaxHorizontalResolution maxHorizontalResolution = Config.Client.Advanced.Graphics.Quality.maxHorizontalResolution.get();
+			return this.calcDetailLevelFromDistance(blockDistance, maxHorizontalResolution.detailLevel);
+		}
+		
 		return this.calcDetailLevelFromDistance(blockDistance);
 	}
 	
@@ -1109,6 +1146,8 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	{
 		this.detailDropOffDistanceUnit = Config.Client.Advanced.Graphics.Quality.horizontalQuality.get().distanceUnitInBlocks * LodUtil.CHUNK_WIDTH;
 		this.detailDropOffLogBase = Math.log(Config.Client.Advanced.Graphics.Quality.horizontalQuality.get().quadraticBase);
+		
+		RenderUtil.updateCameraZoom(this.cameraZoom);
 		
 		this.maxLeafRenderDetailLevel = Config.Client.Advanced.Graphics.Quality.maxHorizontalResolution.get().detailLevel;
 		
@@ -1121,9 +1160,11 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	}
 	
 	private byte calcDetailLevelFromDistance(double blockDistance)
+	{ return this.calcDetailLevelFromDistance(blockDistance, this.maxLeafRenderDetailLevel); }
+	private byte calcDetailLevelFromDistance(double blockDistance, byte maxDetailLevel)
 	{
 		int detailLevel = (int) (Math.log(blockDistance / this.detailDropOffDistanceUnit) / this.detailDropOffLogBase);
-		return (byte) MathUtil.clamp(this.maxLeafRenderDetailLevel, detailLevel, FullDataSourceProviderV2.ROOT_SECTION_DETAIL_LEVEL);
+		return (byte) MathUtil.clamp(maxDetailLevel, detailLevel, FullDataSourceProviderV2.ROOT_SECTION_DETAIL_LEVEL);
 	}
 	
 	//endregion detail level logic

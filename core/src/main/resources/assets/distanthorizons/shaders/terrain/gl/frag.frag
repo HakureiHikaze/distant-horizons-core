@@ -1,25 +1,30 @@
 #version 330
 
-// order matters, this must match the vertex shader's outputs
-in vec3 vPos;
+in vec4 vPos;
 in vec4 vertexColor;
 in vec3 vertexWorldPos;
+in vec3 vBlockPos;
+flat in uint vNormalIndex;
+flat in uint vTextureTileId;
 in vec4 gl_FragCoord;
 
 out vec4 fragColor;
 
-layout (std140) uniform fragUniformBlock
-{
-    // Fade/Clip Uniforms
-    float uClipDistance;
-    
-    // Noise Uniforms
-    float uNoiseIntensity;
-    int uNoiseSteps;
-    int uNoiseDropoff;
-    bool uDitherDhRendering;
-    bool uNoiseEnabled;
-};
+// Each tile stores the color ratio relative to the LOD's flat 
+// color where 128 means using the base LOD color.
+// Tiles are packed in a 2D grid, 256 tiles per row,
+// see AbstractBlockTextureAtlas.TILES_PER_ROW
+uniform sampler2D uBlockAtlas;
+
+// Fade/Clip Uniforms
+uniform float uClipDistance = 0.0;
+
+// Noise Uniforms
+uniform bool uNoiseEnabled;
+uniform int uNoiseSteps;
+uniform float uNoiseIntensity;
+uniform int uNoiseDropoff;
+uniform bool uDitherDhRendering;
 
 
 // The random functions for diffrent dimentions
@@ -31,12 +36,12 @@ float rand(vec3 co) { return rand(co.xy + rand(co.z)); }
 // EG. setting stepSize to 4 then this would be the result of this function
 // In:  0.0, 0.1, 0.2, 0.3,  0.4,  0.5, 0.6, ..., 1.1, 1.2, 1.3
 // Out: 0.0, 0.0, 0.0, 0.25, 0.25, 0.5, 0.5, ..., 1.0, 1.0, 1.25
-vec3 quantize(vec3 val, int stepSize) 
+vec3 quantize(vec3 val, int stepSize)
 {
     return floor(val * stepSize) / stepSize;
 }
 
-void applyNoise(inout vec4 fragColor, const in float viewDist) 
+void applyNoise(inout vec4 fragColor, const in float viewDist)
 {
     vec3 vertexNormal = normalize(cross(dFdy(vPos.xyz), dFdx(vPos.xyz)));
     // This bit of code is required to fix the vertex position problem cus of floats in the verted world position varuable
@@ -65,7 +70,7 @@ void applyNoise(inout vec4 fragColor, const in float viewDist)
 }
 
 /** returns a normalized value between 0.0 and 1.0 */
-float bayerMatrix4x4(vec2 st) 
+float bayerMatrix4x4(vec2 st)
 {
     int x = int(mod(st.x, 4.0));
     int y = int(mod(st.y, 4.0));
@@ -87,9 +92,44 @@ float bayerMatrix4x4(vec2 st)
 
 
 
+/**
+ * Returns the texture coordinate for this fragment,
+ * matching the orientation block textures are baked with.
+ * The normal index is the same order as EDhDirection:
+ * 0 down, 1 up, 2 north, 3 south, 4 west, 5 east
+ */
+vec2 blockFaceUv()
+{
+    vec3 pos = fract(vBlockPos);
+    switch (vNormalIndex)
+    {
+        case 0u: return vec2(pos.x, 1.0 - pos.z); // down
+        case 1u: return vec2(pos.x, pos.z); // up
+        case 2u: return vec2(1.0 - pos.x, 1.0 - pos.y); // north
+        case 3u: return vec2(pos.x, 1.0 - pos.y); // south
+        case 4u: return vec2(pos.z, 1.0 - pos.y); // west
+        default: return vec2(1.0 - pos.z, 1.0 - pos.y); // east
+    }
+}
+
 void main()
 {
     fragColor = vertexColor;
+    
+    if (vTextureTileId != 0u)
+    {
+        // tile id -> grid cell -> exact texel.
+        // texelFetch makes sure the texture renders correctly regardless of the bound sampler's filtering
+        ivec2 tileOrigin = ivec2(int(vTextureTileId % 256u), int(vTextureTileId / 256u)) * 16;
+        ivec2 texelPos = tileOrigin + ivec2(clamp(blockFaceUv() * 16.0, 0.0, 15.0));
+        vec4 tile = texelFetch(uBlockAtlas, texelPos, 0);
+        
+        // The tile's color ratio preserves the LOD's original tint and shading.
+        // Tile color value of gray, 128 (half way between 0 and 255)
+        // means the LOD will use it's base color.
+        vec3 clampedColor = clamp(fragColor.rgb * (tile.rgb * 2.0), 0.0, 1.0);
+        fragColor.rgb = mix(fragColor.rgb, clampedColor, tile.a);
+    }
     
     float viewDist = length(vertexWorldPos);
     
@@ -119,7 +159,10 @@ void main()
         }
     }
     
-    if (uNoiseEnabled)
+    if (uNoiseEnabled
+        // only apply noise to untextured blocks, 
+        // textured blocks don't need the fake texturing
+        && vTextureTileId == 0u)
     {
         applyNoise(fragColor, viewDist);
     }
