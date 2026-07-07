@@ -50,7 +50,10 @@ public class ByteBufferCheckoutWrapper
 				this.buffer.order(ByteOrder.nativeOrder()); // we need native ordering for GL/Vulkan
 			}
 			
-			this.bufferSlice = this.buffer.slice(0, newSize);
+			this.bufferSlice = this.buffer.duplicate();
+			this.bufferSlice.limit(this.buffer.capacity());
+			this.bufferSlice.position(0);
+			this.bufferSlice.limit(newSize);
 			this.bufferSlice.order(ByteOrder.nativeOrder());
 			
 			this.size = newSize;

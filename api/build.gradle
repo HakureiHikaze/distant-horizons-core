@@ -11,7 +11,7 @@ repositories {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.release = gradle.ext.java_version as Integer
+    options.release = rootProject.dh_core_java_version as Integer
     options.encoding = "UTF-8"
 }
 
