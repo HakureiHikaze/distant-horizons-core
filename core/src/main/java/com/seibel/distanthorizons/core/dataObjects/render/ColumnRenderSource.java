@@ -45,6 +45,13 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	/** measured in data columns */
 	public static final int WIDTH = 64;
 	
+	/** 
+	 * Texture palettes are indexed by unsigned bytes. <Br>
+	 * This limitation is also done so a single LOD doesn't take
+	 * up every possible texture ID available to the world.
+	 */
+	public static final int MAX_TEXTURE_PALETTE_SIZE = 256;
+	
 	public static final PhantomArrayListPool ARRAY_LIST_POOL = new PhantomArrayListPool("Render Source");
 	
 	
@@ -64,8 +71,6 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	 * each byte is an index into {@link ColumnRenderSource#texturePalette}. <br>
 	 * Empty when textured LODs are disabled or this section's
 	 * detail level is too low to show textures.
-	 *
-	 * @see ColumnRenderSource#texturedLodsEnabledAtDetailLevel(byte)
 	 */
 	public final ByteArrayList textureSetPaletteIndices;
 	/**
@@ -100,13 +105,18 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 		
 		this.maxVerticalSliceCount = maxVertSliceCount;
 		
-		this.renderDataContainer = this.pooledArraysCheckout.getLongArray(0, WIDTH * WIDTH * this.maxVerticalSliceCount);
+		int maxDatapointCount = WIDTH * WIDTH * this.maxVerticalSliceCount;
+		this.renderDataContainer = this.pooledArraysCheckout.getLongArray(0, maxDatapointCount);
 		
-		// texture ids are only stored for high detail sections where textures are visible,
-		// for everything else the empty list should keep the memory overhead at zero
-		int textureIndexCount = texturedLodsEnabledAtDetailLevel(this.getDataDetailLevel()) ? WIDTH * WIDTH * this.maxVerticalSliceCount : 0;
+		// texture ids are only stored for high detail sections
+		int textureIndexCount = texturedLodsEnabledAtDetailLevel(this.getDataDetailLevel()) ? maxDatapointCount : 0;
 		this.textureSetPaletteIndices = this.pooledArraysCheckout.getByteArray(0, textureIndexCount);
 		this.texturePalette.add(BlockTextureRegistry.UNTEXTURED_ID);
+	}
+	private static boolean texturedLodsEnabledAtDetailLevel(byte dataDetailLevel)
+	{
+		return Config.Client.Advanced.Graphics.Texture.enableTexturedLods.get()
+			&& dataDetailLevel <= Config.Client.Advanced.Graphics.Texture.maxTexturedLodDetailLevel.get();
 	}
 	
 	//endregion
@@ -118,82 +128,12 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	//========================//
 	//region
 	
-	/** texture palettes are indexed by unsigned bytes */
-	public static final int MAX_PALETTE_SIZE = 256;
-	
-	public long getDataPoint(int posX, int posZ, int verticalIndex) { return this.renderDataContainer.getLong(posX * WIDTH * this.maxVerticalSliceCount + posZ * this.maxVerticalSliceCount + verticalIndex); }
-	
-	public static boolean texturedLodsEnabledAtDetailLevel(byte dataDetailLevel)
-	{
-		return Config.Client.Advanced.Graphics.Texture.enableTexturedLods.get()
-			&& dataDetailLevel <= Config.Client.Advanced.Graphics.Texture.maxTexturedLodDetailLevel.get();
-	}
-	
-	/** @return whether this section is storing texture ids */
-	public boolean hasTextureSetIds() { return !this.textureSetPaletteIndices.isEmpty(); }
-	
-	/**
-	 * @return the {@link com.seibel.distanthorizons.core.dataObjects.render.textures.BlockTextureRegistry}
-	 *          set id for the given data point, the flat set id if this section isn't storing textures
-	 */
-	public short getTextureSetId(int posX, int posZ, int verticalIndex)
-	{
-		if (!this.hasTextureSetIds())
-		{
-			return BlockTextureRegistry.UNTEXTURED_ID;
-		}
-		
-		int paletteIndex = this.textureSetPaletteIndices.getByte(
-			posX * WIDTH * this.maxVerticalSliceCount + posZ * this.maxVerticalSliceCount + verticalIndex) 
-			& 0xFF;
-		return this.texturePalette.getShort(paletteIndex);
-	}
-	
-	/**
-	 * Stores the texture set id for the given data point,
-	 * does nothing if this section isn't storing textures.
-	 */
-	public void setTextureSetId(int posX, int posZ, int verticalIndex, short textureSetId)
-	{
-		if (!this.hasTextureSetIds())
-		{
-			return;
-		}
-		
-		this.textureSetPaletteIndices.set(
-			posX * WIDTH * this.maxVerticalSliceCount + posZ * this.maxVerticalSliceCount + verticalIndex,
-			this.getOrAddPaletteIndex(textureSetId));
-	}
-	
-	private byte getOrAddPaletteIndex(short textureSetId)
-	{
-		// linear search is fine, palettes hold the few dozen
-		// distinct block appearances of a single 64x64 section
-		// and most lookups hit the first few entries
-		// TODO: Still see if we can improve this
-		int paletteSize = this.texturePalette.size();
-		for (int i = 0; i < paletteSize; i++)
-		{
-			if (this.texturePalette.getShort(i) == textureSetId)
-			{
-				return (byte) i;
-			}
-		}
-		
-		if (paletteSize >= MAX_PALETTE_SIZE)
-		{
-			// sections with too many distinct blocks
-			// gracefully lose textures so they can't take up every possible ID
-			return BlockTextureRegistry.UNTEXTURED_ID;
-		}
-		
-		this.texturePalette.add(textureSetId);
-		return (byte) paletteSize;
-	}
+	public long getDataPoint(int posX, int posZ, int verticalIndex) 
+	{ return this.renderDataContainer.getLong(this.getDatapointIndex(posX, posZ, verticalIndex)); }
 	
 	public void populateColumnView(ColumnRenderView view, int posX, int posZ) throws IllegalArgumentException
 	{
-		int offset = posX * WIDTH * this.maxVerticalSliceCount + posZ * this.maxVerticalSliceCount;
+		int offset = this.getDatapointIndex(posX, posZ, 0);
 		
 		// don't allow returning views that are outside this render source's bounds
 		if (offset >= this.renderDataContainer.size())
@@ -215,13 +155,80 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 	
 	
 	
+	//==================//
+	// texture handling //
+	//==================//
+	//region
+	
+	/** @return true if this section is storing texture ids */
+	public boolean hasTextureSetIds() { return !this.textureSetPaletteIndices.isEmpty(); }
+	
+	/**
+	 * @return the {@link BlockTextureRegistry}
+	 *          set id for the given data point, the flat set id if this section isn't storing textures
+	 */
+	public short getTextureSetId(int posX, int posZ, int verticalIndex)
+	{
+		if (!this.hasTextureSetIds())
+		{
+			return BlockTextureRegistry.UNTEXTURED_ID;
+		}
+		
+		int paletteIndex = this.textureSetPaletteIndices.getByte(this.getDatapointIndex(posX, posZ, verticalIndex)) 
+			& 0xFF; // convert from signed byte to unsigned int
+		return this.texturePalette.getShort(paletteIndex);
+	}
+	
+	/**
+	 * Stores the texture set id for the given data point,
+	 * does nothing if this section isn't storing textures.
+	 */
+	public void setTextureSetId(int posX, int posZ, int verticalIndex, short textureSetId)
+	{
+		if (!this.hasTextureSetIds())
+		{
+			return;
+		}
+		
+		this.textureSetPaletteIndices.set(
+			this.getDatapointIndex(posX, posZ, verticalIndex),
+			this.getOrAddPaletteIndex(textureSetId));
+	}
+	
+	private byte getOrAddPaletteIndex(short textureSetId)
+	{
+		// linear search is fine, palettes hold the few dozen
+		// distinct block appearances of a single 64x64 section
+		// and most lookups hit the first few entries
+		// TODO: Still see if we can improve this
+		int paletteSize = this.texturePalette.size();
+		for (int i = 0; i < paletteSize; i++)
+		{
+			if (this.texturePalette.getShort(i) == textureSetId)
+			{
+				return (byte) i;
+			}
+		}
+		
+		if (paletteSize >= MAX_TEXTURE_PALETTE_SIZE)
+		{
+			// sections with too many distinct blocks
+			// gracefully lose textures so they can't take up every possible ID
+			return BlockTextureRegistry.UNTEXTURED_ID;
+		}
+		
+		this.texturePalette.add(textureSetId);
+		return (byte) paletteSize;
+	}
+	
+	//endregion
+	
+	
+	
 	//=====================//
 	// data helper methods //
 	//=====================//
 	//region
-	
-	public Long getPos() { return this.pos; }
-	public Long getKey() { return this.pos; }
 	
 	public byte getDataDetailLevel() { return (byte) (DhSectionPos.getDetailLevel(this.pos) - DhSectionPos.SECTION_MINIMUM_DETAIL_LEVEL); }
 	
@@ -256,6 +263,13 @@ public class ColumnRenderSource extends AbstractPhantomArrayList
 		}
 		
 		return false;
+	}
+	
+	private int getDatapointIndex(int posX, int posZ, int verticalIndex)
+	{
+		return (posX * WIDTH * this.maxVerticalSliceCount)
+			+ (posZ * this.maxVerticalSliceCount)
+			+ verticalIndex;
 	}
 	
 	//endregion

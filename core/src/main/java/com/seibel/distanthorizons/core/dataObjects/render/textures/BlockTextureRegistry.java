@@ -77,9 +77,12 @@ public class BlockTextureRegistry
 	/** tiles that haven't been uploaded to the GPU yet, drained by the render thread */
 	private int firstTileIdPendingUpload = 0;
 	
-	/** indexed by set id, holds the 6 face tile ids for one block state */
-	private final ArrayList<short[]> faceTileIdsById = new ArrayList<>();
-	private final ConcurrentHashMap<IBlockStateWrapper, Short> idByBlockStateWrapper = new ConcurrentHashMap<>();
+	/** 
+	 * indexed by set id (stored by {@link BlockTextureRegistry#setIdByBlockStateWrapper}), 
+	 * holds the 6 face tile ids for one block state.
+	 */
+	private final ArrayList<short[]> faceTileIdsBySetId = new ArrayList<>();
+	private final ConcurrentHashMap<IBlockStateWrapper, Short> setIdByBlockStateWrapper = new ConcurrentHashMap<>();
 	
 	
 	
@@ -104,7 +107,7 @@ public class BlockTextureRegistry
 		this.tilePixelsById.add(flatPixels);
 		
 		// reserve the all-flat face set so set id 0 always renders flat
-		this.faceTileIdsById.add(new short[6]);
+		this.faceTileIdsBySetId.add(new short[6]);
 	}
 	
 	//endregion
@@ -125,12 +128,12 @@ public class BlockTextureRegistry
 	 */
 	public short getOrRegisterBlockStateSetId(IBlockStateWrapper blockState)
 	{
-		Short id = this.idByBlockStateWrapper.get(blockState);
-		if (id == null)
+		Short setId = this.setIdByBlockStateWrapper.get(blockState);
+		if (setId == null)
 		{
-			id = this.registerBlockState(blockState);
+			setId = this.registerBlockState(blockState);
 		}
-		return id;
+		return setId;
 	}
 	
 	/**
@@ -142,11 +145,11 @@ public class BlockTextureRegistry
 	 */
 	public synchronized short @Nullable [] getFaceTileIds(int setId)
 	{
-		if (setId <= UNTEXTURED_ID || setId >= this.faceTileIdsById.size())
+		if (setId <= UNTEXTURED_ID || setId >= this.faceTileIdsBySetId.size())
 		{
 			return null;
 		}
-		return this.faceTileIdsById.get(setId);
+		return this.faceTileIdsBySetId.get(setId);
 	}
 	
 	private short registerBlockState(IBlockStateWrapper blockState)
@@ -191,19 +194,19 @@ public class BlockTextureRegistry
 			// synchronized to prevent concurrent array modifications
 			synchronized (this)
 			{
-				if (this.faceTileIdsById.size() >= MAX_TILE_COUNT)
+				if (this.faceTileIdsBySetId.size() >= MAX_TILE_COUNT)
 				{
 					textureId = UNTEXTURED_ID;
 				}
 				else
 				{
-					textureId = (short) this.faceTileIdsById.size();
-					this.faceTileIdsById.add(faceTileIds);
+					textureId = (short) this.faceTileIdsBySetId.size();
+					this.faceTileIdsBySetId.add(faceTileIds);
 				}
 			}
 		}
 		
-		Short existingSetId = this.idByBlockStateWrapper.putIfAbsent(blockState, textureId);
+		Short existingSetId = this.setIdByBlockStateWrapper.putIfAbsent(blockState, textureId);
 		return (existingSetId != null) ? existingSetId : textureId;
 	}
 	
@@ -380,10 +383,10 @@ public class BlockTextureRegistry
 	/** Should be called whenever MC's textures change, IE when resource packs are swapped. */
 	public synchronized void clear()
 	{
-		this.idByBlockStateWrapper.clear();
-		short[] flatSet = this.faceTileIdsById.get(UNTEXTURED_ID);
-		this.faceTileIdsById.clear();
-		this.faceTileIdsById.add(flatSet);
+		this.setIdByBlockStateWrapper.clear();
+		short[] flatSet = this.faceTileIdsBySetId.get(UNTEXTURED_ID);
+		this.faceTileIdsBySetId.clear();
+		this.faceTileIdsBySetId.add(flatSet);
 		
 		this.tileIdByContent.clear();
 		byte[] flatTile = this.tilePixelsById.get(UNTEXTURED_ID);

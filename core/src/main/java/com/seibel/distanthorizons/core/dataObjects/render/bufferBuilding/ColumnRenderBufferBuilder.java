@@ -35,6 +35,7 @@ import com.seibel.distanthorizons.coreapi.util.ColorUtil;
 import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.RenderDataPointUtil;
 import com.seibel.distanthorizons.core.dataObjects.render.columnViews.ColumnRenderView;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Used to populate the buffers in a {@link ColumnRenderSource} object.
@@ -263,18 +264,18 @@ public class ColumnRenderBufferBuilder
 						long topDataPoint = (i - 1) >= 0 ? columnRenderData.get(i - 1) : RenderDataPointUtil.EMPTY_DATA;
 						long bottomDataPoint = (i + 1) < columnRenderData.size ? columnRenderData.get(i + 1) : RenderDataPointUtil.EMPTY_DATA;
 						
-						// resolve which textures this data point's quads should use
-						short[] faceTileIds = null;
+						// determine which textures this data point's quads should use
+						short[] faceTileIdsByDirectionOrdinal = null;
 						if (renderSource.hasTextureSetIds())
 						{
-							faceTileIds = BlockTextureRegistry.INSTANCE.getFaceTileIds(renderSource.getTextureSetId(relX, relZ, i));
+							short textureSetId = renderSource.getTextureSetId(relX, relZ, i);
+							faceTileIdsByDirectionOrdinal = BlockTextureRegistry.INSTANCE.getFaceTileIds(textureSetId);
 						}
-						quadBuilder.setCurrentFaceTileIds(faceTileIds);
 						
 						addRenderDataPointToBuilder(
 							clientLevel, phantomArrayCheckout,
 							data, topDataPoint, bottomDataPoint,
-							adjColumnViews, isSameDetailLevel,
+							adjColumnViews, isSameDetailLevel, faceTileIdsByDirectionOrdinal,
 							thisDetailLevel, relX, relZ,
 							quadBuilder);
 					}
@@ -287,7 +288,7 @@ public class ColumnRenderBufferBuilder
 	private static void addRenderDataPointToBuilder(
 			IDhClientLevel clientLevel, PhantomArrayListCheckout phantomArrayCheckout,
 			long renderData, long topRenderData, long bottomRenderData, 
-			ColumnRenderView[] adjColumnViews, boolean[] isSameDetailLevel,
+			ColumnRenderView[] adjColumnViews, boolean[] isSameDetailLevel, short @Nullable [] faceTileIdsByDirectionOrdinal,
 			byte detailLevel, int renderSourceOffsetPosX, int renderSourceOffsetPosZ, 
 			LodQuadBuilder quadBuilder)
 	{
@@ -411,14 +412,15 @@ public class ColumnRenderBufferBuilder
 		}
 		
 		ColumnBox.addBoxQuadsToBuilder(
-				quadBuilder, phantomArrayCheckout, clientLevel,
-				blockWidth, blockMaxY,
-				blockMinX, blockMinY, blockMinZ,
-				color,
-				blockMaterialId,
-				RenderDataPointUtil.getLightSky(renderData),
-				fullBright ? LodUtil.MAX_MC_LIGHT : RenderDataPointUtil.getLightBlock(renderData),
-				topRenderData, bottomRenderData, adjColumnViews, isSameDetailLevel);
+			quadBuilder, phantomArrayCheckout, clientLevel,
+			blockWidth, blockMaxY,
+			blockMinX, blockMinY, blockMinZ,
+			color,
+			blockMaterialId,
+			RenderDataPointUtil.getLightSky(renderData),
+			fullBright ? LodUtil.MAX_MC_LIGHT : RenderDataPointUtil.getLightBlock(renderData),
+			topRenderData, bottomRenderData, adjColumnViews, isSameDetailLevel,
+			faceTileIdsByDirectionOrdinal);
 	}
 	
 }
