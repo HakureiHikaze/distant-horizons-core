@@ -21,6 +21,7 @@ package com.seibel.distanthorizons.core.api.internal;
 
 import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.enums.config.EDhApiMcRenderingFadeMode;
+import com.seibel.distanthorizons.api.enums.config.EDhApiRenderingEngine;
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiRenderPass;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.*;
 import com.seibel.distanthorizons.core.api.internal.rendering.DhRenderState;
@@ -41,6 +42,7 @@ import com.seibel.distanthorizons.core.util.objects.Pair;
 import com.seibel.distanthorizons.core.util.objects.RollingAverage;
 import com.seibel.distanthorizons.core.util.threading.ThreadPoolUtil;
 import com.seibel.distanthorizons.core.world.IDhClientWorld;
+import com.seibel.distanthorizons.core.wrapperInterfaces.IVersionConstants;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IImmersivePortalsAccessor;
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IIrisAccessor;
@@ -87,6 +89,7 @@ public class ClientApi
 	
 	private static final IMinecraftClientWrapper MC_CLIENT = SingletonInjector.INSTANCE.get(IMinecraftClientWrapper.class);
 	private static final IMinecraftRenderWrapper MC_RENDER = SingletonInjector.INSTANCE.get(IMinecraftRenderWrapper.class);
+	private static final IVersionConstants VERSION_CONSTANTS = SingletonInjector.INSTANCE.get(IVersionConstants.class);
 	
 	/** Delayed accessing is necessary since this object will be created before the mod accessors are bound. */
 	private static class DelayedAccessors 
@@ -123,6 +126,7 @@ public class ClientApi
 	private boolean isDevBuildMessagePrinted = false;
 	private boolean lowMemoryWarningPrinted = false;
 	private boolean highVanillaRenderDistanceWarningPrinted = false;
+	private boolean deprecatedRendererWarningPrinted = false;
 	
 	private long lastStaticWarningMessageSentMsTime = 0L;
 	
@@ -782,6 +786,8 @@ public class ClientApi
 			MC_CLIENT.sendOverlayMessage(message);
 		}
 	}
+	// TODO merge with AbstractModInitializer.logIncompatibilityWarnings
+	//  probably put in a separate class
 	private void detectAndSendBootTimeWarnings()
 	{
 		// dev build
@@ -850,6 +856,42 @@ public class ClientApi
 				MC_CLIENT.sendChatMessage(message);
 			}
 		}
+		
+		
+		
+		//==================//
+		// Rendering Engine //
+		//==================//
+		//region
+		if (this.staticStartupMessageSentRecently()) return;
+		if (!this.deprecatedRendererWarningPrinted)
+		{
+			this.deprecatedRendererWarningPrinted = true;
+			
+			// get the currently selected rendering API
+			EDhApiRenderingEngine activeRenderingEngine = Config.Client.Advanced.Graphics.Experimental.renderingEngine.get();
+			EDhApiRenderingEngine recommendedEngine = VERSION_CONSTANTS.getDefaultRenderingEngine();
+			
+			// complain when using OpenGL on newer MC versions
+			if (activeRenderingEngine == EDhApiRenderingEngine.OPEN_GL
+				&& recommendedEngine != EDhApiRenderingEngine.OPEN_GL)
+			{
+				if (Config.Common.Logging.Warning.showDeprecatedRendererWarningOnStartup.get())
+				{
+					IMinecraftClientWrapper mc = SingletonInjector.INSTANCE.get(IMinecraftClientWrapper.class);
+					String message =
+						MinecraftTextFormat.ORANGE + "Distant Horizons: Deprecated Rendering Engine." + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
+							"DH is currently rendering via raw OpenGL. \n" +
+							"Raw OpenGL is deprecated for this Minecraft version, \n" +
+							"meaning there may be visual issues. \n" +
+							"This warning can be disabled in DH's config under Advanced -> Logging. \n";
+					mc.sendChatMessage(message);
+				}
+			}
+		}
+		
+		//endregion
+		
 	}
 	/** done to prevent sending a bunch of startup messages all at once, causing some to be missed. */
 	private boolean staticStartupMessageSentRecently()

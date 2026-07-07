@@ -766,6 +766,8 @@
     "Show Slow World Gen Warnings",
   "distanthorizons.config.common.logging.warning.showModCompatibilityWarningsOnStartup":
     "Show Mod Compatibility Warnings",
+  "distanthorizons.config.common.logging.warning.showDeprecatedRendererWarningOnStartup":
+    "Show Deprecated Renderer Warnings",
   "distanthorizons.config.common.logging.warning.logGarbageCollectorWarning":
     "Log Garbage Collector Warning",
   "distanthorizons.config.common.logging.warning.showGarbageCollectorWarning":
