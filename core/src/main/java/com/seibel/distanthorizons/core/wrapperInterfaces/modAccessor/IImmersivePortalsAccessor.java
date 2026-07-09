@@ -30,6 +30,9 @@ public interface IImmersivePortalsAccessor extends IModAccessor
 	String CORE_MOD_ID = "imm_ptl_core";
 	String MOD_ID = "immersive_portals";
 	
+	String INJECTION_CLASS_1_16 = "com.qouteall.immersive_portals.render.context_management.RenderStates";
+	String INJECTION_CLASS = "qouteall.imm_ptl.core.render.context_management.RenderStates";
+	
 	/** 
 	 * Returns true if Immersive Portals is currently rendering a portal.
 	 * This can be used to determine if the level currently being rendered
