@@ -59,6 +59,17 @@ public interface IDhApiRenderProxy
 	 */
 	EDhApiRenderingApi getRenderingApi() throws IllegalStateException;
 	/**
+	 * Returns which specific {@link EDhApiRenderingEngine}
+	 * Distant Horizons will use for rendering. <br><br>
+	 * 
+	 * @throws IllegalStateException if no renderer has been bound yet, 
+	 *      wait till after {@link DhApiAfterDhInitEvent} has been fired
+	 * 
+	 * @see DhApiAfterDhInitEvent
+	 * @since API 7.1.0
+	 */
+	EDhApiRenderingEngine getRenderingEngine() throws IllegalStateException;
+	/**
 	 * Returns true if the current renderer
 	 * is calling the base rendering API's method calls. <br>
 	 * ie GL.drawArrays() for OpenGL. <Br><br>
@@ -80,19 +91,50 @@ public interface IDhApiRenderProxy
 	// OpenGL object getters //
 	//=======================//
 	
+	/** @deprecated in favor of {@link IDhApiRenderProxy#getDhDepthTextureGlId} */
+	@Deprecated // don't remove, this method is needed by Iris
+	default DhApiResult<Integer> getDhDepthTextureId() { return this.getDhDepthTextureGlId(); }
 	/**
 	 * Returns the OpenGL name of Distant Horizons' depth texture. <br>
 	 * Will return {@link DhApiResult#success} = false and {@link DhApiResult#payload} = -1 if the texture hasn't been created yet
-	 * or a rendering API other than OpenGL is in use.
+	 * or a rendering API other than {@link EDhApiRenderingEngine#OPEN_GL} is in use.
+	 *
+	 * @see IDhApiRenderProxy#getRenderingEngine()
+	 * @since API 7.1.0
 	 */
-	DhApiResult<Integer> getDhDepthTextureId();
+	DhApiResult<Integer> getDhDepthTextureGlId();
+	/**
+	 * Returns a wrapper around the Blaze3D objects that represent Distant Horizons' depth texture. <br>
+	 * Will return {@link DhApiResult#success} = false and {@link DhApiResult#payload} = null if the texture hasn't been created yet
+	 * or a rendering API other than {@link EDhApiRenderingEngine#BLAZE_3D} is in use.
+	 *
+	 * @see IDhApiRenderProxy#getRenderingEngine()
+	 * @since API 7.1.0
+	 */
+	DhApiResult<IDhApiBlazeTextureWrapper> getDhDepthTextureBlazeWrapper();
 	
+	
+	/** @deprecated in favor of {@link IDhApiRenderProxy#getDhDepthTextureGlId} */
+	@Deprecated // don't remove, this method is needed by Iris
+	default DhApiResult<Integer> getDhColorTextureId() { return this.getDhColorTextureGlId(); }
 	/**
 	 * Returns the OpenGL name of Distant Horizons' color texture. <br>
 	 * Will return {@link DhApiResult#success} = false and {@link DhApiResult#payload} = -1 if the texture hasn't been created yet
-	 * or a rendering API other than OpenGL is in use
+	 * or a rendering API other than {@link EDhApiRenderingEngine#OPEN_GL} is in use.
+	 *
+	 * @see IDhApiRenderProxy#getRenderingEngine()
+	 * @since API 7.1.0
 	 */
-	DhApiResult<Integer> getDhColorTextureId();
+	DhApiResult<Integer> getDhColorTextureGlId();
+	/**
+	 * Returns a wrapper around the Blaze3D objects that represent Distant Horizons' color texture. <br>
+	 * Will return {@link DhApiResult#success} = false and {@link DhApiResult#payload} = null if the texture hasn't been created yet
+	 * or a rendering API other than {@link EDhApiRenderingEngine#BLAZE_3D} is in use.
+	 *
+	 * @see IDhApiRenderProxy#getRenderingEngine() 
+	 * @since API 7.1.0
+	 */
+	DhApiResult<IDhApiBlazeTextureWrapper> getDhColorTextureBlazeWrapper();
 	
 	
 	
