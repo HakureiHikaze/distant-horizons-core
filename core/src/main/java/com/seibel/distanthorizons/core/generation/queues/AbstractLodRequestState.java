@@ -146,11 +146,11 @@ public abstract class AbstractLodRequestState
 			EDhApiDistantGeneratorProgressDisplayLocation displayLocation = Config.Common.WorldGenerator.showGenerationProgress.get();
 			if (displayLocation == EDhApiDistantGeneratorProgressDisplayLocation.OVERLAY)
 			{
-				ClientApi.INSTANCE.showOverlayMessageNextFrame(message);
+				ClientApi.INSTANCE.queueOverlayMessage(message);
 			}
 			else if (displayLocation == EDhApiDistantGeneratorProgressDisplayLocation.CHAT)
 			{
-				ClientApi.INSTANCE.showChatMessageNextFrame(message);
+				ClientApi.INSTANCE.queueChatMessage(message);
 			}
 			else if (displayLocation == EDhApiDistantGeneratorProgressDisplayLocation.LOG)
 			{

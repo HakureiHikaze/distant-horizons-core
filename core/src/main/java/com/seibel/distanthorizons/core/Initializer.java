@@ -251,7 +251,7 @@ public class Initializer
 				
 				if (Config.Common.Logging.Warning.showGarbageCollectorWarning.get())
 				{
-					ClientApi.INSTANCE.showChatMessageNextFrame(
+					ClientApi.INSTANCE.queueChatMessage(
 						MinecraftTextFormat.ORANGE + warningMessageHeader + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
 						warningMessageBody +
 						"");
@@ -308,7 +308,7 @@ public class Initializer
 				
 				if (Config.Common.Logging.Warning.showExplicitGcDisabledWarning.get())
 				{
-					ClientApi.INSTANCE.showChatMessageNextFrame(
+					ClientApi.INSTANCE.queueChatMessage(
 						MinecraftTextFormat.ORANGE + warningMessageHeader + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
 						warningMessageBody +
 						"");
