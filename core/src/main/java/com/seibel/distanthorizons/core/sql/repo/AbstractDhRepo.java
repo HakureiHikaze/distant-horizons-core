@@ -62,6 +62,12 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 	private static final ConcurrentHashMap<AbstractDhRepo<?, ?>, String> ACTIVE_CONNECTION_STRINGS_BY_REPO = new ConcurrentHashMap<>();
 	private static final Set<String> CORRUPTED_DB_PATHS = Collections.newSetFromMap(new ConcurrentHashMap<>());
 	
+	/** 
+	 * Should only be used for performance testing. <br>
+	 * Nothing is saved to the disk (duh).
+	 */
+	private static final boolean USE_MEMORY_DATABASE = false;
+	
 	
 	
 	private final String connectionString;
@@ -107,64 +113,72 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 		//==========================//
 		// database file validation //
 		//==========================//
-		
-		// check that the database file exists
-		if (!databaseFile.exists())
+
+		if (USE_MEMORY_DATABASE)
 		{
-			// check that the parent folder exists
-			File parentFolder = databaseFile.getParentFile();
-			if (parentFolder != null && !parentFolder.exists())
+			this.connectionString = "jdbc:sqlite:file:"+this.databaseFile.getPath()+"?mode=memory&cache=shared";
+		}
+		else
+		{
+			// check that the database file exists
+			if (!databaseFile.exists())
 			{
-				if (!parentFolder.mkdirs())
+				// check that the parent folder exists
+				File parentFolder = databaseFile.getParentFile();
+				if (parentFolder != null && !parentFolder.exists())
 				{
-					throw new IOException("Unable to create the necessary parent folders for the database file at location ["+databaseFile.getPath()+"].");
+					if (!parentFolder.mkdirs())
+					{
+						throw new IOException("Unable to create the necessary parent folders for the database file at location [" + databaseFile.getPath() + "].");
+					}
+				}
+				
+				if (!databaseFile.exists())
+				{
+					try
+					{
+						boolean fileCreated = databaseFile.createNewFile();
+					}
+					catch (IOException e)
+					{
+						throw new IOException("Unable to create database file at location [" + databaseFile.getPath() + "] due to error: [" + e.getMessage() + "]", e);
+					}
 				}
 			}
 			
 			if (!databaseFile.exists())
 			{
-				try
-				{
-					boolean fileCreated = databaseFile.createNewFile();
-				}
-				catch (IOException e)
-				{
-					throw new IOException("Unable to create database file at location ["+databaseFile.getPath()+"] due to error: ["+e.getMessage()+"]", e);
-				}
-			}
-		}
-		
-		if (!databaseFile.exists())
-		{
-			String databaseFilePath = databaseFile.getPath();
-			
-			String windowsLongFileWarning = "";
-			// windows has issues at 260 characters, but checking a few characters shorter should make sure we catch this issue
-			if (databaseFilePath.length() > 250
-				&& EPlatform.get() == EPlatform.WINDOWS)
-			{
-				// print a message to chat for people who don't know how to access the log
-				String message =
-					MinecraftTextFormat.DARK_RED + "Distant Horizons: File Path Length Issue." + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
-					"A file path was ["+databaseFilePath.length()+"] characters long. \n" +
-					"Windows only supports file paths up to 260 chars normally. \n" +
-					"Please enable long file paths in Windows. \n"
-					;
-				ClientApi.INSTANCE.queueChatMessage(message);
+				String databaseFilePath = databaseFile.getPath();
 				
-				// add additional info to the log
-				windowsLongFileWarning = "Potential fix: enable long file paths in Windows.";
+				String windowsLongFileWarning = "";
+				// windows has issues at 260 characters, but checking a few characters shorter should make sure we catch this issue
+				if (databaseFilePath.length() > 250
+					&& EPlatform.get() == EPlatform.WINDOWS)
+				{
+					// print a message to chat for people who don't know how to access the log
+					String message =
+						MinecraftTextFormat.DARK_RED + "Distant Horizons: File Path Length Issue." + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
+							"A file path was [" + databaseFilePath.length() + "] characters long. \n" +
+							"Windows only supports file paths up to 260 chars normally. \n" +
+							"Please enable long file paths in Windows. \n";
+					ClientApi.INSTANCE.queueChatMessage(message);
+					
+					// add additional info to the log
+					windowsLongFileWarning = "Potential fix: enable long file paths in Windows.";
+				}
+				
+				throw new IOException("Unable to create database file at location [" + databaseFile.getPath() + "], please make sure the folder and file has the correct permissions. " + windowsLongFileWarning);
+			}
+			if (!databaseFile.canRead())
+			{
+				throw new IOException("Unable to read database file at location [" + databaseFile.getPath() + "], please make sure the folder and file has the correct permissions.");
+			}
+			if (!databaseFile.canWrite())
+			{
+				throw new IOException("Unable to write database file at location [" + databaseFile.getPath() + "], please make sure the folder and file aren't set to read-only.");
 			}
 			
-			throw new IOException("Unable to create database file at location ["+databaseFile.getPath()+"], please make sure the folder and file has the correct permissions. " + windowsLongFileWarning);
-		}
-		if (!databaseFile.canRead())
-		{
-			throw new IOException("Unable to read database file at location ["+databaseFile.getPath()+"], please make sure the folder and file has the correct permissions.");
-		}
-		if (!databaseFile.canWrite())
-		{
-			throw new IOException("Unable to write database file at location ["+databaseFile.getPath()+"], please make sure the folder and file aren't set to read-only.");
+			this.connectionString = this.databaseType+":"+this.databaseFile.getPath();
 		}
 		
 		
@@ -175,8 +189,6 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 		
 		// get or create the connection,
 		// reusing existing connections reduces the chance of locking the database during trivial queries
-		this.connectionString = this.databaseType+":"+this.databaseFile.getPath();
-		
 		
 		this.connection = CONNECTIONS_BY_CONNECTION_STRING.computeIfAbsent(this.connectionString, (connectionString) ->
 			{
