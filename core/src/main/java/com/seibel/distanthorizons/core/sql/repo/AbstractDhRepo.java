@@ -21,6 +21,7 @@ package com.seibel.distanthorizons.core.sql.repo;
 
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
 import com.seibel.distanthorizons.core.enums.MinecraftTextFormat;
+import com.seibel.distanthorizons.core.jar.EPlatform;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.sql.DatabaseUpdater;
@@ -133,6 +134,30 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 			}
 		}
 		
+		if (!databaseFile.exists())
+		{
+			String databaseFilePath = databaseFile.getPath();
+			
+			String windowsLongFileWarning = "";
+			// windows has issues at 260 characters, but checking a few characters shorter should make sure we catch this issue
+			if (databaseFilePath.length() > 250
+				&& EPlatform.get() == EPlatform.WINDOWS)
+			{
+				// print a message to chat for people who don't know how to access the log
+				String message =
+					MinecraftTextFormat.DARK_RED + "Distant Horizons: File Path Length Issue." + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
+					"A file path was ["+databaseFilePath.length()+"] characters long. \n" +
+					"Windows only supports file paths up to 260 chars normally. \n" +
+					"Please enable long file paths in Windows. \n"
+					;
+				ClientApi.INSTANCE.queueChatMessage(message);
+				
+				// add additional info to the log
+				windowsLongFileWarning = "Potential fix: enable long file paths in Windows.";
+			}
+			
+			throw new IOException("Unable to create database file at location ["+databaseFile.getPath()+"], please make sure the folder and file has the correct permissions. " + windowsLongFileWarning);
+		}
 		if (!databaseFile.canRead())
 		{
 			throw new IOException("Unable to read database file at location ["+databaseFile.getPath()+"], please make sure the folder and file has the correct permissions.");
@@ -453,7 +478,7 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 							"Please leave the world and delete the corrupted database file to fix. \n" +
 							"Error: [" + e.getMessage() + "]", e);
 						
-						ClientApi.INSTANCE.showChatMessageNextFrame(
+						ClientApi.INSTANCE.queueChatMessage(
 							MinecraftTextFormat.DARK_RED + MinecraftTextFormat.BOLD + "DH database is corrupted." + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
 								"DH will behave strangely if your continue playing. \n" +
 								"Please leave the world and delete the corrupted database file at: \n" +
