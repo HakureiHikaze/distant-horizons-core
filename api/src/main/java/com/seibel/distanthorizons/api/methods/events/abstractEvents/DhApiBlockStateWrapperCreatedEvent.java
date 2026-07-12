@@ -37,7 +37,7 @@ import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhAp
  * @since API 6.0.0
  * @see IDhApiBlockStateWrapper
  */
-public abstract class DhApiBlockStateWrapperCreatedEvent implements IDhApiEvent<DhApiBlockStateWrapperCreatedEvent.EventParam>
+public abstract class   DhApiBlockStateWrapperCreatedEvent implements IDhApiEvent<DhApiBlockStateWrapperCreatedEvent.EventParam>
 {
 	public abstract void blockStateWrapperCreated(DhApiEventParam<EventParam> event);
 	
