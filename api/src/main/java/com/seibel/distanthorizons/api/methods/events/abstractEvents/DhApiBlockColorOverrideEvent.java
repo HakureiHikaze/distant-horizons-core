@@ -156,10 +156,10 @@ public abstract class DhApiBlockColorOverrideEvent implements IDhApiEvent<DhApiB
 			this.colorAsInt = ColorUtil.argbToInt(alpha, red, green, blue);
 		}
 		
-		/** @since API 7.1.1 */
+		/** @since API 7.1.0 */
 		public int getTintColorAsInt() { return this.tintColorAsInt; }
 		
-		/** @since API 7.1.1 */
+		/** @since API 7.1.0 */
 		public int getBaseColorAsInt() { return this.baseColorAsInt; }
 		
 		/** @return the block's X value in the world */
