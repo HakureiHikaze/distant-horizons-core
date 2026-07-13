@@ -68,7 +68,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 	public final long pos;
 	
 	private final IDhClientLevel clientLevel;
-	private final IClientLevelWrapper levelWrapper;
+	private final IClientLevelWrapper clientLevelWrapper;
 	@WillNotClose
 	private final FullDataSourceProviderV2 fullDataSourceProvider;
 	private final LodQuadTree quadTree;
@@ -117,7 +117,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 		this.pos = pos;
 		this.quadTree = quadTree;
 		this.clientLevel = clientLevel;
-		this.levelWrapper = clientLevel.getClientLevelWrapper();
+		this.clientLevelWrapper = clientLevel.getClientLevelWrapper();
 		this.fullDataSourceProvider = fullDataSourceProvider;
 		
 		DEBUG_RENDERER.register(this, Config.Client.Advanced.Debugging.DebugWireframe.showRenderSectionStatus);
@@ -248,7 +248,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 			
 			
 			boolean enableTransparency = Config.Client.Advanced.Graphics.Quality.transparency.get() == EDhApiTransparency.COMPLETE;
-			LodQuadBuilder lodQuadBuilder = LodQuadBuilder.getBuilder(enableTransparency, this.clientLevel.getClientLevelWrapper());
+			LodQuadBuilder lodQuadBuilder = LodQuadBuilder.getBuilder(enableTransparency, this.clientLevelWrapper);
 			
 			
 			// get the adjacent positions
@@ -271,7 +271,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 
 				// the render sources are only needed by this synchronous method,
 				// then they can be closed
-				ColumnRenderBufferBuilder.makeLodRenderData(lodQuadBuilder, thisRenderSource, this.clientLevel, adjacentRenderSections, adjIsSameDetailLevel);
+				ColumnRenderBufferBuilder.makeLodRenderData(lodQuadBuilder, thisRenderSource, this.clientLevelWrapper, adjacentRenderSections, adjIsSameDetailLevel);
 				return lodQuadBuilder;
 			}
 			catch (Exception e)
@@ -305,7 +305,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 				? this.fullDataSourceProvider.get(finalPos)
 				: this.fullDataSourceProvider.getAdjForDirection(finalPos, direction.opposite()))
 		{
-			ColumnRenderSource columnRenderSource = FullDataToRenderDataTransformer.transformFullDataToRenderSource(fullDataSource, this.levelWrapper);
+			ColumnRenderSource columnRenderSource = FullDataToRenderDataTransformer.transformFullDataToRenderSource(fullDataSource, this.clientLevelWrapper);
 			return columnRenderSource;
 		}
 		catch (Exception e)
@@ -331,7 +331,7 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 		ArrayList<ByteBuffer> transparentBuffers)
 	{
 		CompletableFuture<LodBufferContainer> uploadFuture = LodBufferContainer.tryMakeAndUploadBuffersAsync(
-			this.pos, this.clientLevel, 
+			this.pos, this.clientLevelWrapper, 
 			opaqueBuffers, 
 			transparentBuffers);
 		uploadFuture.whenComplete((bufferContainer, e) ->
@@ -435,8 +435,8 @@ public class LodRenderSection implements IDebugRenderable, AutoCloseable
 			return;
 		}
 		
-		int levelMinY = this.clientLevel.getLevelWrapper().getMinHeight();
-		int levelMaxY = this.clientLevel.getLevelWrapper().getMaxHeight();
+		int levelMinY = this.clientLevelWrapper.getMinHeight();
+		int levelMaxY = this.clientLevelWrapper.getMaxHeight();
 		
 		// show the wireframe a bit lower than world max height,
 		// since most worlds don't render all the way up to the max height

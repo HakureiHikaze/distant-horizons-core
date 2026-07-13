@@ -34,6 +34,7 @@ public abstract class AbstractDhRenderApiDefinition implements IBindable
 	
 	public abstract EDhRenderDepth getRenderDepth();
 	public abstract EDhApiRenderingApi getRenderApi();
+	public abstract EDhApiRenderingEngine getRenderingEngine();
 	/** 
 	 * Returns true if the current renderer
 	 * is calling the base rendering API's method calls. <br>

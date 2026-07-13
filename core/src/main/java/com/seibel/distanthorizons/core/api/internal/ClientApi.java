@@ -36,7 +36,6 @@ import com.seibel.distanthorizons.core.render.DhApiRenderProxy;
 import com.seibel.distanthorizons.core.render.RenderParams;
 import com.seibel.distanthorizons.core.render.RenderThreadTaskHandler;
 import com.seibel.distanthorizons.core.render.renderer.*;
-import com.seibel.distanthorizons.core.util.TimerUtil;
 import com.seibel.distanthorizons.core.util.math.DhVec3d;
 import com.seibel.distanthorizons.core.util.objects.Pair;
 import com.seibel.distanthorizons.core.util.objects.RollingAverage;
@@ -98,7 +97,7 @@ public class ClientApi
 	}
 	
 	/** this includes the is dev build message and low allocated memory warning */
-	private static final int MS_BETWEEN_STATIC_STARTUP_MESSAGES = 4_000;
+	private static final int MS_BETWEEN_WARNING_MESSAGES = 3_000;
 	
 	/** 
 	 * This isn't the cleanest way of storing variables before passing them to the LOD renderer, 
@@ -128,10 +127,10 @@ public class ClientApi
 	private boolean highVanillaRenderDistanceWarningPrinted = false;
 	private boolean deprecatedRendererWarningPrinted = false;
 	
-	private long lastStaticWarningMessageSentMsTime = 0L;
+	private long lastChatMessageSentMsTime = 0L;
 	
-	private final Queue<String> chatMessageQueueForNextFrame = new LinkedBlockingQueue<>();
-	private final Queue<String> overlayMessageQueueForNextFrame = new LinkedBlockingQueue<>();
+	private final Queue<String> chatMessageQueue = new LinkedBlockingQueue<>();
+	private final Queue<String> overlayMessageQueue = new LinkedBlockingQueue<>();
 	
 	public boolean rendererDisabledBecauseOfExceptions = false;
 	
@@ -753,19 +752,20 @@ public class ClientApi
 		// this includes if the current build is a dev build
 		// and configuration warnings (IE Java memory amount and MC settings)
 		this.detectAndSendBootTimeWarnings();
-		
-		// Don't send any generic messages until the static ones have been sent.
-		// This makes sure the more critical messages are seen first.
-		if (this.staticStartupMessageSentRecently())
-		{
-			return;
-		}
 			
 		
 		// chat messages
-		while (!this.chatMessageQueueForNextFrame.isEmpty())
+		while (!this.chatMessageQueue.isEmpty())
 		{
-			String message = this.chatMessageQueueForNextFrame.poll();
+			// limit chat message rate so each one can be seen
+			// before being pushed off-screen
+			if (this.chatMessageSentRecently())
+			{
+				break;
+			}
+			this.lastChatMessageSentMsTime = System.currentTimeMillis();
+			
+			String message = this.chatMessageQueue.poll();
 			if (message == null)
 			{
 				// done to prevent potential null pointers
@@ -775,9 +775,9 @@ public class ClientApi
 		}
 		
 		// overlay messages
-		while (!this.overlayMessageQueueForNextFrame.isEmpty())
+		while (!this.overlayMessageQueue.isEmpty())
 		{
-			String message = this.overlayMessageQueueForNextFrame.poll();
+			String message = this.overlayMessageQueue.poll();
 			if (message == null)
 			{
 				// done to prevent potential null pointers
@@ -796,7 +796,7 @@ public class ClientApi
 			&& MC_CLIENT.playerExists())
 		{
 			this.isDevBuildMessagePrinted = true;
-			this.lastStaticWarningMessageSentMsTime = System.currentTimeMillis();
+			this.lastChatMessageSentMsTime = System.currentTimeMillis();
 			
 			// remind the user that this is a development build
 			String message =
@@ -808,12 +808,12 @@ public class ClientApi
 		
 		
 		// memory
-		if (this.staticStartupMessageSentRecently()) return;
+		if (this.chatMessageSentRecently()) return;
 		if (!this.lowMemoryWarningPrinted 
 			&& Config.Common.Logging.Warning.showLowMemoryWarningOnStartup.get())
 		{
 			this.lowMemoryWarningPrinted = true;
-			this.lastStaticWarningMessageSentMsTime = System.currentTimeMillis();
+			this.lastChatMessageSentMsTime = System.currentTimeMillis();
 			
 			// 4 GB
 			long minimumRecommendedMemoryInBytes = 4L * 1_000_000_000L;
@@ -834,7 +834,7 @@ public class ClientApi
 		
 		
 		// high vanilla render distance
-		if (this.staticStartupMessageSentRecently()) return;
+		if (this.chatMessageSentRecently()) return;
 		if (!this.highVanillaRenderDistanceWarningPrinted 
 			&& Config.Common.Logging.Warning.showHighVanillaRenderDistanceWarning.get())
 		{
@@ -843,7 +843,7 @@ public class ClientApi
 			// DH generally doesn't need a vanilla render distance above 12 
 			if (MC_RENDER.getRenderDistance() > 12)
 			{
-				this.lastStaticWarningMessageSentMsTime = System.currentTimeMillis();
+				this.lastChatMessageSentMsTime = System.currentTimeMillis();
 				
 				String message =
 					MinecraftTextFormat.YELLOW + "Distant Horizons: High vanilla render distance detected." + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
@@ -863,7 +863,7 @@ public class ClientApi
 		// Rendering Engine //
 		//==================//
 		//region
-		if (this.staticStartupMessageSentRecently()) return;
+		if (this.chatMessageSentRecently()) return;
 		if (!this.deprecatedRendererWarningPrinted)
 		{
 			this.deprecatedRendererWarningPrinted = true;
@@ -893,17 +893,17 @@ public class ClientApi
 		//endregion
 		
 	}
-	/** done to prevent sending a bunch of startup messages all at once, causing some to be missed. */
-	private boolean staticStartupMessageSentRecently()
+	/** done to prevent sending a bunch of chat messages all at once, causing some to be missed. */
+	private boolean chatMessageSentRecently()
 	{
-		if (this.lastStaticWarningMessageSentMsTime == 0)
+		if (this.lastChatMessageSentMsTime == 0)
 		{
 			// no static message has ever been sent
 			return false;
 		}
 		
-		long timeSinceLastMessage = System.currentTimeMillis() - this.lastStaticWarningMessageSentMsTime; 
-		return timeSinceLastMessage <= MS_BETWEEN_STATIC_STARTUP_MESSAGES;
+		long timeSinceLastMessage = System.currentTimeMillis() - this.lastChatMessageSentMsTime; 
+		return timeSinceLastMessage <= MS_BETWEEN_WARNING_MESSAGES;
 	}
 	
 	
@@ -911,12 +911,12 @@ public class ClientApi
 	 * Queues the given message to appear in chat the next valid frame.
 	 * Useful for queueing up messages that may be triggered before the user has loaded into the world. 
 	 */
-	public void showChatMessageNextFrame(String chatMessage) { this.chatMessageQueueForNextFrame.add(chatMessage); }
+	public void queueChatMessage(String chatMessage) { this.chatMessageQueue.add(chatMessage); }
 	
 	/**
-	 * Similar to {@link ClientApi#showChatMessageNextFrame(String)} but appears above the toolbar.
+	 * Similar to {@link ClientApi#queueChatMessage(String)} but appears above the toolbar.
 	 */
-	public void showOverlayMessageNextFrame(String message) { this.overlayMessageQueueForNextFrame.add(message); }
+	public void queueOverlayMessage(String message) { this.overlayMessageQueue.add(message); }
 	
 	//endregion
 	

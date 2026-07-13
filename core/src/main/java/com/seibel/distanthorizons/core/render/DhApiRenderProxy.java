@@ -21,6 +21,7 @@ package com.seibel.distanthorizons.core.render;
 
 import com.seibel.distanthorizons.api.enums.config.EDhApiRenderingApi;
 import com.seibel.distanthorizons.api.enums.config.EDhApiRenderingEngine;
+import com.seibel.distanthorizons.api.interfaces.render.IDhApiBlazeTextureWrapper;
 import com.seibel.distanthorizons.api.interfaces.render.IDhApiRenderProxy;
 import com.seibel.distanthorizons.api.objects.DhApiResult;
 import com.seibel.distanthorizons.core.api.internal.SharedApi;
@@ -111,6 +112,19 @@ public class DhApiRenderProxy implements IDhApiRenderProxy
 	}
 	
 	@Override 
+	public EDhApiRenderingEngine getRenderingEngine() throws IllegalStateException
+	{
+		AbstractDhRenderApiDefinition apiDef = tryGetApiDef();
+		if (apiDef == null)
+		{
+			// The rendering API hasn't been set up yet
+			throw new IllegalStateException("Distant Horizons hasn't finished setup yet. No renderer has been set.");
+		}
+		
+		return apiDef.getRenderingEngine();
+	}
+	
+	@Override 
 	public boolean isNativeRenderer() throws IllegalStateException
 	{
 		AbstractDhRenderApiDefinition apiDef = tryGetApiDef();
@@ -126,18 +140,43 @@ public class DhApiRenderProxy implements IDhApiRenderProxy
 	
 	public static int activeOpenGlDhDepthTextureId = -1;
 	@Override
-	public DhApiResult<Integer> getDhDepthTextureId()
+	public DhApiResult<Integer> getDhDepthTextureGlId()
 	{
 		int activeTexture = activeOpenGlDhDepthTextureId;
-		return (activeTexture == -1) ? DhApiResult.createFail("DH's depth texture hasn't been created and/or bound yet.", -1) : DhApiResult.createSuccess(activeTexture);
+		return (activeTexture == -1) 
+			? DhApiResult.createFail("DH's depth texture hasn't been created and/or bound yet.", -1)
+			: DhApiResult.createSuccess(activeTexture);
 	}
+	
+	public static IDhApiBlazeTextureWrapper activeBlazeDhDepthTextureWrapper = null;
+	@Override
+	public DhApiResult<IDhApiBlazeTextureWrapper> getDhDepthTextureBlazeWrapper()
+	{
+		IDhApiBlazeTextureWrapper activeTexture = activeBlazeDhDepthTextureWrapper;
+		return (activeTexture == null) 
+			? DhApiResult.createFail("DH's depth texture hasn't been created and/or bound yet.", null) 
+			: DhApiResult.createSuccess(activeTexture);
+	}
+	
 	
 	public static int activeOpenGlDhColorTextureId = -1;
 	@Override
-	public DhApiResult<Integer> getDhColorTextureId()
+	public DhApiResult<Integer> getDhColorTextureGlId()
 	{
 		int activeTexture = activeOpenGlDhColorTextureId;
-		return (activeTexture == -1) ? DhApiResult.createFail("DH's color texture hasn't been created and/or bound yet.", -1) : DhApiResult.createSuccess(activeTexture);
+		return (activeTexture == -1) 
+			? DhApiResult.createFail("DH's color texture hasn't been created and/or bound yet.", -1) 
+			: DhApiResult.createSuccess(activeTexture);
+	}
+	
+	public static IDhApiBlazeTextureWrapper activeBlazeDhColorTextureWrapper = null;
+	@Override
+	public DhApiResult<IDhApiBlazeTextureWrapper> getDhColorTextureBlazeWrapper()
+	{
+		IDhApiBlazeTextureWrapper activeTexture = activeBlazeDhColorTextureWrapper;
+		return (activeTexture == null) 
+			? DhApiResult.createFail("DH's color texture hasn't been created and/or bound yet.", null) 
+			: DhApiResult.createSuccess(activeTexture);
 	}
 	
 	
@@ -148,5 +187,7 @@ public class DhApiRenderProxy implements IDhApiRenderProxy
 	
 	@Override
 	public float getNearClipPlaneDistanceInBlocks(float partialTicks) { return RenderUtil.getNearClipPlaneInBlocks(); }
+	
+	
 	
 }

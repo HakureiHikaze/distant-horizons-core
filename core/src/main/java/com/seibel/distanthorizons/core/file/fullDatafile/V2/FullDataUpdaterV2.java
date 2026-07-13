@@ -22,6 +22,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class FullDataUpdaterV2 implements IDebugRenderable, AutoCloseable
 {
@@ -35,7 +36,9 @@ public class FullDataUpdaterV2 implements IDebugRenderable, AutoCloseable
 	public final Set<Long> lockedPosSet = ConcurrentHashMap.newKeySet();
 	private final ConcurrentHashMap<Long, AtomicInteger> queuedUpdateCountsByPos = new ConcurrentHashMap<>();
 	
-	public final ArrayList<IDataSourceUpdateListenerFunc<FullDataSourceV2>> dateSourceUpdateListeners = new ArrayList<>();
+	private final ArrayList<IDataSourceUpdateListenerFunc<FullDataSourceV2>> dateSourceUpdateListeners = new ArrayList<>();
+	/** using a read write lock since most operations will be reads */
+	private final ReentrantReadWriteLock updateListenerReadWriteLock = new ReentrantReadWriteLock();
 	
 	private final String levelId;
 	private final AtomicBoolean isShutdownRef = new AtomicBoolean(false);
@@ -47,6 +50,7 @@ public class FullDataUpdaterV2 implements IDebugRenderable, AutoCloseable
 	//=============//
 	// constructor //
 	//=============//
+	//region
 	
 	public FullDataUpdaterV2(FullDataSourceProviderV2 provider, String levelId)
 	{
@@ -55,11 +59,14 @@ public class FullDataUpdaterV2 implements IDebugRenderable, AutoCloseable
 		
 	}
 	
+	//endregion
+	
 	
 	
 	//===============//
 	// data updating //
 	//===============//
+	//region
 	
 	/**
 	 * Can be used if you don't want to lock the current thread
@@ -145,8 +152,10 @@ public class FullDataUpdaterV2 implements IDebugRenderable, AutoCloseable
 						}
 						
 						
-						synchronized (this.dateSourceUpdateListeners)
+						ReentrantReadWriteLock.ReadLock listenerReadLock = this.updateListenerReadWriteLock.readLock();
+						try
 						{
+							listenerReadLock.lock();
 							for (IDataSourceUpdateListenerFunc<FullDataSourceV2> listener : this.dateSourceUpdateListeners)
 							{
 								if (listener != null)
@@ -154,6 +163,10 @@ public class FullDataUpdaterV2 implements IDebugRenderable, AutoCloseable
 									listener.OnDataSourceUpdated(recipientDataSource);
 								}
 							}
+						}
+						finally
+						{
+							listenerReadLock.unlock();
 						}
 					}
 				}
@@ -185,12 +198,50 @@ public class FullDataUpdaterV2 implements IDebugRenderable, AutoCloseable
 		}
 	}
 	
+	//endregion
+	
+	
+	
+	//========//
+	// events //
+	//========//
+	//region
+	
+	public void addDataSourceUpdateListener(IDataSourceUpdateListenerFunc<FullDataSourceV2> listener)
+	{
+		ReentrantReadWriteLock.WriteLock writeLock = this.updateListenerReadWriteLock.writeLock();
+		try
+		{
+			writeLock.lock();
+			this.dateSourceUpdateListeners.add(listener);
+		}
+		finally
+		{
+			writeLock.unlock();
+		}
+	}
+	public void removeDataSourceUpdateListener(IDataSourceUpdateListenerFunc<FullDataSourceV2> listener)
+	{
+		ReentrantReadWriteLock.WriteLock writeLock = this.updateListenerReadWriteLock.writeLock();
+		try
+		{
+			writeLock.lock();
+			this.dateSourceUpdateListeners.remove(listener);
+		}
+		finally
+		{
+			writeLock.unlock();
+		}
+	}
+	
+	//endregion
 	
 	
 	
 	//==================//
 	// debugger methods //
 	//==================//
+	//region
 	
 	/** used for debugging to track which positions are queued for updating */
 	private void markUpdateStart(long dataSourcePos)
@@ -218,11 +269,14 @@ public class FullDataUpdaterV2 implements IDebugRenderable, AutoCloseable
 		});
 	}
 	
+	//endregion
+	
 	
 	
 	//===========//
 	// overrides //
 	//===========//
+	//region
 	
 	@Override
 	public void debugRender(AbstractDebugWireframeRenderer renderer)
@@ -236,6 +290,8 @@ public class FullDataUpdaterV2 implements IDebugRenderable, AutoCloseable
 	
 	@Override
 	public void close() { this.isShutdownRef.set(true); }
+	
+	//endregion
 	
 	
 	

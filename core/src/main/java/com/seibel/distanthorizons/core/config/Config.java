@@ -1561,19 +1561,18 @@ public class Config
 			
 			public static ConfigEntry<Boolean> disableUnchangedChunkCheck = new ConfigEntry.Builder<Boolean>()
 				.set(false)
-				// enabling this can be quite detrimental to performance,
-				// so hiding it in the config file should reduce people accidentally enabling it
-				.setAppearance(EConfigEntryAppearance.ONLY_IN_FILE)
 				.comment(""
-					+ "Enabling this will drastically increase chunk processing time\n"
-					+ "and you may need to increase your CPU load to handle it.\n"
+					+ "Enabling this will drastically speed up chunk processing time\n"
+					+ "if you are CPU limited.\n"
+					+ "Disabling it will drastically speed up chunk processing time\n"
+					+ "if you are disk speed/IO limited.\n"
 					+ "\n"
 					+ "Normally DH will attempt to skip creating LODs for chunks it's already seen\n"
 					+ "and that haven't changed.\n"
 					+ "\n"
-					+ "However sometimes that logic incorrectly prevents LODs from being updated.\n"
-					+ "Disabling this check may fix issues where LODs aren't updated after\n"
-					+ "blocks have been changed.\n"
+					+ "Disabling this option can also fix a rare bug where\n"
+					+ "modified chunks are skipped due to being too similar to\n"
+					+ "their saved hash.\n"
 					+ "")
 				.build();
 			
@@ -1670,6 +1669,15 @@ public class Config
 					+ "\n"
 					+ "You probably don't need to change this unless you are also \n"
 					+ "running C2ME and are seeing thread starvation in either C2ME or DH. \n"
+					+ "")
+				.build();
+			
+			public static final ConfigEntry<Boolean> useC2meThreadCount = new ConfigEntry.Builder<Boolean>()
+				.set(true)
+				.comment(""
+					+ "If C2ME is present, set DH's thread count to match C2ME. \n"
+					+ "\n"
+					+ "This is necessary to prevent thread starvation issues when C2ME is present. \n"
 					+ "")
 				.build();
 			

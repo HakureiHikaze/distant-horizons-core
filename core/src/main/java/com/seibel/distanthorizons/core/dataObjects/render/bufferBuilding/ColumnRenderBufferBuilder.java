@@ -31,6 +31,7 @@ import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListCheckout;
 import com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList.PhantomArrayListPool;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
+import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
 import com.seibel.distanthorizons.coreapi.util.ColorUtil;
 import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.RenderDataPointUtil;
@@ -55,7 +56,7 @@ public class ColumnRenderBufferBuilder
 	//==============//
 	
 	public static void makeLodRenderData(
-			LodQuadBuilder quadBuilder, ColumnRenderSource renderSource, IDhClientLevel clientLevel,
+			LodQuadBuilder quadBuilder, ColumnRenderSource renderSource, IClientLevelWrapper clientLevelWrapper,
 			ColumnRenderSource[] adjRegions, boolean[] isSameDetailLevel)
 	{
 		//=============//
@@ -273,7 +274,7 @@ public class ColumnRenderBufferBuilder
 						}
 						
 						addRenderDataPointToBuilder(
-							clientLevel, phantomArrayCheckout,
+							clientLevelWrapper, phantomArrayCheckout,
 							data, topDataPoint, bottomDataPoint,
 							adjColumnViews, isSameDetailLevel, faceTileIdsByDirectionOrdinal,
 							thisDetailLevel, relX, relZ,
@@ -286,7 +287,7 @@ public class ColumnRenderBufferBuilder
 		quadBuilder.mergeQuads();
 	}
 	private static void addRenderDataPointToBuilder(
-			IDhClientLevel clientLevel, PhantomArrayListCheckout phantomArrayCheckout,
+			IClientLevelWrapper clientLevelWrapper, PhantomArrayListCheckout phantomArrayCheckout,
 			long renderData, long topRenderData, long bottomRenderData, 
 			ColumnRenderView[] adjColumnViews, boolean[] isSameDetailLevel, short @Nullable [] faceTileIdsByDirectionOrdinal,
 			byte detailLevel, int renderSourceOffsetPosX, int renderSourceOffsetPosZ, 
@@ -412,7 +413,7 @@ public class ColumnRenderBufferBuilder
 		}
 		
 		ColumnBox.addBoxQuadsToBuilder(
-			quadBuilder, phantomArrayCheckout, clientLevel,
+			quadBuilder, phantomArrayCheckout, clientLevelWrapper,
 			blockWidth, blockMaxY,
 			blockMinX, blockMinY, blockMinZ,
 			color,

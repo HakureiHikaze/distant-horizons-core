@@ -324,6 +324,7 @@ public class PriorityTaskPicker
 		
 		
 		public int getQueueSize() { return this.taskQueue.size(); }
+		/** number of threads */
 		public int getPoolSize() { return Config.Common.MultiThreading.numberOfThreads.get(); }
 		
 		public int getRunningTaskCount() { return this.runningTasksRef.get(); }
