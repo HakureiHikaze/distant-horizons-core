@@ -186,6 +186,17 @@ public abstract class AbstractDhLevel implements IDhLevel
 		return this.updateDataSourcesAsync(fullDataSource)
 			.thenRun(() -> 
 			{
+				// If we are processing a lot of chunks at once
+				// (like with C2ME OpenCL)
+				// then we can quickly become bottlenecked by the
+				// chunk hash (due to being a lot of small disk operations).
+				// Disabling the chunk hash saving can improve performance a moderate amount.
+				boolean checkChunkHash = !Config.Common.LodBuilding.disableUnchangedChunkCheck.get();
+				if (!checkChunkHash)
+				{
+					return;
+				}
+				
 				try
 				{
 					HashSet<DhChunkPos> updatedChunkPosSet = this.updatedChunkPosSetBySectionPos.remove(fullDataSource.getPos());
