@@ -45,6 +45,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -190,18 +191,44 @@ public abstract class AbstractDhLevel implements IDhLevel
 					HashSet<DhChunkPos> updatedChunkPosSet = this.updatedChunkPosSetBySectionPos.remove(fullDataSource.getPos());
 					if (updatedChunkPosSet != null)
 					{
-						for (DhChunkPos chunkPos : updatedChunkPosSet)
+						if (this.chunkHashRepo == null)
 						{
-							// save after the data source has been updated to prevent saving the hash without the associated datasource
-							Integer chunkHash = this.updatedChunkHashesByChunkPos.remove(chunkPos);
-							if (this.chunkHashRepo != null && chunkHash != null)
+							return;
+						}
+						
+						Connection dbConnection = this.chunkHashRepo.getConnection();
+						if (dbConnection == null)
+						{
+							return;
+						}
+						
+						// insert all chunk hashes in a single transaction to speed things up
+						boolean previousAutoCommit = dbConnection.getAutoCommit();
+						dbConnection.setAutoCommit(false);
+						
+						try
+						{
+							for (DhChunkPos chunkPos : updatedChunkPosSet)
 							{
-								this.chunkHashRepo.save(new ChunkHashDTO(chunkPos, chunkHash));
+								// save after the data source has been updated to prevent saving the hash without the associated datasource
+								Integer chunkHash = this.updatedChunkHashesByChunkPos.remove(chunkPos);
+								if (this.chunkHashRepo != null
+									&& chunkHash != null)
+								{
+									this.chunkHashRepo.save(new ChunkHashDTO(chunkPos, chunkHash));
+								}
+								
+								ApiEventInjector.INSTANCE.fireAllEvents(
+									DhApiChunkModifiedEvent.class,
+									new DhApiChunkModifiedEvent.EventParam(this.getLevelWrapper(), chunkPos.getX(), chunkPos.getZ()));
 							}
 							
-							ApiEventInjector.INSTANCE.fireAllEvents(
-								DhApiChunkModifiedEvent.class,
-								new DhApiChunkModifiedEvent.EventParam(this.getLevelWrapper(), chunkPos.getX(), chunkPos.getZ()));
+							dbConnection.commit();
+						}
+						finally
+						{
+							dbConnection.rollback();
+							dbConnection.setAutoCommit(previousAutoCommit);
 						}
 					}
 				}

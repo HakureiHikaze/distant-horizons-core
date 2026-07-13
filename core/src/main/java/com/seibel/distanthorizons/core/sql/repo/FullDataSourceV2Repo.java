@@ -196,27 +196,51 @@ public class FullDataSourceV2Repo extends AbstractDhRepo<Long, FullDataSourceV2D
 		return dto;
 	}
 	
-	
-	private final String insertSqlTemplate =
-		"INSERT INTO "+this.getTableName() + " (\n" +
-		"   DetailLevel, PosX, PosZ, \n" +
-		"   MinY, DataChecksum, \n" +
-		"   Data, ColumnGenerationStep, ColumnWorldCompressionMode, Mapping, \n" +
-		"   NorthAdjData, SouthAdjData, EastAdjData, WestAdjData, \n" +
-		"   DataFormatVersion, CompressionMode, ApplyToParent, ApplyToChildren, \n" +
-		"   LastModifiedUnixDateTime, CreatedUnixDateTime) \n" +
-		"VALUES( \n" +
-		"    ?, ?, ?, \n" +
-		"    ?, ?, \n" +
-		"    ?, ?, ?, ?, \n" +
-		"    ?, ?, ?, ?, \n" +
-		"    ?, ?, ?, ?, \n" +
-		"    ?, ? \n" +
-		");";
 	@Override
-	public PreparedStatement createInsertStatement(FullDataSourceV2DTO dto) throws SQLException
+	public PreparedStatement createUpsertStatement(FullDataSourceV2DTO dto) throws SQLException
 	{
-		PreparedStatement statement = this.createPreparedStatement(this.insertSqlTemplate);
+		// Dynamic string so we can update one, both, or neither
+		// of the applyTo... flags on conflict.
+		// This is necessary to prevent concurrent modifications when
+		// update propagation is run.
+		String upsertSqlTemplate = (
+			"INSERT INTO " + this.getTableName() + " (\n" +
+			"   DetailLevel, PosX, PosZ, \n" +
+			"   MinY, DataChecksum, \n" +
+			"   Data, ColumnGenerationStep, ColumnWorldCompressionMode, Mapping, \n" +
+			"   NorthAdjData, SouthAdjData, EastAdjData, WestAdjData, \n" +
+			"   DataFormatVersion, CompressionMode, ApplyToParent, ApplyToChildren, \n" +
+			"   LastModifiedUnixDateTime, CreatedUnixDateTime) \n" +
+			"VALUES( \n" +
+			"    ?, ?, ?, \n" +
+			"    ?, ?, \n" +
+			"    ?, ?, ?, ?, \n" +
+			"    ?, ?, ?, ?, \n" +
+			"    ?, ?, ?, ?, \n" +
+			"    ?, ? \n" +
+			") \n" +
+			"ON CONFLICT(DetailLevel, PosX, PosZ) DO UPDATE SET \n" +
+			"    DataChecksum = excluded.DataChecksum \n" +
+			
+			"   ,Data = excluded.Data \n" +
+			"   ,ColumnGenerationStep = excluded.ColumnGenerationStep \n" +
+			"   ,ColumnWorldCompressionMode = excluded.ColumnWorldCompressionMode \n" +
+			"   ,Mapping = excluded.Mapping \n" +
+			"   ,NorthAdjData = excluded.NorthAdjData, SouthAdjData = excluded.SouthAdjData \n" +
+			"   ,EastAdjData = excluded.EastAdjData, WestAdjData = excluded.WestAdjData \n" +
+			
+			"   ,DataFormatVersion = excluded.DataFormatVersion \n" +
+			"   ,CompressionMode = excluded.CompressionMode \n" +
+			// only update these values if they're present
+			(dto.applyToParent != null ? "   ,ApplyToParent = excluded.ApplyToParent \n" : "") +
+			(dto.applyToChildren != null ? "   ,ApplyToChildren = excluded.ApplyToChildren \n" : "") +
+			
+			"   ,LastModifiedUnixDateTime = excluded.LastModifiedUnixDateTime \n"
+			// intern should help reduce memory overhead due to this string being dynamic
+		).intern();
+		
+		
+		PreparedStatement statement = this.createPreparedStatement(upsertSqlTemplate);
 		if (statement == null)
 		{
 			return null;
@@ -251,81 +275,7 @@ public class FullDataSourceV2Repo extends AbstractDhRepo<Long, FullDataSourceV2D
 		statement.setBoolean(i++, BoolUtil.falseIfNull(dto.applyToChildren));
 		
 		statement.setLong(i++, System.currentTimeMillis()); // last modified unix time
-		statement.setLong(i++, System.currentTimeMillis()); // created unix time
-		
-		return statement;
-	}
-	
-	@Override
-	public PreparedStatement createUpdateStatement(FullDataSourceV2DTO dto) throws SQLException
-	{
-		// Dynamic string so we can update one, both, or neither
-		// of the applyTo... flags.
-		// This is necessary to prevent concurrent modifications when
-		// update propagation is run.
-		String updateSqlTemplate = (
-				"UPDATE "+this.getTableName()+" \n" +
-				"SET \n" +
-				"   DataChecksum = ? \n" +
-				
-				"   ,Data = ? \n" +
-				"   ,ColumnGenerationStep = ? \n" +
-				"   ,ColumnWorldCompressionMode = ? \n" +
-				"   ,Mapping = ? \n" +
-				"   ,NorthAdjData = ?, SouthAdjData = ?, EastAdjData = ?, WestAdjData = ? \n" +
-				
-				"   ,DataFormatVersion = ? \n" +
-				"   ,CompressionMode = ? \n" +
-					// only update these values if they're present
-					(dto.applyToParent != null ? "   ,ApplyToParent = ? \n" : "" ) +
-					(dto.applyToChildren != null ? "   ,ApplyToChildren = ? \n" : "" ) +
-				
-				"   ,LastModifiedUnixDateTime = ? \n" +
-				"   ,CreatedUnixDateTime = ? \n" +
-				
-				"WHERE DetailLevel = ? AND PosX = ? AND PosZ = ?"
-			// intern should help reduce memory overhead due to this string being dynamic
-			).intern();
-		
-		
-		PreparedStatement statement = this.createPreparedStatement(updateSqlTemplate);
-		if (statement == null)
-		{
-			return null;
-		}
-		
-		
-		int i = 1;
-		statement.setInt(i++, dto.dataChecksum);
-		
-		statement.setBinaryStream(i++, new ByteArrayInputStream(dto.compressedDataByteArray.elements()), dto.compressedDataByteArray.size());
-		statement.setBinaryStream(i++, new ByteArrayInputStream(dto.compressedColumnGenStepByteArray.elements()), dto.compressedColumnGenStepByteArray.size());
-		statement.setBinaryStream(i++, new ByteArrayInputStream(dto.compressedWorldCompressionModeByteArray.elements()), dto.compressedWorldCompressionModeByteArray.size());
-		statement.setBinaryStream(i++, new ByteArrayInputStream(dto.compressedMappingByteArray.elements()), dto.compressedMappingByteArray.size());
-		// adjacent full data
-		statement.setBinaryStream(i++, new ByteArrayInputStream(dto.compressedNorthAdjDataByteArray.elements()), dto.compressedNorthAdjDataByteArray.size());
-		statement.setBinaryStream(i++, new ByteArrayInputStream(dto.compressedSouthAdjDataByteArray.elements()), dto.compressedSouthAdjDataByteArray.size());
-		statement.setBinaryStream(i++, new ByteArrayInputStream(dto.compressedEastAdjDataByteArray.elements()), dto.compressedEastAdjDataByteArray.size());
-		statement.setBinaryStream(i++, new ByteArrayInputStream(dto.compressedWestAdjDataByteArray.elements()), dto.compressedWestAdjDataByteArray.size());
-		
-		
-		statement.setByte(i++, dto.dataFormatVersion);
-		statement.setByte(i++, dto.compressionModeValue);
-		if (dto.applyToParent != null)
-		{
-			statement.setBoolean(i++, dto.applyToParent);
-		}
-		if (dto.applyToChildren != null)
-		{
-			statement.setBoolean(i++, dto.applyToChildren);
-		}
-		
-		statement.setLong(i++, System.currentTimeMillis()); // last modified unix time
-		statement.setLong(i++, dto.createdUnixDateTime);
-		
-		statement.setInt(i++, DhSectionPos.getDetailLevel(dto.pos) - DhSectionPos.SECTION_MINIMUM_DETAIL_LEVEL);
-		statement.setInt(i++, DhSectionPos.getX(dto.pos));
-		statement.setInt(i++, DhSectionPos.getZ(dto.pos));
+		statement.setLong(i++, System.currentTimeMillis()); // created unix time (only used if this is a fresh insert)
 		
 		return statement;
 	}

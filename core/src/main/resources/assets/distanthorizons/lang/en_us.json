@@ -720,6 +720,10 @@
     "Thread Priority",
   "distanthorizons.config.common.multiThreading.threadPriority.@tooltip":
     "What Java thread priority should DH's primary thread pools run with?\n\nYou probably don't need to change this unless you are also \nrunning C2ME and are seeing thread starvation in either C2ME or DH.",
+  "distanthorizons.config.common.multiThreading.useC2meThreadCount":
+    "Use C2ME Thread Count",
+  "distanthorizons.config.common.multiThreading.useC2meThreadCount.@tooltip":
+    "If C2ME is present, set DH's thread count to match C2ME. \n\nThis is necessary to prevent thread starvation issues when C2ME is present.",
 
 
 
