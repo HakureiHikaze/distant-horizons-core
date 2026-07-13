@@ -114,9 +114,8 @@ public class ThreadPoolUtil
 		fileHandlerThreadPool = taskPicker.createExecutor("IO");
 		renderSectionLoadThreadPool = taskPicker.createExecutor("Render Loader");
 		chunkToLodBuilderThreadPool = taskPicker.createExecutor("LOD Builder");
-		updatePropagatorThreadPool = taskPicker.createExecutor("Update Propagator", ThreadPoolUtil::worldGenThreadsCanRun); // the update propagator isn't necessary when moving through the world, so we'll pause it along with the world generator when moving fast
+		updatePropagatorThreadPool = taskPicker.createExecutor("Update Propagator", ThreadPoolUtil::updatePropagatorThreadsCanRun); // the update propagator isn't necessary when moving through the world, so we'll pause it along with the world generator when moving fast
 		worldGenThreadPool = taskPicker.createExecutor("World Gen", ThreadPoolUtil::worldGenThreadsCanRun);
-		
 		
 		
 		
@@ -170,24 +169,51 @@ public class ThreadPoolUtil
 	 */
 	public static boolean worldGenThreadsCanRun()
 	{
+		if (cameraMovingFast())
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	public static boolean updatePropagatorThreadsCanRun()
+	{
+		if (cameraMovingFast())
+		{
+			return false;
+		}
+		
+		PriorityTaskPicker.Executor lodBuilderExecutor = getChunkToLodBuilderExecutor();
+		if (lodBuilderExecutor != null
+			&& !lodBuilderExecutor.isTerminated())
+		{
+			// Don't run updates if there are chunks that need processing.
+			// This is especially important when running with Chunky.
+			int maxQueueSize = lodBuilderExecutor.getPoolSize() * 200;
+			if (lodBuilderExecutor.getQueueSize() > maxQueueSize)
+			{
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	
+	
+	private static boolean cameraMovingFast()
+	{
 		double cameraSpeed = ClientApi.INSTANCE.getAvgCameraSpeed();
 		// stop these threads if moving a little bit slower than max elytra speed
 		double maxAllowedSpeed = (LodUtil.ROCKET_ELYTRA_SPEED_IN_BLOCKS_PER_SEC - 10.0);
 		if (cameraSpeed > maxAllowedSpeed)
 		{
 			// pause if the user is moving too fast
-			return false;
+			return true;
 		}
 		
-		//PriorityTaskPicker.Executor executor = getRenderLoadingExecutor();
-		//if (executor != null
-		//	&& executor.getQueueSize() > 0)
-		//{
-		//	// pause if LODs are being loaded for rendering
-		//	return false;
-		//}
-		
-		return true;
+		return false;
 	}
 	
 	///endregion
