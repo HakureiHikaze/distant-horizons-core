@@ -55,7 +55,7 @@ public class ColumnBox
 	//region
 	
 	public static void addBoxQuadsToBuilder(
-		LodQuadBuilder builder, PhantomArrayListCheckout phantomArrayCheckout, IDhClientLevel clientLevel,
+		LodQuadBuilder builder, PhantomArrayListCheckout phantomArrayCheckout, IClientLevelWrapper clientLevelWrapper,
 		short blockWidth, short yHeight,
 		short minX, short minY, short minZ,
 		int color, byte irisBlockMaterialId, byte skyLight, byte blockLight,
@@ -66,12 +66,6 @@ public class ColumnBox
 		//================//
 		// variable setup //
 		//================//
-		
-		IClientLevelWrapper clientLevelWrapper = clientLevel.getClientLevelWrapper();
-		if (clientLevelWrapper == null)
-		{
-			LodUtil.assertNotReach("addBoxQuadsToBuilder getClientLevelWrapper should always succeed");
-		}
 		
 		short maxX = (short) (minX + blockWidth);
 		short maxY = (short) (minY + yHeight);
@@ -91,7 +85,7 @@ public class ColumnBox
 		int caveCullingMaxY = Integer.MIN_VALUE;
 		if (Config.Client.Advanced.Graphics.Culling.enableCaveCulling.get())
 		{
-			caveCullingMaxY = Config.Client.Advanced.Graphics.Culling.caveCullingHeight.get() - clientLevel.getLevelWrapper().getMinHeight();
+			caveCullingMaxY = Config.Client.Advanced.Graphics.Culling.caveCullingHeight.get() - clientLevelWrapper.getMinHeight();
 		}
 		
 		

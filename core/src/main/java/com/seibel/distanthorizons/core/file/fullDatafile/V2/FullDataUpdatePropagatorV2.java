@@ -97,7 +97,8 @@ public class FullDataUpdatePropagatorV2 implements IDebugRenderable, AutoCloseab
 				Thread.sleep(PROPAGATE_QUEUE_THREAD_DELAY_IN_MS);
 				
 				PriorityTaskPicker.Executor executor = ThreadPoolUtil.getUpdatePropagatorExecutor();
-				if (executor == null || executor.isTerminated())
+				if (executor == null 
+					|| executor.isTerminated())
 				{
 					continue;
 				}
