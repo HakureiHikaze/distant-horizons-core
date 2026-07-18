@@ -460,15 +460,7 @@ public class GeneratedFullDataSourceProvider extends FullDataSourceProviderV2 im
 	//================//
 	
 	private CompletableFuture<Void> onDataSourceSaveAsync(FullDataSourceV2 fullDataSource) 
-	{
-		// block lights should have been populated at the chunkWrapper stage
-		// waiting to populate the data source's skylight at this stage prevents re-lighting and
-		// allows us to reduce cross-chunk lighting issues by lighting the whole 4x4 LOD at once
-		int skyLight = this.level.getLevelWrapper().hasSkyLight() ? LodUtil.MAX_MC_LIGHT : LodUtil.MIN_MC_LIGHT;
-		DhLightingEngine.INSTANCE.bakeDataSourceSkyLight(fullDataSource, skyLight);
-		
-		return this.updateDataSourceAsync(fullDataSource);
-	}
+	{ return this.updateDataSourceAsync(fullDataSource); }
 	
 	
 	

@@ -25,7 +25,6 @@ import com.seibel.distanthorizons.core.dataObjects.fullData.sources.FullDataSour
 import com.seibel.distanthorizons.core.render.renderer.CloudRenderHandler;
 import com.seibel.distanthorizons.core.util.delayedSaveCache.DelayedBeaconSaveCache;
 import com.seibel.distanthorizons.core.util.delayedSaveCache.DelayedDataSourceSaveCache;
-import com.seibel.distanthorizons.core.generation.DhLightingEngine;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.pos.DhChunkPos;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
@@ -36,7 +35,6 @@ import com.seibel.distanthorizons.core.sql.repo.AbstractDhRepo;
 import com.seibel.distanthorizons.core.sql.repo.BeaconBeamRepo;
 import com.seibel.distanthorizons.core.sql.repo.ChunkHashRepo;
 import com.seibel.distanthorizons.core.util.KeyedLockContainer;
-import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.wrapperInterfaces.chunk.IChunkWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.renderPass.IDhGenericRenderer;
 import com.seibel.distanthorizons.coreapi.DependencyInjection.ApiEventInjector;
@@ -177,12 +175,6 @@ public abstract class AbstractDhLevel implements IDhLevel
 	
 	private CompletableFuture<Void> onDataSourceSaveAsync(FullDataSourceV2 fullDataSource)
 	{
-		// block lights should have been populated at the chunkWrapper stage
-		// waiting to populate the data source's skylight at this stage prevents re-lighting and
-		// allows us to reduce cross-chunk lighting issues by lighting the whole 4x4 LOD at once 
-		DhLightingEngine.INSTANCE.bakeDataSourceSkyLight(fullDataSource, this.getLevelWrapper().hasSkyLight() ? LodUtil.MAX_MC_LIGHT : LodUtil.MIN_MC_LIGHT);
-		
-		
 		return this.updateDataSourcesAsync(fullDataSource)
 			.thenRun(() -> 
 			{

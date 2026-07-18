@@ -39,6 +39,7 @@ import com.seibel.distanthorizons.core.sql.repo.FullDataSourceV2Repo;
 import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.objects.DataCorruptedException;
 import com.seibel.distanthorizons.core.util.threading.ThreadPoolUtil;
+import com.seibel.distanthorizons.core.wrapperInterfaces.world.ILevelWrapper;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -85,6 +86,7 @@ public class FullDataSourceProviderV2 implements IDebugRenderable, AutoCloseable
 	protected final AtomicBoolean isShutdownRef = new AtomicBoolean(false);
 	protected final File saveDir;
 	protected final IDhLevel level;
+	protected final ILevelWrapper levelWrapper;
 	protected final String levelId;
 	
 	
@@ -105,8 +107,9 @@ public class FullDataSourceProviderV2 implements IDebugRenderable, AutoCloseable
 		this.saveDir = (saveDirOverride == null) ? saveStructure.getSaveFolder(level.getLevelWrapper()) : saveDirOverride;
 		this.repo = new FullDataSourceV2Repo(AbstractDhRepo.DEFAULT_DATABASE_TYPE, new File(this.saveDir.getPath() + File.separator + ISaveStructure.DATABASE_NAME));
 		this.level = level;
+		this.levelWrapper = level.getLevelWrapper();
 		
-		this.levelId = this.level.getLevelWrapper().getDhIdentifier();
+		this.levelId = this.levelWrapper.getDhIdentifier();
 		
 		this.dataUpdater = new FullDataUpdaterV2(this, this.levelId);
 		this.updatePropagator = new FullDataUpdatePropagatorV2(this, this.dataUpdater, this.levelId);

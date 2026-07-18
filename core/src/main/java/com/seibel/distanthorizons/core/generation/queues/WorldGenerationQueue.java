@@ -487,7 +487,6 @@ public class WorldGenerationQueue implements IFullDataSourceRetrievalQueue, IDeb
 				}
 			}
 			
-			DhLightingEngine.INSTANCE.bakeDataSourceSkyLight(requestedDataSource, LodUtil.MAX_MC_LIGHT);
 			returnFuture.complete(requestedDataSource);
 		});
 		

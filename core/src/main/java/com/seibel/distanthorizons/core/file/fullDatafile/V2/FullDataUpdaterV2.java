@@ -1,17 +1,25 @@
 package com.seibel.distanthorizons.core.file.fullDatafile.V2;
 
 import com.seibel.distanthorizons.api.enums.config.EDhApiDataCompressionMode;
+import com.seibel.distanthorizons.api.interfaces.block.IDhApiBlockStateWrapper;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dataObjects.fullData.sources.FullDataSourceV2;
 import com.seibel.distanthorizons.core.file.fullDatafile.IDataSourceUpdateListenerFunc;
+import com.seibel.distanthorizons.core.generation.DhLightingEngine;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
+import com.seibel.distanthorizons.core.pos.DhChunkPos;
 import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.render.renderer.AbstractDebugWireframeRenderer;
 import com.seibel.distanthorizons.core.render.renderer.IDebugRenderable;
 import com.seibel.distanthorizons.core.sql.dto.FullDataSourceV2DTO;
+import com.seibel.distanthorizons.core.util.FullDataPointUtil;
+import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.threading.PositionalLockProvider;
 import com.seibel.distanthorizons.core.util.threading.ThreadPoolUtil;
+import com.seibel.distanthorizons.core.wrapperInterfaces.block.IBlockStateWrapper;
+import com.seibel.distanthorizons.core.wrapperInterfaces.world.ILevelWrapper;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -142,6 +150,18 @@ public class FullDataUpdaterV2 implements IDebugRenderable, AutoCloseable
 					boolean dataModified = recipientDataSource.updateFromDataSource(inputData);
 					if (dataModified)
 					{
+						// Only update sky lighting at the lowest level,
+						// everything above that gets that generated lighting for free
+						// via downsampling.
+						if (DhSectionPos.getDetailLevel(updatePos) == DhSectionPos.SECTION_BLOCK_DETAIL_LEVEL)
+						{
+							// Block lights should have been populated at the chunkWrapper stage.
+							// Sky lights must be re-calculated at this stage in order to prevent an issue
+							// where overhangs (specifically floating islands) have 0 sky light when they shouldn't.
+							DhLightingEngine.INSTANCE.bakeDataSourceSkyLight(recipientDataSource, this.provider.levelWrapper.hasSkyLight() ? LodUtil.MAX_MC_LIGHT : LodUtil.MIN_MC_LIGHT);
+						}
+						
+						
 						// save the updated data to the database
 						try (FullDataSourceV2DTO dto = this.createDtoFromDataSource(recipientDataSource))
 						{
