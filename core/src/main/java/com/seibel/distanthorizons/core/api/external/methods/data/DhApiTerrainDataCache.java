@@ -80,7 +80,8 @@ public class DhApiTerrainDataCache implements IDhApiTerrainDataCache
 			LongSet keySet = this.posToFullDataRef.keySet();
 			for (long pos : keySet)
 			{
-				SoftReference<FullDataSourceV2> dataRef = this.posToFullDataRef.remove(pos);
+				// we can't call remove() here because that can cause inconsistent issues
+				SoftReference<FullDataSourceV2> dataRef = this.posToFullDataRef.get(pos);
 				if (dataRef != null)
 				{
 					FullDataSourceV2 dataSource = dataRef.get();
@@ -97,6 +98,9 @@ public class DhApiTerrainDataCache implements IDhApiTerrainDataCache
 					}
 				}
 			}
+			
+			// clearing can only be done after all the data sources have been closed
+			this.posToFullDataRef.clear();
 		}
 		finally
 		{
