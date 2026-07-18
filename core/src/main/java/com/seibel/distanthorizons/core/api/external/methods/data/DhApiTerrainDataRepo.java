@@ -66,10 +66,13 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 	
 	private static final DhLogger LOGGER = new DhLoggerBuilder().build();
 	
+	private static final DhApiTerrainDataCache DEBUG_DATA_CACHE = new DhApiTerrainDataCache();
+	
+	
 	// debugging values
 	private static volatile boolean debugThreadRunning = false;
-	private static final DhApiTerrainDataCache debugDataCache = new DhApiTerrainDataCache();
 	private static long timeSinceLastDebugClear = 0L;
+	private static boolean logFullColumnInDebug = false;
 	private static DhApiVec3i currentDebugVec3i = new DhVec3i();
 	
 	
@@ -576,19 +579,19 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 					if (nowMs - timeSinceLastDebugClear > 5_000L)
 					{
 						timeSinceLastDebugClear = nowMs;
-						debugDataCache.clear();
+						DEBUG_DATA_CACHE.clear();
 					}
 					
 					
-					DhApiResult<DhApiTerrainDataPoint> single = getTerrainDataAtBlockYPos(levelWrapper, DhSectionPos.encode(LodUtil.BLOCK_DETAIL_LEVEL, blockPosX, blockPosZ), blockPosY, debugDataCache);
-					DhApiResult<DhApiTerrainDataPoint[]> column = getTerrainDataColumnArray(levelWrapper, DhSectionPos.encode(LodUtil.BLOCK_DETAIL_LEVEL, blockPosX, blockPosZ), null, debugDataCache);
+					DhApiResult<DhApiTerrainDataPoint> single = getTerrainDataAtBlockYPos(levelWrapper, DhSectionPos.encode(LodUtil.BLOCK_DETAIL_LEVEL, blockPosX, blockPosZ), blockPosY, DEBUG_DATA_CACHE);
+					DhApiResult<DhApiTerrainDataPoint[]> column = getTerrainDataColumnArray(levelWrapper, DhSectionPos.encode(LodUtil.BLOCK_DETAIL_LEVEL, blockPosX, blockPosZ), null, DEBUG_DATA_CACHE);
 					
 					long chunkPos = DhSectionPos.encodeContaining(LodUtil.CHUNK_DETAIL_LEVEL, new DhChunkPos(blockPosX, blockPosZ));
-					DhApiResult<DhApiTerrainDataPoint[][][]> area = getTerrainDataOverAreaForPositionDetailLevel(levelWrapper, chunkPos, debugDataCache);
+					DhApiResult<DhApiTerrainDataPoint[][][]> area = getTerrainDataOverAreaForPositionDetailLevel(levelWrapper, chunkPos, DEBUG_DATA_CACHE);
 					
 					
 					IMinecraftRenderWrapper MC_RENDER = SingletonInjector.INSTANCE.get(IMinecraftRenderWrapper.class);
-					DhApiResult<DhApiRaycastResult> rayCast = INSTANCE.raycastLodData(levelWrapper, MC_RENDER.getCameraExactPosition(), MC_RENDER.getLookAtVector(), 1000, debugDataCache);
+					DhApiResult<DhApiRaycastResult> rayCast = INSTANCE.raycastLodData(levelWrapper, MC_RENDER.getCameraExactPosition(), MC_RENDER.getLookAtVector(), 1000, DEBUG_DATA_CACHE);
 					if (rayCast.payload != null 
 						&& !rayCast.payload.pos.equals(currentDebugVec3i))
 					{
@@ -612,10 +615,23 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 						int skyLight = rayCast.payload.dataPoint.skyLightLevel;
 						int blockLight = rayCast.payload.dataPoint.blockLightLevel;
 						
-						DhApiResult<DhApiTerrainDataPoint[]> rayCastColumn = getTerrainDataColumnArray(levelWrapper, 
-							DhSectionPos.encode(LodUtil.BLOCK_DETAIL_LEVEL, currentDebugVec3i.x, currentDebugVec3i.z), 
-							null, debugDataCache);
-						
+						// can be enabled to debug a whole column
+						if (logFullColumnInDebug)
+						{
+							DhApiTerrainDataPoint[] rayCastColumn = getTerrainDataColumnArray(levelWrapper,
+								DhSectionPos.encode(LodUtil.BLOCK_DETAIL_LEVEL, currentDebugVec3i.x, currentDebugVec3i.z),
+								null, DEBUG_DATA_CACHE).payload;
+							
+							StringBuilder str = new StringBuilder("\n");
+							if (rayCastColumn != null)
+							{
+								for (DhApiTerrainDataPoint point : rayCastColumn)
+								{
+									str.append(point.topYBlockPos + " block: " + point.blockStateWrapper.getSerialString() + " SL: " + point.skyLightLevel + " BL: " + point.blockLightLevel + "\n");
+								}
+							}
+							LOGGER.info(str.toString());
+						}
 						
 						LOGGER.info("raycast: " + currentDebugVec3i + " block: " + blockString + " SL: " + skyLight + " BL: " + blockLight);
 					}
