@@ -1854,8 +1854,12 @@ public class Config
 						+ "")
 					.build();
 				
+				// as of 3.2.0 explicit GC shouldn't be needed since we pool our byte buffers
+				// but we'll keep this around (in a disabled form) for now in case we
+				// see problems that explicit GC solves
 				public static ConfigEntry<Boolean> logExplicitGcDisabledWarning = new ConfigEntry.Builder<Boolean>()
-					.set(true)
+					.set(false)
+					.setAppearance(EConfigEntryAppearance.ONLY_IN_FILE)
 					.comment(""
 						+ "If enabled, a message will be logged if explicit garbage collection \n"
 						+ "is disabled. \n"
@@ -1865,7 +1869,8 @@ public class Config
 					.build();
 				
 				public static ConfigEntry<Boolean> showExplicitGcDisabledWarning = new ConfigEntry.Builder<Boolean>()
-					.set(true)
+					.set(false)
+					.setAppearance(EConfigEntryAppearance.ONLY_IN_FILE)
 					.comment(""
 						+ "If enabled, a message will be displayed in chat if explicit garbage collection \n"
 						+ "is disabled. \n"
