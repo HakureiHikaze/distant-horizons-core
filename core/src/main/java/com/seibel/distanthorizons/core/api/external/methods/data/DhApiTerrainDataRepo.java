@@ -66,11 +66,10 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 	
 	private static final DhLogger LOGGER = new DhLoggerBuilder().build();
 	
-	private static final AbstractDebugWireframeRenderer DEBUG_RENDERER = SingletonInjector.INSTANCE.get(AbstractDebugWireframeRenderer.class);
-	
 	// debugging values
 	private static volatile boolean debugThreadRunning = false;
-	private static DhApiTerrainDataCache debugDataCache = new DhApiTerrainDataCache();
+	private static final DhApiTerrainDataCache debugDataCache = new DhApiTerrainDataCache();
+	private static long timeSinceLastDebugClear = 0L;
 	private static DhApiVec3i currentDebugVec3i = new DhVec3i();
 	
 	
@@ -567,9 +566,20 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 		if (!debugThreadRunning)
 		{
 			debugThreadRunning = true;
-			Thread thread = new Thread(() -> {
+			Thread thread = new Thread(() -> 
+			{
 				try
 				{
+					AbstractDebugWireframeRenderer debugRenderer = SingletonInjector.INSTANCE.get(AbstractDebugWireframeRenderer.class);
+					
+					long nowMs = System.currentTimeMillis();
+					if (nowMs - timeSinceLastDebugClear > 5_000L)
+					{
+						timeSinceLastDebugClear = nowMs;
+						debugDataCache.clear();
+					}
+					
+					
 					DhApiResult<DhApiTerrainDataPoint> single = getTerrainDataAtBlockYPos(levelWrapper, DhSectionPos.encode(LodUtil.BLOCK_DETAIL_LEVEL, blockPosX, blockPosZ), blockPosY, debugDataCache);
 					DhApiResult<DhApiTerrainDataPoint[]> column = getTerrainDataColumnArray(levelWrapper, DhSectionPos.encode(LodUtil.BLOCK_DETAIL_LEVEL, blockPosX, blockPosZ), null, debugDataCache);
 					
@@ -579,7 +589,8 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 					
 					IMinecraftRenderWrapper MC_RENDER = SingletonInjector.INSTANCE.get(IMinecraftRenderWrapper.class);
 					DhApiResult<DhApiRaycastResult> rayCast = INSTANCE.raycastLodData(levelWrapper, MC_RENDER.getCameraExactPosition(), MC_RENDER.getLookAtVector(), 1000, debugDataCache);
-					if (rayCast.payload != null && !rayCast.payload.pos.equals(currentDebugVec3i))
+					if (rayCast.payload != null 
+						&& !rayCast.payload.pos.equals(currentDebugVec3i))
 					{
 						currentDebugVec3i = rayCast.payload.pos;
 						
@@ -587,7 +598,8 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 						String blockString = "[NULL BLOCK]"; // shouldn't normally happen unless there is an issue with getting the terrain at the given position
 						if (rayCast.payload.dataPoint.blockStateWrapper != null)
 						{
-							if (!rayCast.payload.dataPoint.blockStateWrapper.isAir() && rayCast.payload.dataPoint.blockStateWrapper.getWrappedMcObject() != null)
+							if (!rayCast.payload.dataPoint.blockStateWrapper.isAir() 
+								&& rayCast.payload.dataPoint.blockStateWrapper.getWrappedMcObject() != null)
 							{
 								blockString = rayCast.payload.dataPoint.blockStateWrapper.getWrappedMcObject().toString();
 							}
@@ -597,7 +609,15 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 							}
 						}
 						
-						LOGGER.info("raycast: " + currentDebugVec3i + "\t block: " + blockString);
+						int skyLight = rayCast.payload.dataPoint.skyLightLevel;
+						int blockLight = rayCast.payload.dataPoint.blockLightLevel;
+						
+						DhApiResult<DhApiTerrainDataPoint[]> rayCastColumn = getTerrainDataColumnArray(levelWrapper, 
+							DhSectionPos.encode(LodUtil.BLOCK_DETAIL_LEVEL, currentDebugVec3i.x, currentDebugVec3i.z), 
+							null, debugDataCache);
+						
+						
+						LOGGER.info("raycast: " + currentDebugVec3i + " block: " + blockString + " SL: " + skyLight + " BL: " + blockLight);
 					}
 					else if (rayCast.payload == null && currentDebugVec3i != null)
 					{
@@ -609,16 +629,19 @@ public class DhApiTerrainDataRepo implements IDhApiTerrainDataRepo
 					if (rayCast.success 
 						&& rayCast.payload != null)
 					{
-						DEBUG_RENDERER.makeParticle(
-							new AbstractDebugWireframeRenderer.BoxParticle(
-								new AbstractDebugWireframeRenderer.Box(
-									DhSectionPos.encode((byte) 0, rayCast.payload.pos.x, rayCast.payload.pos.z), 
-										rayCast.payload.dataPoint.bottomYBlockPos, 
-										rayCast.payload.dataPoint.topYBlockPos, 
-										-0.1f, Color.RED),
-							1.0, 0f
-							)
-						);
+						if (debugRenderer != null)
+						{
+							debugRenderer.makeParticle(
+								new AbstractDebugWireframeRenderer.BoxParticle(
+									new AbstractDebugWireframeRenderer.Box(
+										DhSectionPos.encode((byte) 0, rayCast.payload.pos.x, rayCast.payload.pos.z), 
+											rayCast.payload.dataPoint.bottomYBlockPos, 
+											rayCast.payload.dataPoint.topYBlockPos, 
+											-0.1f, Color.RED),
+								1.0, 0f
+								)
+							);
+						}
 					}
 					
 					
