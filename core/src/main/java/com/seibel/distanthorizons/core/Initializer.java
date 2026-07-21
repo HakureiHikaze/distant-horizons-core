@@ -71,6 +71,7 @@ public class Initializer
 		{
 			try
 			{
+				// org.lwjgl.system.MemoryUtil should only exist in lwjgl3, in lwjgl2 it has a different path.
 				Class.forName("org.lwjgl.system.MemoryUtil", false, Initializer.class.getClassLoader());
 			}
 			catch (Throwable e)
