@@ -71,8 +71,7 @@ public class Initializer
 		{
 			try
 			{
-				// tinyfd (and a bunch of other stuff we need) isn't present in LWGJL 2, we need LWJGL 3
-				Class<?> tinyFd = org.lwjgl.util.tinyfd.TinyFileDialogs.class;
+				Class.forName("org.lwjgl.system.MemoryUtil", false, Initializer.class.getClassLoader());
 			}
 			catch (Throwable e)
 			{
