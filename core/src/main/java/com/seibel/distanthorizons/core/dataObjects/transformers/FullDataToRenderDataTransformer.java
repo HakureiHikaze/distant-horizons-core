@@ -20,6 +20,7 @@
 package com.seibel.distanthorizons.core.dataObjects.transformers;
 
 import com.seibel.distanthorizons.api.enums.config.EDhApiBlocksToAvoid;
+import com.seibel.distanthorizons.api.enums.rendering.EDhApiBlockMaterial;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dataObjects.fullData.FullDataPointIdMap;
 import com.seibel.distanthorizons.core.dataObjects.fullData.sources.FullDataSourceV2;
@@ -130,7 +131,7 @@ public class FullDataToRenderDataTransformer
 		int baseZ = DhSectionPos.getMinCornerBlockZ(pos);
 		
 		try(ColumnRenderView columnArrayView = ColumnRenderView.getPooled();
-			PhantomArrayListCheckout phantomCheckout = ARRAY_LIST_POOL.checkoutLongArrays(1);
+			PhantomArrayListCheckout phantomCheckout = ARRAY_LIST_POOL.checkoutLongArrays(2);
 			ColumnRenderView tempExpandingColumnView = ColumnRenderView.getPooled();
 			RenderDataPointReducingList reducingList = new RenderDataPointReducingList())
 		{
@@ -159,14 +160,15 @@ public class FullDataToRenderDataTransformer
 	
 	/** Updates the given {@link ColumnRenderView} to match the incoming Full data {@link LongArrayList} */
 	private static void updateOrReplaceRenderDataViewColumnWithFullDataColumn(
-			IClientLevelWrapper levelWrapper,
-			FullDataSourceV2 fullDataSource, int blockX, int blockZ, 
-			ColumnRenderView columnArrayView, 
-			LongArrayList fullDataColumn,
-			// only needed if the render source stores texture ids, see applyTextureSetIds
-			@Nullable ColumnRenderSource columnSource, int sourceRelX, int sourceRelZ,
-			// pooled references
-			PhantomArrayListCheckout phantomCheckout, ColumnRenderView tempExpandingColumnView, RenderDataPointReducingList reducingList, DhBlockPosMutable mutableBlockPos)
+		IClientLevelWrapper levelWrapper,
+		FullDataSourceV2 fullDataSource, int blockX, int blockZ, 
+		ColumnRenderView columnArrayView, 
+		LongArrayList fullDataColumn,
+		// only needed if the render source stores texture ids, see applyTextureSetIds
+		@Nullable ColumnRenderSource columnSource, int sourceRelX, int sourceRelZ,
+		// pooled references
+		PhantomArrayListCheckout phantomCheckout, ColumnRenderView tempExpandingColumnView, 
+		RenderDataPointReducingList reducingList, DhBlockPosMutable mutableBlockPos)
 	{
 		// we can't do anything if the full data is missing or empty
 		if (fullDataColumn == null 
@@ -184,9 +186,12 @@ public class FullDataToRenderDataTransformer
 		else
 		{
 			LongArrayList dataArrayList = phantomCheckout.getLongArray(0, fullDataLength);
+			LongArrayList voidDataArrayList = phantomCheckout.getLongArray(1, fullDataLength);
 			
 			// expand the ColumnArrayView to fit the new larger max vertical size
-			tempExpandingColumnView.populate(dataArrayList, fullDataLength, 0, fullDataLength);
+			tempExpandingColumnView.populate(
+				dataArrayList, voidDataArrayList,
+				fullDataLength, 0, 0, fullDataLength);
 			setRenderColumnView(levelWrapper, fullDataSource, blockX, blockZ, tempExpandingColumnView, fullDataColumn, mutableBlockPos);
 			
 			columnArrayView.changeVerticalSizeFrom(tempExpandingColumnView, reducingList);
@@ -408,7 +413,21 @@ public class FullDataToRenderDataTransformer
 				
 				if (ignoreBlock)
 				{
-					// this is a merged block and a cave block, so it should never be rendered
+					// if this is the bottom datapoint
+					// save it so lighting appears properly for floating
+					// islands over the void
+					if (fullDataIndex == fullColumnData.size() - 1)
+					{
+						long columnData = RenderDataPointUtil.createDataPoint(
+							bottomY + blockHeight, bottomY, 
+							ColorUtil.INVISIBLE, skyLight, blockLight,
+							// use air's material since this datapoint shouldn't be rendered, 
+							// it's only present to handle sky/block lighting
+							EDhApiBlockMaterial.AIR.index);
+						renderColumnData.setVoid(columnData);
+					}
+					
+					// this is a merged block and a cave block, so it shouldn't be rendered
 					continue;
 				}
 			}
@@ -493,6 +512,21 @@ public class FullDataToRenderDataTransformer
 					// (not entire sure why grid lines on LOD borders, maybe it has to do with the fact that those LODs aren't occluded?).
 					skylightToApplyToNextBlock = skyLight;
 					blocklightToApplyToNextBlock = blockLight;
+				}
+				
+				
+				// if this is the bottom datapoint
+				// save it so lighting appears properly for floating
+				// islands over the void
+				if (fullDataIndex == fullColumnData.size() - 1)
+				{
+					long columnData = RenderDataPointUtil.createDataPoint(
+						bottomY + blockHeight, bottomY, 
+						ColorUtil.INVISIBLE, skyLight, blockLight, 
+						// use air's material since this datapoint shouldn't be rendered, 
+						// it's only present to handle sky/block lighting
+						EDhApiBlockMaterial.AIR.index);
+					renderColumnData.setVoid(columnData);
 				}
 				
 				// skip this non-colliding block

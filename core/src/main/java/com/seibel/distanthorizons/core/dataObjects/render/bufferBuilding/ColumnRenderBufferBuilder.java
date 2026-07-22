@@ -263,7 +263,14 @@ public class ColumnRenderBufferBuilder
 						}
 						
 						long topDataPoint = (i - 1) >= 0 ? columnRenderData.get(i - 1) : RenderDataPointUtil.EMPTY_DATA;
-						long bottomDataPoint = (i + 1) < columnRenderData.size ? columnRenderData.get(i + 1) : RenderDataPointUtil.EMPTY_DATA;
+						long bottomDataPoint = (i + 1) < columnRenderData.size ? columnRenderData.get(i + 1) : columnRenderData.getVoid();
+						
+						// the datapoint below this may be empty due to how datapoint reducing
+						// is done. In that case use the void datapoint.
+						if (bottomDataPoint == RenderDataPointUtil.EMPTY_DATA)
+						{
+							bottomDataPoint = columnRenderData.getVoid();
+						}
 						
 						// determine which textures this data point's quads should use
 						short[] faceTileIdsByDirectionOrdinal = null;

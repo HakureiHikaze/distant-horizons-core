@@ -19,6 +19,7 @@
 
 package com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding;
 
+import com.seibel.distanthorizons.api.enums.rendering.EDhApiBlockMaterial;
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiTransparency;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dataObjects.render.ColumnRenderSource;
@@ -95,6 +96,13 @@ public class ColumnBox
 		if (!RenderDataPointUtil.doesDataPointExist(bottomData))
 		{
 			color = ColorUtil.setAlpha(color, 255);
+		}
+		
+		// never let air render,
+		// air is only used for holding sky/block light data
+		if (irisBlockMaterialId == EDhApiBlockMaterial.AIR.index)
+		{
+			return;
 		}
 		
 		
@@ -302,9 +310,12 @@ public class ColumnBox
 		segments.add(YSegmentUtil.encode(yMin, yMax, LodUtil.MAX_MC_LIGHT));
 		
 		// Process each adjacent datapoint and split segments as needed
-		for (int adjIndex = 0; adjIndex < adjCount; adjIndex++)
+		// (index -1 is a special case for the void datapoint)
+		for (int adjIndex = -1; adjIndex < adjCount; adjIndex++)
 		{
-			long adjPoint = adjColumnView.get(adjIndex);
+			long adjPoint = (adjIndex != -1) 
+				? adjColumnView.get(adjIndex) 
+				: adjColumnView.getVoid();
 			short adjMinY = RenderDataPointUtil.getYMin(adjPoint);
 			short adjMaxY = RenderDataPointUtil.getYMax(adjPoint);
 			
@@ -318,8 +329,26 @@ public class ColumnBox
 			}
 			
 			
-			long adjAbovePoint = (adjIndex != 0) ? adjColumnView.get(adjIndex - 1) : RenderDataPointUtil.EMPTY_DATA;
-			long adjBelowPoint = (adjIndex + 1 < adjCount) ? adjColumnView.get(adjIndex + 1) : RenderDataPointUtil.EMPTY_DATA;
+			long adjAbovePoint = (adjIndex > 0) ? adjColumnView.get(adjIndex - 1) : RenderDataPointUtil.EMPTY_DATA;
+			
+			long adjBelowPoint;
+			if (adjIndex != -1)
+			{
+				adjBelowPoint = (adjIndex + 1 < adjCount) 
+					? adjColumnView.get(adjIndex + 1) 
+					: adjColumnView.getVoid();
+			}
+			else
+			{
+				adjBelowPoint = adjColumnView.getVoid();
+			}
+			
+			// the datapoint below this may be empty due to how datapoint reducing
+			// is done. In that case use the void datapoint.
+			if (adjBelowPoint == RenderDataPointUtil.EMPTY_DATA)
+			{
+				adjBelowPoint = adjColumnView.getVoid();
+			}
 			
 			boolean adjOverVoid = !RenderDataPointUtil.doesDataPointExist(adjBelowPoint);
 			boolean adjTransparent = 
