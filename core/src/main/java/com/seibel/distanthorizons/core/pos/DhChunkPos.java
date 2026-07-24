@@ -105,8 +105,8 @@ public class DhChunkPos
 		int maxBlockX = minBlockX + LodUtil.CHUNK_WIDTH;
 		int maxBlockZ = minBlockZ + LodUtil.CHUNK_WIDTH;
 		
-		return minBlockX >= pos.getX() && pos.getX() < maxBlockX
-				&& minBlockZ >= pos.getZ() && pos.getZ() < maxBlockZ;
+		return minBlockX <= pos.getX() && pos.getX() < maxBlockX
+				&& minBlockZ <= pos.getZ() && pos.getZ() < maxBlockZ;
 	}
 	
 	public double distance(DhChunkPos other)
