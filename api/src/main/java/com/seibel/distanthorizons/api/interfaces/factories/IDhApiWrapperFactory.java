@@ -39,7 +39,9 @@ public interface IDhApiWrapperFactory
 	 * Constructs a {@link IDhApiBiomeWrapper} for use by other DhApi methods.
 	 * 
 	 * @param objectArray Expects the following Minecraft objects (in order) for each MC version: <br>
-	 * <b>1.16</b> and <b>1.17</b><br>
+	 * <b>1.7</b> <br>
+	 * - [net.minecraft.world.biome.BiomeGenBase] <br>
+	 * <b>1.12</b>, <b>1.16</b>, and <b>1.17</b> <br>
 	 * - [net.minecraft.world.level.biome.Biome] <br>
 	 * <b>1.18</b> and <b>newer</b> <br>
 	 * - {@literal [net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>] }<br>
@@ -58,6 +60,8 @@ public interface IDhApiWrapperFactory
 	 * Constructs a {@link IDhApiBlockStateWrapper} for use by other DhApi methods.
 	 *
 	 * @param objectArray Expects the following Minecraft objects (in order) for each MC version: <br>
+	 * <b>1.7</b> and <b>1.12</b> <br>
+	 * - [ ??? ]<br> TODO current implementation uses DH objects, fix this
 	 * <b>1.16</b> and <b>newer</b> <br>
 	 * - [net.minecraft.world.level.block.state.BlockState]<br>
 	 *
