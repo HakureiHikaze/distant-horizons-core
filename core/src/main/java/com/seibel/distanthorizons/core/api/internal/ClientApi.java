@@ -36,6 +36,7 @@ import com.seibel.distanthorizons.core.render.DhApiRenderProxy;
 import com.seibel.distanthorizons.core.render.RenderParams;
 import com.seibel.distanthorizons.core.render.RenderThreadTaskHandler;
 import com.seibel.distanthorizons.core.render.renderer.*;
+import com.seibel.distanthorizons.core.util.KeyCodesUtil;
 import com.seibel.distanthorizons.core.util.math.DhVec3d;
 import com.seibel.distanthorizons.core.util.objects.Pair;
 import com.seibel.distanthorizons.core.util.objects.RollingAverage;
@@ -65,8 +66,6 @@ import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapp
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
-
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -721,17 +720,17 @@ public class ClientApi
 		}
 		
 		
-		if (glfwKey == GLFW.GLFW_KEY_F6)
+		if (glfwKey == KeyCodesUtil.F6)
 		{
 			Config.Client.Advanced.Debugging.rendererMode.set(EDhApiRendererMode.next(Config.Client.Advanced.Debugging.rendererMode.get()));
 			MC_CLIENT.sendChatMessage("F6: Set rendering to " + Config.Client.Advanced.Debugging.rendererMode.get());
 		}
-		else if (glfwKey == GLFW.GLFW_KEY_F7)
+		else if (glfwKey == KeyCodesUtil.F7)
 		{
 			Config.Client.Advanced.Debugging.lodOnlyMode.set(!Config.Client.Advanced.Debugging.lodOnlyMode.get());
 			MC_CLIENT.sendChatMessage("F7: Set LOD only mode to " + Config.Client.Advanced.Debugging.lodOnlyMode.get());
 		}
-		else if (glfwKey == GLFW.GLFW_KEY_F8)
+		else if (glfwKey == KeyCodesUtil.F8)
 		{
 			Config.Client.Advanced.Debugging.debugRenderingColors.set(EDhApiDebugRendering.next(Config.Client.Advanced.Debugging.debugRenderingColors.get()));
 			MC_CLIENT.sendChatMessage("F8: Set debug mode to " + Config.Client.Advanced.Debugging.debugRenderingColors.get());
