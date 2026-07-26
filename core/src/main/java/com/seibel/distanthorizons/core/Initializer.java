@@ -66,20 +66,6 @@ public class Initializer
 		
 		LOGGER.info("Running library validation...");
 		
-		// check the LWJGL version for UI/GL methods
-		if (!MC_SHARED.isDedicatedServer()) // the dedicated server doesn't care what LWJGL version we're running
-		{
-			try
-			{
-				// org.lwjgl.system.MemoryUtil should only exist in lwjgl3, in lwjgl2 it has a different path.
-				Class.forName("org.lwjgl.system.MemoryUtil", false, Initializer.class.getClassLoader());
-			}
-			catch (Throwable e)
-			{
-				MC_CLIENT.crashMinecraft("Distant Horizons critical setup error: LWJGL 3 or newer required. Error: [" + e.getMessage() + "].", e);
-			}
-		}
-		
 		// confirm that all referenced libraries are available to use
 		try
 		{
