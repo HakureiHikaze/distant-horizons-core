@@ -30,7 +30,8 @@ dependencies {
     implementation project(":api")
 
     // MC-provided libraries (available at runtime via Minecraft)
-    compileOnly platform("org.lwjgl:lwjgl-bom:${rootProject.lwjgl_version}")
+    //TODO Remove ?
+/*    compileOnly platform("org.lwjgl:lwjgl-bom:${rootProject.lwjgl_version}")
     compileOnly "org.lwjgl:lwjgl"
     compileOnly "org.lwjgl:lwjgl-assimp"
     compileOnly "org.lwjgl:lwjgl-glfw"
@@ -41,7 +42,7 @@ dependencies {
     testRuntimeOnly "org.lwjgl:lwjgl-assimp::$lwjglNatives"
     testRuntimeOnly "org.lwjgl:lwjgl-glfw::$lwjglNatives"
     testRuntimeOnly "org.lwjgl:lwjgl-stb::$lwjglNatives"
-    testRuntimeOnly "org.lwjgl:lwjgl-tinyfd::$lwjglNatives"
+    testRuntimeOnly "org.lwjgl:lwjgl-tinyfd::$lwjglNatives"*/
 
     compileOnly("org.apache.logging.log4j:log4j-api:${rootProject.log4j_version}")
     compileOnly("org.apache.logging.log4j:log4j-core:${rootProject.log4j_version}")
