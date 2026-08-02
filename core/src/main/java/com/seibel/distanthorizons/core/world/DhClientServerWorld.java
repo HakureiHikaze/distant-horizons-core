@@ -143,7 +143,7 @@ public class DhClientServerWorld extends AbstractDhServerWorld<DhClientServerLev
 				
 				level.startRenderer();
 				clientLevelWrapper.setDhLevel(level);
-				clientLevelWrapperSetByDhLevel.get(level).add(wrapper);
+				this.clientLevelWrapperSetByDhLevel.get(level).add(wrapper);
 				return level;
 			});
 		}
