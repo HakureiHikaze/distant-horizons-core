@@ -282,31 +282,9 @@ public class SharedApi
 	
 	private static void queueChunkUpdate(ChunkUpdateQueueManager chunkManager, IChunkWrapper chunkWrapper, IDhLevel dhLevel)
 	{
-		// return if the chunk is already queued
-		if (chunkManager.contains(chunkWrapper.getChunkPos()))
-		{
-			return;
-		}
-		
-		
 		// add chunk update data to preUpdate queue
 		ChunkUpdateData updateData = new ChunkUpdateData(chunkWrapper, dhLevel);
 		chunkManager.addItemToPreUpdateQueue(chunkWrapper.getChunkPos(), updateData);
-		
-		
-		// queue the next position if there are still positions to process
-		AbstractExecutorService executor = ThreadPoolUtil.getChunkToLodBuilderExecutor();
-		if (executor != null)
-		{
-			try
-			{
-				executor.execute(WORLD_CHUNK_UPDATE_MANAGER::processEachQueue);
-			}
-			catch (RejectedExecutionException ignore)
-			{
-				// the executor was shut down, it should be back up shortly and able to accept new jobs
-			}
-		}
 	}
 	
 	//endregion

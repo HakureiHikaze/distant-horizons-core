@@ -109,7 +109,7 @@ public class WorldChunkUpdateManager
 					return oldQueueManager;
 				}
 				
-				oldQueueManager = new ChunkUpdateQueueManager();
+				oldQueueManager = new ChunkUpdateQueueManager(newLevelWrapper.getDhIdentifier());
 				return oldQueueManager;
 			});
 	}
@@ -136,7 +136,11 @@ public class WorldChunkUpdateManager
 		return queueCountRef.get();
 	}
 	
-	public void clear() { this.updateQueueByLevelWrapper.clear(); }
+	public void clear() 
+	{
+		this.updateQueueByLevelWrapper.forEach((levelWrapper, updateManager) -> updateManager.close());
+		this.updateQueueByLevelWrapper.clear();
+	}
 	
 	//endregion
 	

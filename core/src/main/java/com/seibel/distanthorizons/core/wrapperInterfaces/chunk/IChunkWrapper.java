@@ -21,7 +21,6 @@ package com.seibel.distanthorizons.core.wrapperInterfaces.chunk;
 
 import com.seibel.distanthorizons.core.generation.AdjacentChunkHolder;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos;
-import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos2D;
 import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPosMutable;
 import com.seibel.distanthorizons.core.pos.DhChunkPos;
 import com.seibel.distanthorizons.core.sql.dto.BeaconBeamDTO;
