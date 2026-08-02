@@ -422,18 +422,21 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 				continue; 
 			}
 			
-			// run this on the render thread to hopefully prevent
-			// closing render data while rendering is happening
-			RenderThreadTaskHandler.INSTANCE.queueRunningOnRenderThread("LodQuadTree delayed child cleanup", () -> 
+			// we have conflicting desires for running this method.
+			// 1. running on the render thread to prevent closing data sources that are actively being rendered.
+			// 2. closing nodes that were queued due to zoom, but are no longer needed.
+			// If we run this on the render thread we lag the render thread and end up queueing a lot
+			// of unnecessary work.
+			// However, running this on this thread prevents infinitely growing lod-loading tasks.
+			// Due to the problems with infinitely growing tasks, we're going to run this method
+			// here instead of the render thread.
+			node.deleteAllChildren((childRenderSection) ->
 			{
-				node.deleteAllChildren((childRenderSection) ->
+				if (childRenderSection != null)
 				{
-					if (childRenderSection != null)
-					{
-						childRenderSection.setRenderingEnabled(false);
-						childRenderSection.close();
-					}
-				});
+					childRenderSection.setRenderingEnabled(false);
+					childRenderSection.close();
+				}
 			});
 		}
 		
