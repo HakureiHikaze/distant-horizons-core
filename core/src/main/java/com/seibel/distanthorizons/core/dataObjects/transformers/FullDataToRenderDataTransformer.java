@@ -362,6 +362,17 @@ public class FullDataToRenderDataTransformer
 				continue;
 			}
 			
+			// can be un-commented for testing floating islands
+			// it's recommended to place a single netherrack block as a marker 
+			// and a glowstone block to trigger an LOD update
+			//if (DhSectionPos.encode((byte)6, -8, 2) == fullDataSource.getPos()
+			//	//&& block.getMaterialId() == EDhApiBlockMaterial.NETHER_STONE.index
+			//	&& block.getSerialString().contains("glowstone")
+			//)
+			//{
+			//	int k = 0;
+			//}
+			
 			
 			
 			//====================//
@@ -418,13 +429,11 @@ public class FullDataToRenderDataTransformer
 					// islands over the void
 					if (fullDataIndex == fullColumnData.size() - 1)
 					{
-						long columnData = RenderDataPointUtil.createDataPoint(
-							bottomY + blockHeight, bottomY, 
-							ColorUtil.INVISIBLE, skyLight, blockLight,
-							// use air's material since this datapoint shouldn't be rendered, 
-							// it's only present to handle sky/block lighting
-							EDhApiBlockMaterial.AIR.index);
-						renderColumnData.setVoid(columnData);
+						setVoidAir(
+							renderColumnData, renderDataIndex,
+							bottomY, blockHeight,
+							skyLight, blockLight
+						);
 					}
 					
 					// this is a merged block and a cave block, so it shouldn't be rendered
@@ -520,13 +529,11 @@ public class FullDataToRenderDataTransformer
 				// islands over the void
 				if (fullDataIndex == fullColumnData.size() - 1)
 				{
-					long columnData = RenderDataPointUtil.createDataPoint(
-						bottomY + blockHeight, bottomY, 
-						ColorUtil.INVISIBLE, skyLight, blockLight, 
-						// use air's material since this datapoint shouldn't be rendered, 
-						// it's only present to handle sky/block lighting
-						EDhApiBlockMaterial.AIR.index);
-					renderColumnData.setVoid(columnData);
+					setVoidAir(
+						renderColumnData, renderDataIndex,
+						bottomY, blockHeight,
+						skyLight, blockLight
+					);
 				}
 				
 				// skip this non-colliding block
@@ -606,6 +613,39 @@ public class FullDataToRenderDataTransformer
 		{
 			renderColumnData.set(0, RenderDataPointUtil.EMPTY_DATA);
 		}
+	}
+	
+	/**
+	 * Necessary to handle adjacent sky/block lighting
+	 * over the void.
+	 */
+	private static void setVoidAir(
+		ColumnRenderView renderColumnData, int renderDataIndex,
+		int bottomY, int blockHeight,
+		int skyLight, int blockLight)
+	{
+		// get the last render point (if present)
+		long lastDatapoint = RenderDataPointUtil.EMPTY_DATA;
+		if (renderDataIndex > 0)
+		{
+			lastDatapoint = renderColumnData.get(renderDataIndex - 1);
+		}
+		
+		// Get the max y position from the previous render data point's bottom Y.
+		// This is necessary for lighting to appear correctly for adjacent air data points over the void.
+		int maxY = (bottomY + blockHeight);
+		if (lastDatapoint != RenderDataPointUtil.EMPTY_DATA)
+		{
+			maxY = RenderDataPointUtil.getYMin(lastDatapoint);
+		}
+		
+		long columnData = RenderDataPointUtil.createDataPoint(
+			maxY, 0, // min Y since this datapoint should go all the way down to the void
+			ColorUtil.INVISIBLE, skyLight, blockLight,
+			// use air's material since this datapoint shouldn't be rendered, 
+			// it's only present to handle sky/block lighting
+			EDhApiBlockMaterial.AIR.index);
+		renderColumnData.setVoid(columnData);
 	}
 	
 	//endregion
