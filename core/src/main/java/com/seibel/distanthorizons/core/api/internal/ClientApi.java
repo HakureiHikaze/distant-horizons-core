@@ -32,6 +32,7 @@ import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
 import com.seibel.distanthorizons.core.logging.f3.F3Screen;
 import com.seibel.distanthorizons.core.network.messages.MessageRegistry;
 import com.seibel.distanthorizons.core.pos.DhChunkPos;
+import com.seibel.distanthorizons.core.render.CameraZoom;
 import com.seibel.distanthorizons.core.render.DhApiRenderProxy;
 import com.seibel.distanthorizons.core.render.RenderParams;
 import com.seibel.distanthorizons.core.render.RenderThreadTaskHandler;
@@ -93,6 +94,7 @@ public class ClientApi
 	private static class DelayedAccessors 
 	{
 		public static final IImmersivePortalsAccessor IMMERSIVE_PORTALS = ModAccessorInjector.INSTANCE.get(IImmersivePortalsAccessor.class);
+		public static final IIrisAccessor IRIS = ModAccessorInjector.INSTANCE.get(IIrisAccessor.class);
 	}
 	
 	/** this includes the is dev build message and low allocated memory warning */
@@ -440,21 +442,43 @@ public class ClientApi
 					
 					
 					
-					//====================//
-					// Iris data re-build //
-					//====================//
+					//================================//
+					// Iris LOD data re-build trigger //
+					//================================//
 					//region
 					
-					// delayed getter since ClientApi is created before this accessor is bound
-					IIrisAccessor irisAccessor = ModAccessorInjector.INSTANCE.get(IIrisAccessor.class);
-					if (irisAccessor != null)
+					if (DelayedAccessors.IRIS != null)
 					{
-						boolean shadersActive = irisAccessor.isShaderPackInUse();
+						boolean shadersActive = DelayedAccessors.IRIS.isShaderPackInUse();
 						if (this.irisShadersEnabledLastFrame != shadersActive)
 						{
 							this.irisShadersEnabledLastFrame = shadersActive;
 							DhApi.Delayed.renderProxy.clearRenderDataCache();
 						}
+					}
+					
+					//endregion
+					
+					
+					
+					//=============//
+					// Camera Zoom //
+					//=============//
+					//region
+					
+					boolean updateCameraZoom = true;
+					if (DelayedAccessors.IRIS != null
+						&& DelayedAccessors.IRIS.isRenderingShadowPass())
+					{
+						// only update the zoom if we're rendering the player's camera
+						// if we update the zoom during the shadow pass it will cause flickering
+						// due to the conflicting zoom information.
+						updateCameraZoom = false;
+					}
+					
+					if (updateCameraZoom)
+					{
+						CameraZoom.INSTANCE.update(RENDER_STATE);
 					}
 					
 					//endregion

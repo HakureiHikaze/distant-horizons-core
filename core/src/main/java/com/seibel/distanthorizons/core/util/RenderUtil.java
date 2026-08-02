@@ -66,20 +66,6 @@ public class RenderUtil
 		public static final float MIN_OVERDRAW_RATIO = 0.2f;
 	}
 	
-	public static final double NOT_ZOOMED_MAGNIFICATION = 1.0;
-	
-	/** 
-	 * The smallest camera magnification that's considered an intentional zoom. <br>
-	 * Vanilla FOV effects (IE drawing a bow or swimming underwater) shrink the FOV 
-	 * slightly and shouldn't cause LODs to reload. 
-	 */
-	private static final double MIN_ZOOM_MAGNIFICATION = 1.5;
-	/**
-	 * How much wider the zoom quality cone is than the zoomed camera's actual FOV.
-	 * @see CameraZoom#coneTanHalfAngle
-	 */
-	private static final double ZOOM_CONE_PADDING_MULTIPLIER = 1.5;
-	
 	
 	
 	//=====================//
@@ -323,104 +309,6 @@ public class RenderUtil
 			// * 2 to prevent clipping when high above the world
 			return (lodBlockDist + LodUtil.REGION_WIDTH) * 2;
 		}
-	}
-	
-	//endregion
-	
-	
-	
-	//=============//
-	// camera zoom //
-	//=============//
-	
-	//region
-	
-	/**
-	 * Updates the given zoom with how far the camera is currently zoomed in
-	 * (IE when using a spyglass or zoom mod)
-	 * and which direction the zoomed camera is looking. <br><br>
-	 *
-	 * Sets the input to {@link CameraZoom#NOT_ZOOMED} if the camera isn't zoomed in or zoomed quality increasing is disabled
-	 */
-	public static void updateCameraZoom(CameraZoom cameraZoom)
-	{
-		if (!Config.Client.Advanced.Graphics.Quality.increaseQualityWhenZoomedIn.get())
-		{
-			// zoom quality disabled
-			cameraZoom.set(CameraZoom.NOT_ZOOMED);
-			return;
-		}
-		
-		// will be null before the first frame has rendered
-		DhApiMat4f projectionMatrix = ClientApi.RENDER_STATE.mcProjectionMatrix;
-		if (projectionMatrix == null)
-		{
-			cameraZoom.set(CameraZoom.NOT_ZOOMED);
-			return;
-		}
-		
-		if (projectionMatrix.equals(DhMat4f.IDENTITY))
-		{
-			// on some MC versions the model view and projection matrices are
-			// pre-multiplied together and stored in the model view matrix
-			projectionMatrix = ClientApi.RENDER_STATE.mcModelViewMatrix;
-			if (projectionMatrix == null)
-			{
-				cameraZoom.set(CameraZoom.NOT_ZOOMED);
-				return;
-			}
-		}
-		
-		
-		
-		// For a perspective projection this row's length is the cotangent of half the vertical FOV.
-		// The row's length is used instead of m11 alone so the FOV can also be read from
-		// pre-multiplied matrices, where the row is rotated by the model view's unit length rotation rows.
-		double projectionYScale = Math.sqrt(
-				MathUtil.pow2(projectionMatrix.m10)
-				+ MathUtil.pow2(projectionMatrix.m11)
-				+ MathUtil.pow2(projectionMatrix.m12));
-		double fovSettingYScale = 1.0 / Math.tan(Math.toRadians(MC_RENDER.getFovSetting()) / 2.0);
-		
-		// how many times larger objects appear on screen compared to the player's FOV setting
-		double magnification = projectionYScale / fovSettingYScale;
-		if (magnification < MIN_ZOOM_MAGNIFICATION)
-		{
-			// ignores minor FOV reductions (IE vanilla FOV effects), 
-			// FOV increases (IE sprinting), 
-			// and non-perspective projections (IE shadow map rendering)
-			cameraZoom.set(CameraZoom.NOT_ZOOMED);
-			return;
-		}
-		
-		// limit how much additional detail a strong zoom (IE a spyglass) can request,
-		// since each additional detail level quadruples the number of LODs that need to be loaded
-		double quadraticBase = Config.Client.Advanced.Graphics.Quality.horizontalQuality.get().quadraticBase;
-		double maxMagnification = Math.pow(quadraticBase, Config.Client.Advanced.Graphics.Quality.maxZoomQualityIncrease.get());
-		magnification = Math.min(magnification, maxMagnification);
-		
-		// LOD detail is selected in 2D so only the look direction's horizontal component matters
-		DhVec3f lookAtVector = MC_RENDER.getLookAtVector();
-		double lookLengthXZ = Math.sqrt(MathUtil.pow2(lookAtVector.x) + MathUtil.pow2(lookAtVector.z));
-		if (lookLengthXZ < 0.1)
-		{
-			// looking almost straight up or down,
-			// no horizontal direction is being zoomed at
-			cameraZoom.set(CameraZoom.NOT_ZOOMED);
-			return;
-		}
-		
-		// same as the vertical FOV above, just for the horizontal FOV
-		double projectionXScale = Math.sqrt(
-				MathUtil.pow2(projectionMatrix.m00)
-				+ MathUtil.pow2(projectionMatrix.m01)
-				+ MathUtil.pow2(projectionMatrix.m02));
-		double coneTanHalfAngle = (1.0 / projectionXScale) * ZOOM_CONE_PADDING_MULTIPLIER;
-		
-		
-		cameraZoom.set(
-			magnification, coneTanHalfAngle,
-			lookAtVector.x / lookLengthXZ, lookAtVector.z / lookLengthXZ);
 	}
 	
 	//endregion

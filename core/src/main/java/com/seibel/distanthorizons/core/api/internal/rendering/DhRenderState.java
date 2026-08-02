@@ -45,6 +45,7 @@ public class DhRenderState
 	//========//
 	// checks //
 	//========//
+	//region
 	
 	public String unableToRenderBecause()
 	{
@@ -83,6 +84,8 @@ public class DhRenderState
 			throw new IllegalStateException(errorReasons);
 		}
 	}
+	
+	//endregion
 	
 	
 	
