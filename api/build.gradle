@@ -20,7 +20,7 @@ configurations {
 
 dependencies {
     compileOnly "org.apache.logging.log4j:log4j-api:${rootProject.log4j_version}"
-    testImplementation "junit:junit:4.13"
+    testImplementation "junit:junit:4.13.2"
 }
 
 java {
