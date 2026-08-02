@@ -186,6 +186,17 @@ public class PriorityTaskPicker
 		LOGGER.info("Shutting down PriorityTaskPicker thread pool...");
 		this.isShutDownRef.set(true);
 		
+		// signal all executors to shutdown
+		for (int i = 0; i < this.executors.size(); i++)
+		{
+			Executor executor = this.executors.get(i);
+			if (executor != null)
+			{
+				executor.shutdown();
+			}
+		}
+		
+		// since they're all already shutting down concurrently, this is bounded by the slowest one
 		try
 		{
 			for (int i = 0; i < this.executors.size(); i++)
@@ -193,7 +204,6 @@ public class PriorityTaskPicker
 				Executor executor = this.executors.get(i);
 				if (executor != null)
 				{
-					executor.shutdown();
 					if (!executor.awaitTermination(5, TimeUnit.SECONDS))
 					{
 						executor.shutdownNow();
