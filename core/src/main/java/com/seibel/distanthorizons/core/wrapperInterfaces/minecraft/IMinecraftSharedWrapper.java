@@ -37,5 +37,9 @@ public interface IMinecraftSharedWrapper extends IBindable
 	@Nullable
 	IServerLevelWrapper getLevelWrapper(String dimensionResourceLocation);
 	
+	/** returns true if MC's server thread is running in an acceptable amount of time */
+	boolean isServerThreadHealthy();
+	
+	
 	
 }

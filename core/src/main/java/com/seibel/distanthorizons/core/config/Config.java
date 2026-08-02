@@ -1483,6 +1483,16 @@ public class Config
 					+ "")
 				.build();
 			
+			public static ConfigUISpacer genLimitingSpacer = new ConfigUISpacer.Builder().build();
+			
+			public static final ConfigEntry<Boolean> limitIfServerUnhealthy = new ConfigEntry.Builder<Boolean>()
+				.set(true)
+				.comment(""
+					+ "If the Minecraft server thread is taking too long \n"
+					+ "Distant Horizons will pause world gen to reduce server stuttering/lag. \n"
+					+ "")
+				.build();
+			
 			public static ConfigUISpacer genProgressSpacer = new ConfigUISpacer.Builder().build();
 			
 			public static ConfigEntry<EDhApiDistantGeneratorProgressDisplayLocation> showGenerationProgress = new ConfigEntry.Builder<EDhApiDistantGeneratorProgressDisplayLocation>()
@@ -1521,6 +1531,10 @@ public class Config
 					+ "This can be useful for troubleshooting performance. \n"
 					+ "")
 				.build();
+			
+			
+			
+			// file configs //
 			
 			public static ConfigEntry<Integer> generationCenterChunkX = new ConfigEntry.Builder<Integer>()
 				.setChatCommandName("generation.bounds.centerChunk.x")

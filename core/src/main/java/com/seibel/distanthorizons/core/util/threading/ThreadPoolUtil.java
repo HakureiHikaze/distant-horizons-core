@@ -20,8 +20,11 @@
 package com.seibel.distanthorizons.core.util.threading;
 
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
+import com.seibel.distanthorizons.core.config.Config;
+import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.util.LodUtil;
 import com.seibel.distanthorizons.core.util.ThreadUtil;
+import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftSharedWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,6 +37,10 @@ import java.util.concurrent.*;
  */
 public class ThreadPoolUtil
 {
+	private static final IMinecraftSharedWrapper MC_SHARED = SingletonInjector.INSTANCE.get(IMinecraftSharedWrapper.class);
+	
+	
+	
 	//=========================//
 	// standalone thread pools //
 	//=========================//
@@ -175,6 +182,12 @@ public class ThreadPoolUtil
 		}
 		
 		if (chunkBuilderOverloaded())
+		{
+			return false;
+		}
+		
+		if (Config.Common.WorldGenerator.limitIfServerUnhealthy.get()
+			&& !MC_SHARED.isServerThreadHealthy())
 		{
 			return false;
 		}

@@ -677,7 +677,11 @@
     "Show Generation Speed in Chunks/Second",
   "distanthorizons.config.common.worldGenerator.generationProgressIncludeChunksPerSecond.@tooltip":
     "When logging generation progress also include the rate at which chunks \nare being generated. \nThis can be useful for troubleshooting performance.",
-
+  "distanthorizons.config.common.worldGenerator.limitIfServerUnhealthy":
+    "Limit if Server Unhealthy",
+  "distanthorizons.config.common.worldGenerator.limitIfServerUnhealthy.@tooltip":
+    "If the Minecraft server thread is taking too long \nDistant Horizons will pause world gen to reduce server stuttering/lag.",
+    
 
   "distanthorizons.config.common.lodBuilding":
     "Lod Building",
