@@ -174,12 +174,22 @@ public class ThreadPoolUtil
 			return false;
 		}
 		
+		if (chunkBuilderOverloaded())
+		{
+			return false;
+		}
+		
 		return true;
 	}
 	
 	public static boolean updatePropagatorThreadsCanRun()
 	{
 		if (cameraMovingFast())
+		{
+			return false;
+		}
+		
+		if (chunkBuilderOverloaded())
 		{
 			return false;
 		}
@@ -210,6 +220,22 @@ public class ThreadPoolUtil
 		if (cameraSpeed > maxAllowedSpeed)
 		{
 			// pause if the user is moving too fast
+			return true;
+		}
+		
+		return false;
+	}
+	
+	private static boolean chunkBuilderOverloaded()
+	{
+		// rarely the builder executor can queue up
+		// thousands of tasks,
+		// if this happens we want to limit other executors
+		// so these tasks can be hanlded.
+		PriorityTaskPicker.Executor ex = getChunkToLodBuilderExecutor();
+		if (ex != null
+			&& ex.getQueueSize() > 1000)
+		{
 			return true;
 		}
 		
