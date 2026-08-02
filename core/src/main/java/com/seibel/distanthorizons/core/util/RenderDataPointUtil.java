@@ -40,8 +40,8 @@ import com.seibel.distanthorizons.coreapi.util.ColorUtil;
  * R: color red <br>
  * G: color green <br>
  * B: color blue <br>
- * H: column height <br>
- * D: column depth (what Y value the column starts at) <br>
+ * H: column max Y <br>
+ * D: column min Y (what Y value the column starts at) <br>
  * BL: block light <br>
  * SL: sky light <br>
  *
@@ -87,8 +87,8 @@ public class RenderDataPointUtil
 	public final static int RED_SHIFT = GREEN_SHIFT + 8;
 	public final static int ALPHA_SHIFT = RED_SHIFT + 8;
 	
-	public final static int HEIGHT_SHIFT = 20;
-	public final static int DEPTH_SHIFT = 8;
+	public final static int MAX_Y_SHIFT = 20;
+	public final static int MIN_Y_SHIFT = 8;
 	public final static int BLOCK_LIGHT_SHIFT = 4;
 	public final static int SKY_LIGHT_SHIFT = 0;
 	
@@ -97,18 +97,18 @@ public class RenderDataPointUtil
 	public final static long GREEN_MASK = 0xFF;
 	public final static long BLUE_MASK = 0xFF;
 	public final static long COLOR_MASK = 0xFFFFFF;
-	public final static long HEIGHT_MASK = 0xFFF;
-	public final static long DEPTH_MASK = 0xFFF;
-	public final static long HEIGHT_DEPTH_MASK = 0xFFFFFF;
+	public final static long MAX_Y_MASK = 0xFFF;
+	public final static long MIN_Y_MASK = 0xFFF;
+	public final static long MIN_MAX_Y_MASK = 0xFFFFFF;
 	public final static long BLOCK_LIGHT_MASK = 0xF;
 	public final static long SKY_LIGHT_MASK = 0xF;
 	public final static long IRIS_BLOCK_MATERIAL_ID_MASK = 0xF;
 	public final static long COMPARE_SHIFT = 0b111;
 	
-	public final static long HEIGHT_SHIFTED_MASK = HEIGHT_MASK << HEIGHT_SHIFT;
-	public final static long DEPTH_SHIFTED_MASK = DEPTH_MASK << DEPTH_SHIFT;
+	public final static long MAX_Y_SHIFTED_MASK = MAX_Y_MASK << MAX_Y_SHIFT;
+	public final static long MIN_Y_SHIFTED_MASK = MIN_Y_MASK << MIN_Y_SHIFT;
 	
-	public final static long VOID_SETTER = HEIGHT_SHIFTED_MASK | DEPTH_SHIFTED_MASK;
+	public final static long VOID_SETTER = MAX_Y_SHIFTED_MASK | MIN_Y_SHIFTED_MASK;
 	
 	
 	
@@ -116,65 +116,65 @@ public class RenderDataPointUtil
 	// datapoint manipulation //
 	//========================//
 	
-	public static long createDataPoint(int height, int depth, int color, int lightSky, int lightBlock, int irisBlockMaterialId)
+	public static long createDataPoint(int maxY, int minY, int color, int lightSky, int lightBlock, int irisBlockMaterialId)
 	{
 		return createDataPoint(
 				ColorUtil.getAlpha(color),
 				ColorUtil.getRed(color),
 				ColorUtil.getGreen(color),
 				ColorUtil.getBlue(color),
-				height, depth, lightSky, lightBlock, irisBlockMaterialId);
+				maxY, minY, lightSky, lightBlock, irisBlockMaterialId);
 	}
 	
-	public static long createDataPoint(int alpha, int red, int green, int blue, int height, int depth, int lightSky, int lightBlock, int irisBlockMaterialId)
+	public static long createDataPoint(int alpha, int red, int green, int blue, int maxY, int minY, int lightSky, int lightBlock, int irisBlockMaterialId)
 	{
 		if (RUN_VALIDATION)
 		{
 			// assertions are inside if-blocks to prevent unnecessary string concatenations
-			if (height < 0 || height >= MAX_WORLD_Y_SIZE)
+			if (maxY < 0 || maxY >= MAX_WORLD_Y_SIZE)
 			{
-				LodUtil.assertNotReach("Trying to create datapoint with height[" + height + "] out of range!");
+				LodUtil.assertNotReach("Trying to create datapoint with max Y [" + maxY + "] out of range!");
 			}
-			if (depth < 0 || depth >= MAX_WORLD_Y_SIZE)
+			if (minY < 0 || minY >= MAX_WORLD_Y_SIZE)
 			{
-				LodUtil.assertNotReach("Trying to create datapoint with depth[" + depth + "] out of range!");
+				LodUtil.assertNotReach("Trying to create datapoint with min Y [" + minY + "] out of range!");
 			}
 			
 			if (lightSky < 0 || lightSky >= 16)
 			{
-				LodUtil.assertNotReach("Trying to create datapoint with lightSky[" + lightSky + "] out of range!");
+				LodUtil.assertNotReach("Trying to create datapoint with lightSky [" + lightSky + "] out of range!");
 			}
 			if (lightBlock < 0 || lightBlock >= 16)
 			{
-				LodUtil.assertNotReach("Trying to create datapoint with lightBlock[" + lightBlock + "] out of range!");
+				LodUtil.assertNotReach("Trying to create datapoint with lightBlock [" + lightBlock + "] out of range!");
 			}
 			
 			if (irisBlockMaterialId < 0 || irisBlockMaterialId >= 256)
 			{
-				LodUtil.assertNotReach("Trying to create datapoint with irisBlockMaterialId[" + irisBlockMaterialId + "] out of range!");
+				LodUtil.assertNotReach("Trying to create datapoint with irisBlockMaterialId [" + irisBlockMaterialId + "] out of range!");
 			}
 			
 			if (alpha < 0 || alpha >= 256)
 			{
-				LodUtil.assertNotReach("Trying to create datapoint with alpha[" + alpha + "] out of range!");
+				LodUtil.assertNotReach("Trying to create datapoint with alpha [" + alpha + "] out of range!");
 			}
 			if (red < 0 || red >= 256)
 			{
-				LodUtil.assertNotReach("Trying to create datapoint with red[" + red + "] out of range!");
+				LodUtil.assertNotReach("Trying to create datapoint with red[ " + red + "] out of range!");
 			}
 			if (green < 0 || green >= 256)
 			{
-				LodUtil.assertNotReach("Trying to create datapoint with green[" + green + "] out of range!");
+				LodUtil.assertNotReach("Trying to create datapoint with green [" + green + "] out of range!");
 			}
 			if (blue < 0 || blue >= 256)
 			{
-				LodUtil.assertNotReach("Trying to create datapoint with blue[" + blue + "] out of range!");
+				LodUtil.assertNotReach("Trying to create datapoint with blue [" + blue + "] out of range!");
 			}
 			
 			
-			if (depth > height)
+			if (minY > maxY)
 			{
-				LodUtil.assertNotReach("Trying to create datapoint with depth[" + depth + "] greater than height[" + height + "]!");
+				LodUtil.assertNotReach("Trying to create datapoint with min Y [" + minY + "] greater than max Y [" + maxY + "]!");
 			}
 		}
 		
@@ -183,8 +183,8 @@ public class RenderDataPointUtil
 				| (red & RED_MASK) << RED_SHIFT
 				| (green & GREEN_MASK) << GREEN_SHIFT
 				| (blue & BLUE_MASK) << BLUE_SHIFT
-				| (height & HEIGHT_MASK) << HEIGHT_SHIFT
-				| (depth & DEPTH_MASK) << DEPTH_SHIFT
+				| (maxY & MAX_Y_MASK) << MAX_Y_SHIFT
+				| (minY & MIN_Y_MASK) << MIN_Y_SHIFT
 				| (lightBlock & BLOCK_LIGHT_MASK) << BLOCK_LIGHT_SHIFT
 				| (lightSky & SKY_LIGHT_MASK) << SKY_LIGHT_SHIFT
 				| (irisBlockMaterialId & IRIS_BLOCK_MATERIAL_ID_MASK) << IRIS_BLOCK_MATERIAL_ID_SHIFT
@@ -193,19 +193,19 @@ public class RenderDataPointUtil
 		return out;
 	}
 	
-	public static long shiftHeightAndDepth(long dataPoint, short offset)
-	{
-		long height = (dataPoint + ((long) offset << HEIGHT_SHIFT)) & HEIGHT_SHIFTED_MASK;
-		long depth = (dataPoint + (offset << DEPTH_SHIFT)) & DEPTH_SHIFTED_MASK;
-		
-		return dataPoint & ~(HEIGHT_SHIFTED_MASK | DEPTH_SHIFTED_MASK) | height | depth;
-	}
+	//public static long shiftHeightAndDepth(long dataPoint, short offset)
+	//{
+	//	long maxY = (dataPoint + ((long) offset << MAX_Y_SHIFT)) & MAX_Y_SHIFTED_MASK;
+	//	long minY = (dataPoint + (offset << MIN_Y_SHIFT)) & MIN_Y_SHIFTED_MASK;
+	//	
+	//	return dataPoint & ~(MAX_Y_SHIFTED_MASK | MIN_Y_SHIFTED_MASK) | maxY | minY;
+	//}
 	
 	/** AKA the ending/top/highest Y value above {@link ILevelWrapper#getMinHeight()} ()} */
-	public static short getYMax(long dataPoint) { return (short) ((dataPoint >>> HEIGHT_SHIFT) & HEIGHT_MASK); }
+	public static short getYMax(long dataPoint) { return (short) ((dataPoint >>> MAX_Y_SHIFT) & MAX_Y_MASK); }
 	/** AKA the starting/bottom/lowest Y value above {@link ILevelWrapper#getMinHeight()} */
-	public static short getYMin(long dataPoint) { return (short) ((dataPoint >>> DEPTH_SHIFT) & DEPTH_MASK); }
-	public static long setYMin(long dataPoint, int depth) { return (long) ((dataPoint & ~(DEPTH_MASK << DEPTH_SHIFT)) | (depth & DEPTH_MASK) << DEPTH_SHIFT); }
+	public static short getYMin(long dataPoint) { return (short) ((dataPoint >>> MIN_Y_SHIFT) & MIN_Y_MASK); }
+	public static long setYMin(long dataPoint, int minY) { return (long) ((dataPoint & ~(MIN_Y_MASK << MIN_Y_SHIFT)) | (minY & MIN_Y_MASK) << MIN_Y_SHIFT); }
 	
 	public static short getAlpha(long dataPoint) { return (short) ((((dataPoint >>> ALPHA_SHIFT) & ALPHA_MASK) << ALPHA_DOWNSIZE_SHIFT) | 0b1111); }
 	public static short getRed(long dataPoint) { return (short) ((dataPoint >>> RED_SHIFT) & RED_MASK); }
@@ -218,7 +218,7 @@ public class RenderDataPointUtil
 	public static byte getBlockMaterialId(long dataPoint) { return (byte) ((dataPoint >>> IRIS_BLOCK_MATERIAL_ID_SHIFT) & IRIS_BLOCK_MATERIAL_ID_MASK); }
 	
 	
-	public static boolean hasZeroHeight(long dataPoint) { return (((dataPoint >>> DEPTH_SHIFT) & HEIGHT_DEPTH_MASK) == 0); }
+	public static boolean hasZeroHeight(long dataPoint) { return (((dataPoint >>> MIN_Y_SHIFT) & MIN_MAX_Y_MASK) == 0); }
 	
 	public static boolean doesDataPointExist(long dataPoint) { return dataPoint != EMPTY_DATA; }
 	

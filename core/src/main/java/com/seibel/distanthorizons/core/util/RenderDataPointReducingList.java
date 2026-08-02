@@ -890,7 +890,7 @@ public class RenderDataPointReducingList extends AbstractPhantomArrayList
 			}
 		}
 		
-		return (highestDataPoint & ~RenderDataPointUtil.DEPTH_SHIFTED_MASK) | (RenderDataPointUtil.getYMin(lowestDataPoint) << RenderDataPointUtil.DEPTH_SHIFT);
+		return (highestDataPoint & ~RenderDataPointUtil.MIN_Y_SHIFTED_MASK) | (RenderDataPointUtil.getYMin(lowestDataPoint) << RenderDataPointUtil.MIN_Y_SHIFT);
 	}
 	
 	
@@ -1003,11 +1003,11 @@ public class RenderDataPointReducingList extends AbstractPhantomArrayList
 
 	public void setMinY(int index, int minY) 
 	{
-		this.data.set(index, (this.data.getLong(index) & ~RenderDataPointUtil.DEPTH_SHIFTED_MASK) | ((minY & RenderDataPointUtil.DEPTH_MASK) << RenderDataPointUtil.DEPTH_SHIFT));
+		this.data.set(index, (this.data.getLong(index) & ~RenderDataPointUtil.MIN_Y_SHIFTED_MASK) | ((minY & RenderDataPointUtil.MIN_Y_MASK) << RenderDataPointUtil.MIN_Y_SHIFT));
 	}
 	public void setMaxY(int index, int maxY) 
 	{
-		this.data.set(index, (this.data.getLong(index) & ~RenderDataPointUtil.HEIGHT_SHIFTED_MASK) | ((maxY & RenderDataPointUtil.HEIGHT_MASK) << RenderDataPointUtil.HEIGHT_SHIFT));
+		this.data.set(index, (this.data.getLong(index) & ~RenderDataPointUtil.MAX_Y_SHIFTED_MASK) | ((maxY & RenderDataPointUtil.MAX_Y_MASK) << RenderDataPointUtil.MAX_Y_SHIFT));
 	}
 
 	public void setRed(int index, int red) 

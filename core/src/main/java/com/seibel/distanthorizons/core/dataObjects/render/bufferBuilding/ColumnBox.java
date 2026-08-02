@@ -72,7 +72,7 @@ public class ColumnBox
 		short maxY = (short) (minY + yHeight);
 		short maxZ = (short) (minZ + blockWidth);
 		byte skyLightTop = skyLight;
-		byte skyLightBottom = RenderDataPointUtil.doesDataPointExist(bottomData) ? RenderDataPointUtil.getLightSky(bottomData) : 0;
+		byte skyLightBottom = RenderDataPointUtil.doesDataPointExist(bottomData) ? RenderDataPointUtil.getLightSky(bottomData) : LodUtil.MIN_MC_LIGHT;
 		
 		boolean transparencyEnabled = Config.Client.Advanced.Graphics.Quality.transparency.get() == EDhApiTransparency.COMPLETE;
 		
