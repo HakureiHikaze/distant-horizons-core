@@ -51,7 +51,7 @@ dependencies {
     compileOnly("io.netty:netty-buffer:${rootProject.netty_version}")
     compileOnly("org.jetbrains:annotations:16.0.2")
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
-    compileOnly("com.google.guava:guava:31.1-jre")
+    compileOnly("com.google.guava:guava:31.1-jre") // TODO we should remove/shade this library since we're pulling it from vanilla MC
 
     // DH's bundled libraries (shadowed + relocated in loader jars)
     implementation("com.github.luben:zstd-jni:${rootProject.zstd_version}")
