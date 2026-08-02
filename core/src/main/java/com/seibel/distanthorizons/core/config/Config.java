@@ -707,7 +707,8 @@ public class Config
 						.set("grass_block," +
 							"mycelium," +
 							"nylium," +
-							"dirt_path" +
+							"dirt_path," +
+							"grass" +
 							"")
 						.setAppearance(EConfigEntryAppearance.ALL)
 						.comment(""
