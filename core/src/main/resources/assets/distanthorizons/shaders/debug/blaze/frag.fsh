@@ -1,14 +1,9 @@
 #version 330 core
 
+in vec4 fColor;
 out vec4 fragColor;
-
-layout (std140) uniform uniformBlock
-{
-    mat4 uTransform;
-    vec4 uColor;
-};
 
 void main()
 {
-    fragColor = uColor;
+    fragColor = fColor;
 }
