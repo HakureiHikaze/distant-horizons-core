@@ -136,6 +136,43 @@ public interface IDhApiRenderProxy
 	 */
 	DhApiResult<IDhApiBlazeTextureWrapper> getDhColorTextureBlazeWrapper();
 	
+	/**
+	 * Returns the OpenGL name of Distant Horizons' block ratio atlas texture. <br>
+	 * Will return {@link DhApiResult#success} = false and {@link DhApiResult#payload} = -1 if the texture hasn't been created yet
+	 * or a rendering API other than {@link EDhApiRenderingEngine#OPEN_GL} is in use. <br><br>
+	 *  
+	 * The term "block ratio atlas" means the texture is a ratio between DH's underlying color
+	 * and the color the block should have for that face. <br>
+	 * A color value of 0.5f (or half a byte) means DH's base color will be used for that pixel. <br><br>
+	 *  
+	 * <b>Note:</b> <br>
+	 * This texture is likely to be recreated/changed without warning.
+	 * If you want to use this texture at render-time it's recommended you
+	 * query this method every time before binding.
+	 * 
+	 * @see IDhApiRenderProxy#getRenderingEngine()
+	 * @since API 7.1.0
+	 */
+	DhApiResult<Integer> getDhBlockRatioAtlasTextureGlId();
+	/**
+	 * Returns a wrapper around the Blaze3D objects that represent Distant Horizons' block ratio atlas texture. <br>
+	 * Will return {@link DhApiResult#success} = false and {@link DhApiResult#payload} = null if the texture hasn't been created yet
+	 * or a rendering API other than {@link EDhApiRenderingEngine#BLAZE_3D} is in use. <br><br>
+	 * 
+	 * The term "block ratio atlas" means the texture is a ratio between DH's underlying color
+	 * and the color the block should have for that face. <br>
+	 * A color value of 0.5f (or half a byte) means DH's base color will be used for that pixel. <br><br>
+	 *
+	 * <b>Note:</b> <br>
+	 * This texture is likely to be recreated/changed without warning.
+	 * If you want to use this texture at render-time it's recommended you
+	 * query this method every time before binding.
+	 *
+	 * @see IDhApiRenderProxy#getRenderingEngine()
+	 * @since API 7.1.0
+	 */
+	DhApiResult<IDhApiBlazeTextureWrapper> getDhBlockRatioAtlasTextureBlazeWrapper();
+	
 	
 	
 	//======================//

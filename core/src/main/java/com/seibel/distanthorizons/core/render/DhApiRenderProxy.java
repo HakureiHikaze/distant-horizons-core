@@ -180,6 +180,29 @@ public class DhApiRenderProxy implements IDhApiRenderProxy
 	}
 	
 	
+	
+	public static int getDhBlockRatioAtlasTextureGlId = -1;
+	@Override
+	public DhApiResult<Integer> getDhBlockRatioAtlasTextureGlId()
+	{
+		int activeTexture = getDhBlockRatioAtlasTextureGlId;
+		return (activeTexture == -1)
+			? DhApiResult.createFail("DH's block ratio atlas texture hasn't been created and/or bound yet.", -1)
+			: DhApiResult.createSuccess(activeTexture);
+	}
+	
+	public static IDhApiBlazeTextureWrapper activeBlazeDhBlockRatioAtlasTextureWrapper = null;
+	@Override
+	public DhApiResult<IDhApiBlazeTextureWrapper> getDhBlockRatioAtlasTextureBlazeWrapper()
+	{
+		IDhApiBlazeTextureWrapper activeTexture = activeBlazeDhBlockRatioAtlasTextureWrapper;
+		return (activeTexture == null)
+			? DhApiResult.createFail("DH's block ratio atlas texture hasn't been created and/or bound yet.", null)
+			: DhApiResult.createSuccess(activeTexture);
+	}
+	
+	
+	
 	@Override 
 	public void setDeferTransparentRendering(boolean deferTransparentRendering) { this.deferTransparentRendering = deferTransparentRendering; }
 	@Override 
