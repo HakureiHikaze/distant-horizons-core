@@ -47,6 +47,7 @@ import com.seibel.distanthorizons.core.wrapperInterfaces.IVersionConstants;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IImmersivePortalsAccessor;
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IIrisAccessor;
+import com.seibel.distanthorizons.core.wrapperInterfaces.render.AbstractDhRenderApiDefinition;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.renderPass.IDhMetaRenderer;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.renderPass.IDhVanillaFadeRenderer;
 import com.seibel.distanthorizons.core.wrapperInterfaces.render.renderPass.IDhTestTriangleRenderer;
@@ -402,7 +403,14 @@ public class ClientApi
 					try
 					{
 						// these tasks always need to be called, regardless of whether the renderer is enabled or not to prevent memory leaks
-						RenderThreadTaskHandler.INSTANCE.runRenderThreadTasks();
+						// renderpearl (stage 2) forbids command-encoder writes while a RenderPass is open,
+						// so those engines flush the tasks before the pass opens and skip the flush here.
+						AbstractDhRenderApiDefinition renderApiDefinition = SingletonInjector.INSTANCE.get(AbstractDhRenderApiDefinition.class);
+						if (renderApiDefinition == null
+							|| renderApiDefinition.mayRunRenderThreadTasksInsideRenderPass())
+						{
+							RenderThreadTaskHandler.INSTANCE.runRenderThreadTasks();
+						}
 					}
 					catch (Exception e)
 					{

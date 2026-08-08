@@ -45,6 +45,20 @@ public abstract class AbstractDhRenderApiDefinition implements IBindable
 	 */
 	public abstract boolean isNativeRenderer();
 	
+	/**
+	 * Returns true when DH's queued render-thread tasks (VBO/IBO uploads,
+	 * buffer closes, ...) may be executed while Minecraft has an explicit
+	 * render pass open.
+	 *
+	 * <p>OpenGL-style renderers have no explicit pass and may submit GL
+	 * commands at any point during a frame, so this defaults to true.
+	 * Renderers built on an explicit command API (renderpearl, stage 2)
+	 * must flush those tasks <em>before</em> the pass is opened and return
+	 * false here, otherwise command-encoder writes crash inside the pass
+	 * ("Close the existing render pass before performing additional commands").
+	 */
+	public boolean mayRunRenderThreadTasksInsideRenderPass() { return true; }
+	
 	//endregion
 	
 	
