@@ -469,5 +469,7 @@
   "distanthorizons.config.enum.EDhApiGrassSideRendering.AS_DIRT": "As Dirt",
   "distanthorizons.config.enum.EDhApiRenderingEngine.AUTO": "Auto",
   "distanthorizons.config.enum.EDhApiRenderingEngine.OPEN_GL": "OpenGL",
-  "distanthorizons.config.enum.EDhApiRenderingEngine.BLAZE_3D": "Blaze3D"
+  "distanthorizons.config.enum.EDhApiRenderingEngine.BLAZE_3D": "Blaze3D",
+  "distanthorizons.config.enum.EDhApiRenderingEngine.STUB": "Stub (no rendering)",
+  "distanthorizons.config.enum.EDhApiRenderingEngine.RENDERPEARL": "RenderPearl (experimental)"
 }
