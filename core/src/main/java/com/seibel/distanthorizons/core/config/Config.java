@@ -962,7 +962,8 @@ public class Config
 							+ "Options: \n"
 							+ EDhApiRenderingEngine.AUTO + " - changes based on the most likely API for that MC version \n"
 							+ EDhApiRenderingEngine.OPEN_GL + " - The Default for MC 1.21.11 and older (supports Iris shaders) \n"
-							+ EDhApiRenderingEngine.BLAZE_3D + " - The Default for MC 26.1.2 and newer (supports Vulkan) \n"
+							+ EDhApiRenderingEngine.BLAZE_3D + " - The Default for MC 26.1.2 and 26.2 (supports Vulkan) \n"
+							+ EDhApiRenderingEngine.STUB + " - Temporary no-op engine; the Default for MC 26.3 while the renderpearl port is in progress \n"
 							+ "")
 						.build();
 					
