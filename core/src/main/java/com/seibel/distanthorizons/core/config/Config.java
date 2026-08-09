@@ -183,6 +183,18 @@ public class Config
 							"")
 						.build();
 					
+					public static ConfigEntry<Integer> lodRenderDistanceLevel = new ConfigEntry.Builder<Integer>()
+						.setMinDefaultMax(LodRenderDistanceLevel.MIN_LEVEL, LodRenderDistanceLevel.DEFAULT_LEVEL, LodRenderDistanceLevel.MAX_LEVEL)
+						.comment("" +
+							"The user-facing LOD render distance level (2-8). \n" +
+							"\n" +
+							"Each level doubles the chunk radius: \n" +
+							"level 2 = 64 chunks, level 4 = 256 chunks (default), level 8 = 4096 chunks. \n" +
+							"Changes apply immediately (next frame). \n" +
+							"The exact radius can be adjusted with lodChunkRenderDistanceRadius. \n" +
+							"")
+						.build();
+					
 					public static ConfigUISpacer qualityDropoffSpacer = new ConfigUISpacer.Builder().build();
 					
 					public static ConfigEntry<EDhApiHorizontalQuality> horizontalQuality = new ConfigEntry.Builder<EDhApiHorizontalQuality>()
@@ -1033,6 +1045,14 @@ public class Config
 						+ EDhApiRendererMode.DEFAULT + ": Default lod renderer \n"
 						+ EDhApiRendererMode.DEBUG_TRIANGLE + ": Debug testing renderer \n"
 						+ EDhApiRendererMode.DISABLED + ": Disable rendering")
+					.build();
+				
+				public static ConfigEntry<Boolean> testTriangle = new ConfigEntry.Builder<Boolean>()
+					.set(false)
+					.comment(""
+						+ "Renders the experimental screen-space test triangle overlay. \n"
+						+ "(Stage 2 FT-2 development tool; also toggled with F6 in dev builds) \n"
+						+ "")
 					.build();
 				
 				public static ConfigEntry<EDhApiDebugRendering> debugRenderingColors = new ConfigEntry.Builder<EDhApiDebugRendering>()
@@ -2093,13 +2113,41 @@ public class Config
 			
 			try
 			{
+				// SA-3-9: the user-facing render distance level (2-8) writes the
+				// chunk-radius data source (one-way; the radius is authoritative,
+				// the inverse level is derived for display via
+				// LodRenderDistanceLevel.radiusToLevel). Registered before the
+				// preset handlers so a failing handler cannot skip the linkage.
+				Config.Client.Advanced.Graphics.Quality.lodRenderDistanceLevel.addListener(new com.seibel.distanthorizons.core.config.listeners.IConfigListener()
+				{
+					@Override public void onConfigValueSet()
+					{
+						int radius = LodRenderDistanceLevel.levelToRadius(Config.Client.Advanced.Graphics.Quality.lodRenderDistanceLevel.get());
+						if (Config.Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius.get() != radius)
+						{
+							// persist the derived radius; in JVM unit tests the
+							// config file handler is not initialized, so fall back
+							// to an in-memory write (production always saves)
+							try
+							{
+								Config.Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius.set(radius);
+							}
+							catch (Throwable t)
+							{
+								Config.Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius.setWithoutSaving(radius);
+							}
+						}
+					}
+					@Override public void onUiModify() { this.onConfigValueSet(); }
+				});
+				
 				ThreadPresetConfigEventHandler.INSTANCE.setUiOnlyConfigValues();
 				RenderQualityPresetConfigEventHandler.INSTANCE.setUiOnlyConfigValues();
 				QuickRenderToggleConfigEventHandler.INSTANCE.setUiOnlyConfigValues();
 				
 				IgnoredDimensionCsvHandler.INSTANCE.onConfigValueSet();
 			}
-			catch (Exception e)
+			catch (Throwable e)
 			{
 				LOGGER.error("Unexpected exception when running config delayed UI setup. Error: [" + e.getMessage() + "].", e);
 			}
